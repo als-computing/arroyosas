@@ -19,7 +19,10 @@ jobs:
         cache: 'pip'
     - name: Install dependencies
       run: |
-        apt install curl -y
+        apt-get update && apt-get install -y \
+        curl \
+        git \
+        && rm -rf /var/lib/apt/lists/*
         curl -fsSL https://pixi.sh/install.sh | bash
         pixi install
     - name: Lint with flake8
