@@ -8,3 +8,7 @@ version = "0.0.1"
 description = "A package to perform computations and suggestions during a time-resolved GISAXS experiment."
 authors = [{ name = "Dylan McReynolds", email = "dmcreynolds@lbl.gov" }]
 dependencies = []  # Leave this empty, managed in Pixi
+
+
+[tool.isort]
+profile = "black"

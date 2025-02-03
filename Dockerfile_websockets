@@ -1,0 +1,30 @@
+FROM debian:latest
+
+# Install dependencies for Pixi
+RUN apt-get update && apt-get install -y \
+    curl \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Pixi
+RUN curl -fsSL https://pixi.sh/install.sh | bash
+
+# Set up environment variables
+ENV PATH="/root/.pixi/bin:$PATH"
+
+
+WORKDIR /app
+
+COPY . /app
+
+# Ensure no pre-existing Pixi environments (force clean state)
+# RUN rm -rf /app/.pixi && rm /pixi.lock
+
+# Install dependencies using Pixi
+RUN pixi install
+
+# Build the project
+# RUN pixi run build
+
+
+CMD ["pixi", "run", "start_ws"]

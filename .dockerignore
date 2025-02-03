@@ -1,0 +1,15 @@
+# Ignore build artifacts
+build/
+dist/
+
+# Ignore dependencies
+__pycache__/
+node_modules/
+
+# Ignore Git files
+.git/
+.gitignore
+
+# Ignore Pixi cache
+.pixi/
+.pixi-lock.json

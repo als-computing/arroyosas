@@ -1,49 +1,63 @@
 services:
-  tiled:
-    # see the file ./tiled/deploy/config.yml for detailed configuration of tiled
-    image: ghcr.io/bluesky/tiled:0.1.0-b17
-    ports:
-      - "8000:8000"
-    environment:
-      - TILED_SINGLE_USER_API_KEY=${TILED_SINGLE_USER_API_KEY}
-    volumes:
-      - ./conf/tiled/deploy:/deploy:Z
-      - ./data:/data:Z
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://tiled:8000/healthz"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-    networks:
-      gisax_net:
+  #### Commented out for the time being...will be active soon!!!
+  # tiled:
+  #   # see the file ./tiled/deploy/config.yml for detailed configuration of tiled
+  #   image: ghcr.io/bluesky/tiled:0.1.0-b17
+  #   ports:
+  #     - "8000:8000"
+  #   environment:
+  #     - TILED_SINGLE_USER_API_KEY=${TILED_SINGLE_USER_API_KEY}
+  #   volumes:
+  #     - ./conf/tiled/deploy:/deploy:Z
+  #     - ./data:/data:Z
+  #   restart: unless-stopped
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://tiled:8000/healthz"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 3
+  #   networks:
+  #     gisax_net:
 
-  processor:
-    command: python -m tr_ap_xps.apps.processor_cli
+  # processor:
+  #   command: python -m tr_ap_xps.apps.processor_cli
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile_processor
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8001:8001"
+  #   volumes:
+  #     - .:/app:Z
+  #     - ./settings_container.yaml:/app/settings.yaml:Z
+  #   networks:
+  #     gisax_net:
+  #   depends_on:
+  #     tiled:
+  #       condition: service_healthy
+  # frontend:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile_frontend
+  #   ports:
+  #     - "8080:80"
+  #   restart: unless-stopped
+  #   volumes:
+  #     - .:/app:Z
+  #   networks:
+  #     gisax_net:
+
+  ws:
     build:
       context: .
-      dockerfile: Dockerfile_processor
+      dockerfile: Dockerfile_websockets
+    command: pixi run start_ws
     restart: unless-stopped
     ports:
       - "8001:8001"
-    volumes:
-      - .:/app:Z
-      - ./settings_container.yaml:/app/settings.yaml:Z
-    networks:
-      gisax_net:
-    depends_on:
-      tiled:
-        condition: service_healthy
-
-  frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile_frontend
-    ports:
-      - "8080:80"
-    restart: unless-stopped
-    volumes:
-      - .:/app:Z
+    # volumes:
+      # - .:/app:Z
+      # - ./settings_container.yaml:/app/settings.yaml:Z
     networks:
       gisax_net:
 
