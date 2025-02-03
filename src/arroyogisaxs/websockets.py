@@ -143,8 +143,7 @@ async def test_client(publisher: GISAXSWSResultPublisher, num_frames: int = 10):
         GISAXSStop,
     )
 
-    publisher.start()
-    publisher.publish(GISAXSStart())
+    await publisher.publish(GISAXSStart())
     for x in range(num_frames):
         await asyncio.sleep(1)
         # Create a test pattern image that changes slightly each time
