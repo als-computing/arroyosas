@@ -23,8 +23,4 @@ COPY . /app
 # Install dependencies using Pixi
 RUN pixi install
 
-# Build the project
-# RUN pixi run build
-
-
 CMD ["pixi", "run", "start_ws"]
