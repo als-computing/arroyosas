@@ -1,4 +1,4 @@
-name: tr_ap_xps
+name: build and test
 
 on:
   push:
@@ -19,11 +19,9 @@ jobs:
         cache: 'pip'
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install .
-        pip install .[dev]
-        git clone https://github.com/als-computing/arroyo.git
-        pip install ./arroyo
+        apt install curl -y
+        curl -fsSL https://pixi.sh/install.sh | bash
+        pixi install
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
