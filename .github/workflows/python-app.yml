@@ -24,6 +24,7 @@ jobs:
         git \
         && rm -rf /var/lib/apt/lists/*
         curl -fsSL https://pixi.sh/install.sh | bash
+        PATH="/home/runner/.pixi/bin:$PATH"
         source /home/runner/.bashrc
         pixi install
     # - name: Lint with flake8
