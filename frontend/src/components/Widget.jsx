@@ -8,6 +8,7 @@ export default function Widget({
     defaultHeight='h-1/4',
     maxHeight='max-h-3/4',
     width='w-1/4',
+    minWidth="min-w-64",
     maxWidth='max-w-full',
     expandedWidth='w-full',
     contentStyles=''
@@ -27,7 +28,7 @@ export default function Widget({
 
 
     return (
-        <div className={` p-2 rounded-md ${defaultHeight} ${maxHeight} ${isExpanded ? expandedWidth : `${width} ${maxWidth}`}`}>
+        <div className={` p-4 rounded-md ${defaultHeight} ${maxHeight} ${isExpanded ? expandedWidth : `${width} ${minWidth} ${maxWidth}`}`}>
             <div className="w-full h-full shadow-md bg-white rounded-md">
                 {/* Title */}
                 <header className="bg-sky-950 h-10 flex items-center rounded-t-md justify-between">

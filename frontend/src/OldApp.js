@@ -17,50 +17,31 @@ import FormContainer from "./component_library/FormContainer";
 import { phosphorIcons } from './assets/icons';
 
 import { useAPXPS } from "./hooks/useAPXPS";
-import { useGISAXS } from './hooks/useGISAXS';
 export default function App() {
 
   const {
+    rawArray,
+    vfftArray,
+    ifftArray,
+    singlePeakData,
+    allPeakData,
     messages,
-    currentArrayData,
-    currentPeakData,
     wsUrl,
     setWsUrl,
     frameNumber,
     socketStatus,
     startWebSocket,
     closeWebSocket,
+    warningMessage,
+    status,
     heatmapSettings,
     handleHeatmapSettingChange,
-    warningMessage
-  } = useGISAXS({});
-
-  function generateEggData(size) {
-    const maxVal = 255; // Maximum intensity
-    const center = size / 2; // Center of the Egg
-    const data = [];
-  
-    for (let y = 0; y < size; y++) {
-      const row = [];
-      for (let x = 0; x < size; x++) {
-        // Calculate distance from the center
-        const dx = x - center;
-        const dy = y - center;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-  
-        // Egg-like function: exponential decay from center
-        const intensity = maxVal * Math.exp(-distance * distance / (2 * (center / 2) ** 2));
-        row.push(Math.round(intensity)); // Normalize to integer
-      }
-      data.push(row);
-    }
-  
-    return data;
-  }
-  
-  // Example usage
-  const size = 10; // Adjust size for desired resolution
-  const eggData = generateEggData(size);
+    metadata,
+    shotRecentArray,
+    shotNumber,
+    shotMeanArray,
+    shotStdArray,
+  } = useAPXPS({});
 
   //Automatically start the websocket connection on page load
   useEffect(() => {
@@ -90,20 +71,30 @@ export default function App() {
               </Settings>
             </SidebarItem>
             <SidebarItem title='Scan Metadata' icon={phosphorIcons.fileMd}>
-        
+              <ScanMetadata status={status} metadata={metadata}/>
             </SidebarItem>
           </Sidebar>
 
           <Main >
-            <div className="flex flex-wrap justify-around w-full h-full">
-              <Widget title={`Current Frame #${frameNumber}`} width='w-1/2' minWidth="min-w-96" maxWidth='max-w-[1000px]' defaultHeight='h-1/2' maxHeight='max-h-[800px]' expandedWidth='w-full'>
-                <PlotlyHeatMap array={eggData} title='Most Recent' xAxisTitle='' yAxisTitle='' width='w-full' fixPlotHeightToParent={true} verticalScaleFactor={heatmapSettings.scaleFactor.value} showTicks={heatmapSettings.showTicks.value}/>
+            <Widget title={`Live Images - Current Shot #${shotNumber}`} width='w-3/5' maxWidth='max-w-[1000px]' defaultHeight='h-full' maxHeight='max-h-[1400px]' expandedWidth='w-full'>
+              <div className="w-full h-full overflow-auto flex">
+                <PlotlyHeatMap array={rawArray} title='RAW' xAxisTitle='' yAxisTitle='' width='w-1/3' verticalScaleFactor={heatmapSettings.scaleFactor.value} showTicks={heatmapSettings.showTicks.value}/>
+                <PlotlyHeatMap array={vfftArray} title='VFFT' xAxisTitle='' yAxisTitle='' width='w-1/3' verticalScaleFactor={heatmapSettings.scaleFactor.value} showTicks={heatmapSettings.showTicks.value}/>
+                <PlotlyHeatMap array={ifftArray} title='IFFT' xAxisTitle='' yAxisTitle='' width='w-1/3' verticalScaleFactor={heatmapSettings.scaleFactor.value} showTicks={heatmapSettings.showTicks.value}/>
+              </div>
+            </Widget>
+
+            <div className='flex flex-wrap w-2/5 h-full'>
+              <Widget title={`Shot Sum - Current Shot #${shotNumber}`} width='w-full' maxWidth='max-w-[1000px]' defaultHeight='h-1/2' maxHeight='max-h-[1000px]' contentStyles='flex-col space-y-1 pb-2'>
+                <PlotlyHeatMap array={shotRecentArray} title='Shot Recent' fixPlotHeightToParent={true} height="h-1/3" width='w-full' verticalScaleFactor={1} showTicks={false}/>
+                <PlotlyHeatMap array={shotMeanArray} title='Shot Mean' fixPlotHeightToParent={true} height="h-1/3" width='w-full' verticalScaleFactor={1} showTicks={false}/>
+                <PlotlyHeatMap array={shotStdArray} title='Shot Std' fixPlotHeightToParent={true} height="h-1/3" width='w-full' verticalScaleFactor={1} showTicks={false}/>
               </Widget>
-              <Widget title={`Current Frame #${frameNumber}`} width='w-1/2' minWidth="min-w-96" maxWidth='max-w-[1000px]' defaultHeight='h-1/2' maxHeight='max-h-[800px]' expandedWidth='w-full'>
-                <PlotlyHeatMap array={eggData} title='Historical' xAxisTitle='' yAxisTitle='' width='w-full' fixPlotHeightToParent={true} verticalScaleFactor={heatmapSettings.scaleFactor.value} showTicks={heatmapSettings.showTicks.value}/>
+              <Widget title='Recent Fitted Peaks' width='w-full' maxWidth='max-w-[1000px]' defaultHeight='h-1/4' maxHeight='max-h-96'>
+                  <PlotlyScatterMultiple data={singlePeakData} title='Recent Fitted Peaks' xAxisTitle='x' yAxisTitle='y'/>
               </Widget>
-              <Widget title='1D Plots' width='w-full' defaultHeight='h-1/2'>
-                  <PlotlyScatterMultiple data={currentPeakData} title='Cumulative Fitted Peaks' xAxisTitle='x' yAxisTitle='y'/>
+              <Widget title='Cumulative Fitted Peaks' width='w-full' maxWidth='max-w-[1000px]' defaultHeight='h-1/4' maxHeight='max-h-96'>
+                  <PlotlyScatterMultiple data={allPeakData} title='Cumulative Fitted Peaks' xAxisTitle='x' yAxisTitle='y'/>
               </Widget>
             </div>
           </Main>
