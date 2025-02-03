@@ -51,7 +51,10 @@ jobs:
 
       - name: Test
         run: |
-          docker run --rm ${{ env.TEST_TAG }}
+          CONTAINER_ID=$(docker run -d --rm ${{ env.TEST_TAG }})
+          sleep 5  # Allow time for the server to start
+          docker logs $CONTAINER_ID  # Show logs to confirm it's running
+          docker stop $CONTAINER_ID  # Stop the container
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
