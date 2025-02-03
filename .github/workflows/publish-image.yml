@@ -48,6 +48,9 @@ jobs:
           load: true
           tags: ${{ env.TEST_TAG }}
 
+      - name: Test
+        run: |
+          docker run --rm ${{ env.TEST_TAG }}
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
