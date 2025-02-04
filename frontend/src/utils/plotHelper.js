@@ -1,3 +1,33 @@
+const sampleScatterData = [
+    {
+        x: [1, 2, 3],
+        y: [2, 6, 3],
+        type: 'scatter',
+        mode: 'lines+markers',
+        marker: {color: 'red'},
+    },
+];
+
+export const processJSONPlot = (rawJSONData, cb) => {
+    //receives a json from
+    //"1D": message.one_d_reduction.df.to_json(),
+    //one_d_reduction=DataFrameModel(df=one_d_reduction),
+    const parsedData = JSON.parse(rawJSONData);
+    //we receive an array of 'q' and an array of 'qy'
+    const xValues = Object.values(parsedData.q).map(Number);
+    const yValues = Object.values(parsedData.qy).map(Number);
+    const newPlot = [
+        {
+            x: xValues,
+            y: yValues,
+            type: 'scatter',
+            mode: 'lines+markers',
+            marker: {color: 'red'}
+        }
+    ]
+    cb(newPlot);
+}
+
 export const processPeakData = (peakDataArray=[{x:0, h:0, fwhm: 0}], singlePlotCallback=()=>{}, multiPlotCallback=()=>{}) => {
 
     var recentPlots = [];

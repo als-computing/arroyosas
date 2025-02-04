@@ -97,10 +97,10 @@ export default function App() {
           <Main >
             <div className="flex flex-wrap justify-around w-full h-full">
               <Widget title={`Current Frame #${frameNumber}`} width='w-1/2' minWidth="min-w-96" maxWidth='max-w-[1000px]' defaultHeight='h-1/2' maxHeight='max-h-[800px]' expandedWidth='w-full'>
-                <PlotlyHeatMap array={eggData} title='Most Recent' xAxisTitle='' yAxisTitle='' width='w-full' fixPlotHeightToParent={true} verticalScaleFactor={heatmapSettings.scaleFactor.value} showTicks={heatmapSettings.showTicks.value}/>
+                <PlotlyHeatMap array={currentArrayData} title='Most Recent' xAxisTitle='' yAxisTitle='' width='w-full' fixPlotHeightToParent={true} showTicks={heatmapSettings.showTicks.value} tickStep={heatmapSettings.tickStep.value}/>
               </Widget>
               <Widget title={`Current Frame #${frameNumber}`} width='w-1/2' minWidth="min-w-96" maxWidth='max-w-[1000px]' defaultHeight='h-1/2' maxHeight='max-h-[800px]' expandedWidth='w-full'>
-                <PlotlyHeatMap array={eggData} title='Historical' xAxisTitle='' yAxisTitle='' width='w-full' fixPlotHeightToParent={true} verticalScaleFactor={heatmapSettings.scaleFactor.value} showTicks={heatmapSettings.showTicks.value}/>
+                <PlotlyHeatMap array={eggData} title='Historical' xAxisTitle='' yAxisTitle='' width='w-full' fixPlotHeightToParent={true}  showTicks={heatmapSettings.showTicks.value}/>
               </Widget>
               <Widget title='1D Plots' width='w-full' defaultHeight='h-1/2'>
                   <PlotlyScatterMultiple data={currentPeakData} title='Cumulative Fitted Peaks' xAxisTitle='x' yAxisTitle='y'/>

@@ -2,14 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 import msgpack from 'msgpack-lite';
 import dayjs from 'dayjs';
 import { getWsUrl } from '../utils/connectionHelper';
-import { processAndDownsampleArrayData, processPeakData } from '../utils/plotHelper';
+import { processAndDownsampleArrayData, processJSONPlot } from '../utils/plotHelper';
 
 const defaultWsUrl = getWsUrl();
 const defaultHeatmapSettings = {
-    scaleFactor: {
-        label: 'Scale Factor',
+    tickStep: {
+        label: 'Tick Step',
         type: 'float',
-        value: '2',
+        value: '10',
         description: 'Factor to scale the vertical axis of Raw, VFFT, and IFFT images in the heatmap. Larger number will increase the vertical height.'
     },
     showTicks: {
@@ -54,6 +54,7 @@ export const useGISAXS = ({}) => {
                 // Convert Blob to ArrayBuffer for binary processing
                 const arrayBuffer = await event.data.arrayBuffer();
                 newMessage = msgpack.decode(new Uint8Array(arrayBuffer));
+                console.log({newMessage})
 
             } else if (event.data instanceof ArrayBuffer) {
                 // Process ArrayBuffer directly
@@ -77,16 +78,20 @@ export const useGISAXS = ({}) => {
 
             //handle fitted data parameters for line plots
             if ('1D' in newMessage) {
-                const fittedData = JSON.parse(newMessage['1D']);
-                processPeakData(fittedData, setCurrentPeakData);
+                processJSONPlot(newMessage['1D'], setCurrentPeakData);
             }
 
             //handle heatmap data
             if ('image' in newMessage) {
-                processAndDownsampleArrayData(newMessage.image,  newMessage.height, newMessage.width, 2, setCurrentArayData);
+                console.log('process and downsample array')
+                var width;
+                if ('with' in newMessage) {
+                    width = newMessage.with;
+                } else if ('width' in newMessage) {
+                    width = newMessage.width;
+                }
+                processAndDownsampleArrayData(newMessage.image,  width, newMessage.height, 1, setCurrentArayData);
             }
-
-            console.log({newMessage})
         } catch (error) {
             console.error('Error processing WebSocket message:', error);
         }
