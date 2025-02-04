@@ -33,7 +33,7 @@ class GISAXSMessage(Message):
 
 
 class GISAXSStart(Start, GISAXSMessage):
-    msg_type: str = Literal["start"]
+    msg_type: str = "start"
 
 
 class GISAXSImageInfo(BaseModel):
