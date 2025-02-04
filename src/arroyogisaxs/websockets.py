@@ -116,7 +116,7 @@ def pack_images(message: GISAXSEvent) -> bytes:
                 "image": convert_to_uint8(message.image.array),
                 "1D": message.one_d_reduction.df.to_json(),
                 "frame_number": message.image_info.frame_number,
-                "with": message.image_info.width,
+                "width": message.image_info.width,
                 "height": message.image_info.height,
                 "data_type": message.image_info.data_type,
             }

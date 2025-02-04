@@ -179,3 +179,5 @@ node_modules/
 .archive/
 
 # arroyo/
+
+persist/

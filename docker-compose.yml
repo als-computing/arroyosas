@@ -61,6 +61,16 @@ services:
     networks:
       gisax_net:
 
+  kvrocks:
+    image: kvrocks/kvrocks:latest
+    ports:
+      - "6666:6666"
+    volumes:
+      - ./conf/kvrocks/kvrocks.conf:/etc/kvrocks/kvrocks.conf
+      - ./persist/kvrocks/data:/data
+    networks:
+      gisax_net:
+
 networks:
   gisax_net:
     driver: bridge
