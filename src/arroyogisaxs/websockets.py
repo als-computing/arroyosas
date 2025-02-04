@@ -54,6 +54,7 @@ class GISAXSWSResultPublisher(Publisher):
     ) -> None:
         if isinstance(message, GISAXSStop):
             self.current_start_message = None
+            await client.send(json.dumps(message.model_dump()))
             return
 
         if isinstance(message, GISAXSStart):
@@ -61,18 +62,9 @@ class GISAXSWSResultPublisher(Publisher):
             await client.send(json.dumps(message.model_dump()))
             return
 
-        # send basic info
-        await client.send(
-            json.dumps(
-                {
-                    # "result_info": message.result_info,
-                    "frame_number": message.frame_number,
-                }
-            )
-        )
         # send image data separately to client memory issues
         image_bundle = await asyncio.to_thread(pack_images, message)
-        logger.info(f"Sending image bundle to client of size {len(image_bundle)}")
+
         await client.send(image_bundle)
 
     async def websocket_handler(self, websocket):
@@ -118,16 +110,20 @@ def pack_images(message: GISAXSEvent) -> bytes:
     """
     Pack all the images into a single msgpack message
     """
-    return msgpack.packb(
-        {
-            "image": convert_to_uint8(message.image.array),
-            "1D": message.one_d_reduction.df.to_json(),
-            "frame_number": message.image_info.frame_number,
-            "with": message.image_info.width,
-            "height": message.image_info.height,
-            "data_type": message.image_info.data_type,
-        }
-    )
+    try:
+        return msgpack.packb(
+            {
+                "image": convert_to_uint8(message.image.array),
+                "1D": message.one_d_reduction.df.to_json(),
+                "frame_number": message.image_info.frame_number,
+                "with": message.image_info.width,
+                "height": message.image_info.height,
+                "data_type": message.image_info.data_type,
+            }
+        )
+    except Exception as e:
+        logger.error(f"Error packing images: {e}")
+        raise e
 
 
 async def test_client(publisher: GISAXSWSResultPublisher, num_frames: int = 10):
@@ -143,33 +139,37 @@ async def test_client(publisher: GISAXSWSResultPublisher, num_frames: int = 10):
         GISAXSStop,
     )
 
-    await publisher.publish(GISAXSStart())
-    for x in range(num_frames):
-        await asyncio.sleep(1)
-        # Create a test pattern image that changes slightly each time
-        frame_number = int(time.time()) % 100  # Change pattern every second
-        image = np.zeros((100, 100), dtype=np.float32)
-        np.fill_diagonal(image, frame_number % 255)
+    await asyncio.sleep(2)
+    for y in range(100):
+        await publisher.publish(GISAXSStart())
+        for x in range(num_frames):
+            await asyncio.sleep(1)
+            # Create a test pattern image that changes slightly each time
+            frame_number = int(time.time()) % 100  # Change pattern every second
+            image = np.zeros((100, 100), dtype=np.float32)
+            np.fill_diagonal(image, frame_number % 255)
 
-        # Create a 1D sine wave pattern
-        x = np.linspace(0, 2 * np.pi, 100)
-        one_d_reduction = pd.DataFrame({"q": x, "qy": np.sin(x + frame_number * 0.1)})
-        image_info = {
-            "frame_number": frame_number,
-            "width": image.shape[1],
-            "height": image.shape[0],
-            "data_type": "uint8",
-        }
+            # Create a 1D sine wave pattern
+            x = np.linspace(0, 2 * np.pi, 100)
+            one_d_reduction = pd.DataFrame(
+                {"q": x, "qy": np.sin(x + frame_number * 0.1)}
+            )
+            image_info = {
+                "frame_number": frame_number,
+                "width": image.shape[1],
+                "height": image.shape[0],
+                "data_type": "uint8",
+            }
 
-        # Create GISAXSResult message
-        message = GISAXSEvent(
-            image_info=GISAXSImageInfo(**image_info),
-            image=NumpyArrayModel(array=image),
-            one_d_reduction=DataFrameModel(df=one_d_reduction),
-        )
+            # Create GISAXSResult message
+            message = GISAXSEvent(
+                image_info=GISAXSImageInfo(**image_info),
+                image=NumpyArrayModel(array=image),
+                one_d_reduction=DataFrameModel(df=one_d_reduction),
+            )
 
-        await publisher.publish(pack_images(message))
-    await publisher.publish(GISAXSStop(num_frames=num_frames))
+            await publisher.publish(message)
+        await publisher.publish(GISAXSStop(num_frames=num_frames))
 
 
 async def main(publisher: GISAXSWSResultPublisher):
