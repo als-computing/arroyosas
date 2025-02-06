@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import msgpack from 'msgpack-lite';
 import dayjs from 'dayjs';
 import { getWsUrl } from '../utils/connectionHelper';
-import { processAndDownsampleArrayData, processJSONPlot } from '../utils/plotHelper';
+import { processAndDownsampleArrayData, processJSONPlot, updateCumulativePlot } from '../utils/plotHelper';
 
 const defaultWsUrl = getWsUrl();
 const defaultHeatmapSettings = {
@@ -23,7 +23,9 @@ const defaultHeatmapSettings = {
 export const useGISAXS = ({}) => {
     const [ messages, setMessages ] = useState([]);
     const [ currentArrayData, setCurrentArayData ] = useState([]);
-    const [ currentPeakData, setCurrentPeakData ] = useState([]);
+    const [ currentScatterPlot, setCurrentScatterPlot ] = useState([]);
+    const [ cumulativeScatterPlots, setCumulativeScatterPlots ] = useState([]);
+
     const [ wsUrl, setWsUrl ] = useState(defaultWsUrl);
     const [ socketStatus, setSocketStatus ] = useState('closed');
     const [ frameNumber, setFrameNumber ] = useState();
@@ -54,7 +56,7 @@ export const useGISAXS = ({}) => {
                 // Convert Blob to ArrayBuffer for binary processing
                 const arrayBuffer = await event.data.arrayBuffer();
                 newMessage = msgpack.decode(new Uint8Array(arrayBuffer));
-                console.log({newMessage})
+                //console.log({newMessage})
 
             } else if (event.data instanceof ArrayBuffer) {
                 // Process ArrayBuffer directly
@@ -78,12 +80,13 @@ export const useGISAXS = ({}) => {
 
             //handle fitted data parameters for line plots
             if ('1D' in newMessage) {
-                processJSONPlot(newMessage['1D'], setCurrentPeakData);
+                const newPlot = processJSONPlot(newMessage['1D'], newMessage?.frame_number);
+                setCurrentScatterPlot(newPlot);
+                updateCumulativePlot(newPlot, setCumulativeScatterPlots);
             }
 
             //handle heatmap data
             if ('image' in newMessage) {
-                console.log('process and downsample array')
                 var width;
                 if ('with' in newMessage) {
                     width = newMessage.with;
@@ -177,7 +180,8 @@ export const useGISAXS = ({}) => {
     return {
         messages,
         currentArrayData,
-        currentPeakData,
+        currentScatterPlot,
+        cumulativeScatterPlots,
         wsUrl,
         setWsUrl,
         frameNumber,

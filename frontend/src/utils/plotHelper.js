@@ -8,7 +8,7 @@ const sampleScatterData = [
     },
 ];
 
-export const processJSONPlot = (rawJSONData, cb) => {
+export const processJSONPlot = (rawJSONData, frameNumber='N/A') => {
     //receives a json from
     //"1D": message.one_d_reduction.df.to_json(),
     //one_d_reduction=DataFrameModel(df=one_d_reduction),
@@ -22,10 +22,11 @@ export const processJSONPlot = (rawJSONData, cb) => {
             y: yValues,
             type: 'scatter',
             mode: 'lines+markers',
-            marker: {color: 'red'}
+            marker: {color: 'red'},
+            name: `frame ${frameNumber}`
         }
     ]
-    cb(newPlot);
+    return newPlot;
 }
 
 export const processPeakData = (peakDataArray=[{x:0, h:0, fwhm: 0}], singlePlotCallback=()=>{}, multiPlotCallback=()=>{}) => {
@@ -60,6 +61,42 @@ export const processPeakData = (peakDataArray=[{x:0, h:0, fwhm: 0}], singlePlotC
     singlePlotCallback(recentPlots);
     multiPlotCallback(recentPlots);
 };
+
+export const updateCumulativePlot = (recentPlots=[], cb=()=>{}) => {
+    //console.log({frameNumber})
+   cb((data) => {
+     var oldArrayData = Array.from(data);
+     var newArrayData = [];
+     let totalFrames = oldArrayData.length;
+     let colorNumber = 255; //the lightest color for the oldest entries
+
+     //TO DO: refactor this if its slowing the app down
+     oldArrayData.forEach((plot, index) => {
+         let colorWeight = (totalFrames - index) / totalFrames * colorNumber; //scale color based on index relative to total frames
+         plot.line = {
+             color: `rgb(${colorWeight}, ${colorWeight}, ${colorWeight})`,
+             width: 1,
+         };
+         plot.mode = 'lines';
+         newArrayData.push(plot);
+     })
+     var newestData = [];
+     recentPlots.forEach((plot) => {
+         var newPlot = {
+             x: plot.x,
+             y: plot.y,
+             line: {
+                 color: 'rgb(0, 94, 245)',
+                 width: 2,
+             },
+             name: plot.name,
+             mode: 'lines+markers'
+         };
+         newestData.push(newPlot);
+     })
+     return [...newArrayData, ...newestData];
+   })
+ };
 
 export const processAndDownsampleArrayData = (data = [], width, height, scaleFactor = 1, cb) => {
     if (scaleFactor < 1) throw new Error("Scale factor must be 1 or greater.");
