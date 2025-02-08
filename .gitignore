@@ -181,3 +181,5 @@ node_modules/
 # arroyo/
 
 persist/
+
+data/models/
