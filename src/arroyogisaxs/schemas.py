@@ -8,7 +8,6 @@ from arroyopy.schemas import (
     Start,
     Stop,
 )
-from pydantic import BaseModel
 
 """
     This module defines schemas for GISAXS messages and events using
@@ -34,16 +33,12 @@ class GISAXSMessage(Message):
 
 class GISAXSStart(Start, GISAXSMessage):
     msg_type: str = "start"
-
-
-class GISAXSImageInfo(BaseModel):
-    frame_number: int
     width: int
     height: int
-    data_type: str
+    data_type: type
 
 
-class GISAXSEvent(Event, GISAXSMessage):
+class GISAXSRawEvent(Event, GISAXSMessage):
     """
 
     LabVIEW Message:
@@ -55,8 +50,7 @@ class GISAXSEvent(Event, GISAXSMessage):
 
     msg_type: str = Literal["event"]
     image: NumpyArrayModel
-    image_info: GISAXSImageInfo
-    one_d_reduction: DataFrameModel
+    frame_number: int
 
 
 class GISAXSStop(Stop, GISAXSMessage):
@@ -68,10 +62,14 @@ class GISAXSStop(Stop, GISAXSMessage):
 
     """
 
-    pass
-    # num_frames: int = Field(..., alias="Num Frames")
+    num_frames: int
 
 
 class GISAXSResultStop(Stop, GISAXSMessage):
     msg_type: str = Literal["result_stop"]
     function_timings: DataFrameModel
+
+
+class GISAXS1DReduction(GISAXSMessage):
+    reduced_data: DataFrameModel
+    raw_frame_url: str

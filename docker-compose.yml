@@ -47,29 +47,28 @@ services:
   #   networks:
   #     gisax_net:
 
-  ws:
+  tiled_poller:
+    command: python -m debugpy --listen 0.0.0.0:5678 --wait-for-client -m arroyogisaxs.app.tiled_poller_cli
     build:
       context: .
-      dockerfile: Dockerfile_websockets
-    command: pixi run start_ws
-    restart: unless-stopped
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app:Z
+      - ./settings_container.yaml:/app/settings.yaml:Z
     ports:
-      - "8001:8001"
-    # volumes:
-      # - .:/app:Z
-      # - ./settings_container.yaml:/app/settings.yaml:Z
+      - "5678:5678"
     networks:
       gisax_net:
 
-  kvrocks:
-    image: kvrocks/kvrocks:latest
-    ports:
-      - "6666:6666"
-    volumes:
-      - ./conf/kvrocks/kvrocks.conf:/etc/kvrocks/kvrocks.conf
-      - ./persist/kvrocks/data:/data
-    networks:
-      gisax_net:
+  # kvrocks:
+  #   image: kvrocks/kvrocks:latest
+  #   ports:
+  #     - "6666:6666"
+  #   volumes:
+  #     - ./conf/kvrocks/kvrocks.conf:/etc/kvrocks/kvrocks.conf
+  #     - ./persist/kvrocks/data:/data
+  #   networks:
+  #     gisax_net:
 
 networks:
   gisax_net:

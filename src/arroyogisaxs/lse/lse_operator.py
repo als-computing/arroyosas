@@ -12,7 +12,7 @@ import torch
 from arroyopy.operator import Operator
 
 from ..config import settings
-from ..schemas import GISAXSEvent, GISAXSMessage, GISAXSStart, GISAXSStop
+from ..schemas import GISAXSMessage, GISAXSRawEvent, GISAXSStart, GISAXSStop
 
 # from tiled.client import from_uri
 # from tiled_utils import write_results
@@ -80,7 +80,7 @@ class LatentSpaceOperator(Operator):
     async def process(self, message: GISAXSMessage) -> None:
         if isinstance(message, GISAXSStart):
             await self.publish(message)
-        elif isinstance(message, GISAXSEvent):
+        elif isinstance(message, GISAXSRawEvent):
             await asyncio.to_thread(self.extract_ls, message)
             await self.publish(message)
         elif isinstance(message, GISAXSStop):
@@ -89,7 +89,7 @@ class LatentSpaceOperator(Operator):
             logger.warning(f"Unknown message type: {type(message)}")
         return None
 
-    def extract_ls(self, message: GISAXSEvent):
+    def extract_ls(self, message: GISAXSRawEvent):
         # 1. Encode the image into a latent space
         tensor = self.transform(message.image.array)  # Add batch and channel dimensions
         f_vec_nn = self.model.module.encoder(tensor)

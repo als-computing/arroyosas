@@ -3,7 +3,6 @@ import logging
 
 import typer
 
-from ..config import settings
 from ..log_utils import setup_logger
 
 # import signal
@@ -12,8 +11,6 @@ from ..log_utils import setup_logger
 app = typer.Typer()
 logger = logging.getLogger("tr_ap_xps")
 setup_logger(logger)
-
-app_settings = settings.xps
 
 
 @app.command()

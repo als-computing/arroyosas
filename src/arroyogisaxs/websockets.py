@@ -8,9 +8,17 @@ import numpy as np
 import websockets
 from arroyopy.publisher import Publisher
 
-from .schemas import GISAXSEvent, GISAXSStart, GISAXSStop
+from .schemas import GISAXSRawEvent, GISAXSStart, GISAXSStop
 
 logger = logging.getLogger(__name__)
+
+
+class GISAXSWS1DPublisher(Publisher):
+    """
+    A publisher class for sending XPSResult messages over a web sockets.
+    """
+
+    pass
 
 
 class GISAXSWSResultPublisher(Publisher):
@@ -40,7 +48,7 @@ class GISAXSWSResultPublisher(Publisher):
         logger.info(f"Websocket server started at ws://{self.host}:{self.port}")
         await server.wait_closed()
 
-    async def publish(self, message: GISAXSEvent) -> None:
+    async def publish(self, message: GISAXSRawEvent) -> None:
         if self.connected_clients:  # Only send if there are clients connected
             asyncio.gather(
                 *(self.publish_ws(client, message) for client in self.connected_clients)
@@ -50,7 +58,7 @@ class GISAXSWSResultPublisher(Publisher):
         self,
         #  client: websockets.client.ClientConnection,
         client,
-        message: Union[GISAXSEvent | GISAXSStart | GISAXSStop],
+        message: Union[GISAXSRawEvent | GISAXSStart | GISAXSStop],
     ) -> None:
         if isinstance(message, GISAXSStop):
             self.current_start_message = None
@@ -106,7 +114,7 @@ def convert_to_uint8(image: np.ndarray) -> bytes:
     return image_uint8.tobytes()
 
 
-def pack_images(message: GISAXSEvent) -> bytes:
+def pack_images(message: GISAXSRawEvent) -> bytes:
     """
     Pack all the images into a single msgpack message
     """
@@ -133,8 +141,8 @@ async def test_client(publisher: GISAXSWSResultPublisher, num_frames: int = 10):
     from arroyopy.schemas import DataFrameModel, NumpyArrayModel
 
     from arroyogisaxs.schemas import (
-        GISAXSEvent,
         GISAXSImageInfo,
+        GISAXSRawEvent,
         GISAXSStart,
         GISAXSStop,
     )
@@ -162,7 +170,7 @@ async def test_client(publisher: GISAXSWSResultPublisher, num_frames: int = 10):
             }
 
             # Create GISAXSResult message
-            message = GISAXSEvent(
+            message = GISAXSRawEvent(
                 image_info=GISAXSImageInfo(**image_info),
                 image=NumpyArrayModel(array=image),
                 one_d_reduction=DataFrameModel(df=one_d_reduction),
