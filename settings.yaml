@@ -1,7 +1,7 @@
 ---
 logging_level: INFO
-redis_host: redis
-resis_port: 6379
+
+
 models:
   models_root_dir: /data/models
   torch_models:
@@ -15,3 +15,15 @@ models:
 
     # - name: UMAP
     #   directory: /dim_reduction/umap
+
+tiled_poller:
+  publish_address: 0.0.0.0  #only safe in containers
+  publish_port: 5000
+
+viz_operator:
+  listen_port: 5000
+  listen_address: 0.0.0.0  #only safe in containers
+  redis_host: redis
+  redis_port: 6379
+  websocket_publish_host: 0.0.0.0
+  websocket_publish_port: 8021

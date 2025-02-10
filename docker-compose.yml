@@ -1,23 +1,24 @@
 services:
   #### Commented out for the time being...will be active soon!!!
-  # tiled:
-  #   # see the file ./tiled/deploy/config.yml for detailed configuration of tiled
-  #   image: ghcr.io/bluesky/tiled:0.1.0-b17
-  #   ports:
-  #     - "8000:8000"
-  #   environment:
-  #     - TILED_SINGLE_USER_API_KEY=${TILED_SINGLE_USER_API_KEY}
-  #   volumes:
-  #     - ./conf/tiled/deploy:/deploy:Z
-  #     - ./data:/data:Z
-  #   restart: unless-stopped
-  #   healthcheck:
-  #     test: ["CMD", "curl", "-f", "http://tiled:8000/healthz"]
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 3
-  #   networks:
-  #     gisax_net:
+  tiled:
+    # see the file ./tiled/deploy/config.yml for detailed configuration of tiled
+    image: ghcr.io/bluesky/tiled:0.1.0-b17
+    ports:
+      - "8000:8000"
+    environment:
+      - TILED_SINGLE_USER_API_KEY=${TILED_SINGLE_USER_API_KEY}
+    volumes:
+      - ./conf/tiled/deploy:/deploy:Z
+      - ./data:/data:Z
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://tiled:8000/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    hostname: tiled
+    networks:
+      gisax_net1:
 
   # processor:
   #   command: python -m tr_ap_xps.apps.processor_cli
@@ -55,21 +56,24 @@ services:
     volumes:
       - .:/app:Z
       - ./settings_container.yaml:/app/settings.yaml:Z
+      - ./data:/data:Z
     ports:
       - "5678:5678"
+    hostname: tiled_poller
     networks:
-      gisax_net:
+      gisax_net1:
 
-  # kvrocks:
-  #   image: kvrocks/kvrocks:latest
-  #   ports:
-  #     - "6666:6666"
-  #   volumes:
-  #     - ./conf/kvrocks/kvrocks.conf:/etc/kvrocks/kvrocks.conf
-  #     - ./persist/kvrocks/data:/data
-  #   networks:
-  #     gisax_net:
+
+  kvrocks:
+    image: docker.io/apache/kvrocks:latest
+    ports:
+      - "6666:6666"
+    volumes:
+      - ./conf/kvrocks/kvrocks.conf:/etc/kvrocks/kvrocks.conf
+      - ./persist/kvrocks/data:/data
+    networks:
+      gisax_net1:
 
 networks:
-  gisax_net:
+  gisax_net1:
     driver: bridge

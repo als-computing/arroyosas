@@ -8,7 +8,7 @@ import pytest
 from arroyopy.operator import Operator
 from arroyopy.schemas import NumpyArrayModel
 
-from arroyogisaxs.schemas import GISAXSRawEvent, GISAXSStart, GISAXSStop
+from arroyogisaxs.schemas import GISAXSRawEvent, GISAXSRawStart, GISAXSRawStop
 from arroyogisaxs.tiled import TiledPollingFrameListener, unsent_frame_numbers
 
 
@@ -27,22 +27,22 @@ def events():
 
 
 @pytest.mark.asyncio
-async def test_operator_process_called_with_foobar(events):
+async def test_operator_process_called_with_foobar(events, client):
     operator_mock = AsyncMock(spec=Operator)
 
     # Define message sequence
     messages = [
-        GISAXSStart(width=5, height=6, data_type=numpy.uint),  # First message
+        GISAXSRawStart(width=5, height=6, data_type=numpy.uint),  # First message
         events[0],
         events[1],  # 2 RawEvent messages
-        GISAXSStop(num_frames=2),  # Last message
+        GISAXSRawStop(num_frames=2),  # Last message
     ]
 
     # Mock operator.process() to return these messages in order
     operator_mock.process.side_effect = messages
 
     listener = TiledPollingFrameListener(
-        operator_mock, url="http://example.com", poll_paust_sec=0.1
+        operator_mock, client=client, poll_paust_sec=0.1
     )
 
     received_messages = []
@@ -66,9 +66,9 @@ async def test_operator_process_called_with_foobar(events):
     await task  # Ensure the task completes
 
     # Assertions on message sequence
-    assert isinstance(received_messages[0], GISAXSStart)
+    assert isinstance(received_messages[0], GISAXSRawStart)
     assert all(isinstance(msg, GISAXSRawEvent) for msg in received_messages[1:6])
-    assert isinstance(received_messages[6], GISAXSStop)
+    assert isinstance(received_messages[6], GISAXSRawStop)
     assert len(received_messages) == 7  # Ensure exactly 7 messages received
 
 

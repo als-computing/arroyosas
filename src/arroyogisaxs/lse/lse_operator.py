@@ -12,7 +12,7 @@ import torch
 from arroyopy.operator import Operator
 
 from ..config import settings
-from ..schemas import GISAXSMessage, GISAXSRawEvent, GISAXSStart, GISAXSStop
+from ..schemas import GISAXSMessage, GISAXSRawEvent, GISAXSRawStart, GISAXSRawStop
 
 # from tiled.client import from_uri
 # from tiled_utils import write_results
@@ -78,12 +78,12 @@ class LatentSpaceOperator(Operator):
         # return operator
 
     async def process(self, message: GISAXSMessage) -> None:
-        if isinstance(message, GISAXSStart):
+        if isinstance(message, GISAXSRawStart):
             await self.publish(message)
         elif isinstance(message, GISAXSRawEvent):
             await asyncio.to_thread(self.extract_ls, message)
             await self.publish(message)
-        elif isinstance(message, GISAXSStop):
+        elif isinstance(message, GISAXSRawStop):
             await self.publish(message)
         else:
             logger.warning(f"Unknown message type: {type(message)}")

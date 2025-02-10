@@ -8,7 +8,7 @@ import numpy as np
 import websockets
 from arroyopy.publisher import Publisher
 
-from .schemas import GISAXSRawEvent, GISAXSStart, GISAXSStop
+from .schemas import GISAXSRawEvent, GISAXSRawStart, GISAXSRawStop
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ class GISAXSWS1DPublisher(Publisher):
     pass
 
 
-class GISAXSWSResultPublisher(Publisher):
+class OneDWSResultPublisher(Publisher):
     """
     A publisher class for sending XPSResult messages over a web sockets.
 
@@ -58,14 +58,14 @@ class GISAXSWSResultPublisher(Publisher):
         self,
         #  client: websockets.client.ClientConnection,
         client,
-        message: Union[GISAXSRawEvent | GISAXSStart | GISAXSStop],
+        message: Union[GISAXSRawEvent | GISAXSRawStart | GISAXSRawStop],
     ) -> None:
-        if isinstance(message, GISAXSStop):
+        if isinstance(message, GISAXSRawStop):
             self.current_start_message = None
             await client.send(json.dumps(message.model_dump()))
             return
 
-        if isinstance(message, GISAXSStart):
+        if isinstance(message, GISAXSRawStart):
             self.current_start_message = message
             await client.send(json.dumps(message.model_dump()))
             return
@@ -134,7 +134,7 @@ def pack_images(message: GISAXSRawEvent) -> bytes:
         raise e
 
 
-async def test_client(publisher: GISAXSWSResultPublisher, num_frames: int = 10):
+async def test_client(publisher: OneDWSResultPublisher, num_frames: int = 10):
     import time
 
     import pandas as pd
@@ -180,11 +180,11 @@ async def test_client(publisher: GISAXSWSResultPublisher, num_frames: int = 10):
         await publisher.publish(GISAXSStop(num_frames=num_frames))
 
 
-async def main(publisher: GISAXSWSResultPublisher):
+async def main(publisher: OneDWSResultPublisher):
     await asyncio.gather(publisher.start(), test_client(publisher))
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    publisher = GISAXSWSResultPublisher(host="localhost", port=8001)
+    publisher = OneDWSResultPublisher(host="localhost", port=8001)
     asyncio.run(main(publisher))
