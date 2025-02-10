@@ -13,9 +13,15 @@ export const processJSONPlot = (rawJSONData, frameNumber='N/A') => {
     //"1D": message.one_d_reduction.df.to_json(),
     //one_d_reduction=DataFrameModel(df=one_d_reduction),
     const parsedData = JSON.parse(rawJSONData);
+    //console.log({parsedData})
     //we receive an array of 'q' and an array of 'qy'
-    const xValues = Object.values(parsedData.q).map(Number);
-    const yValues = Object.values(parsedData.qy).map(Number);
+
+    var xValues = [];
+    var yValues = [];
+    for (var key in parsedData) {
+        xValues.push(key);
+        yValues.push(parsedData[key]['0'])
+    }
     const newPlot = [
         {
             x: xValues,
@@ -98,7 +104,7 @@ export const updateCumulativePlot = (recentPlots=[], cb=()=>{}) => {
    })
  };
 
-export const processAndDownsampleArrayData = (data = [], width, height, scaleFactor = 1, cb) => {
+export const processAndDownsampleArrayData = (data = [], width, height, scaleFactor = 1) => {
     if (scaleFactor < 1) throw new Error("Scale factor must be 1 or greater.");
 
     const downsampledHeight = Math.floor(height / scaleFactor);
@@ -129,5 +135,6 @@ export const processAndDownsampleArrayData = (data = [], width, height, scaleFac
         }
         newData.push(newRow);
     }
-    cb(newData);
+    //cb(newData);
+    return newData;
 };

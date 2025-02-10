@@ -33,7 +33,8 @@ export default function App() {
     closeWebSocket,
     heatmapSettings,
     handleHeatmapSettingChange,
-    warningMessage
+    warningMessage,
+    metadata,
   } = useGISAXS({});
 
   function generateEggData(size) {
@@ -91,7 +92,7 @@ export default function App() {
               </Settings>
             </SidebarItem>
             <SidebarItem title='Scan Metadata' icon={phosphorIcons.fileMd}>
-        
+              <pre className="text-sm font-mono text-gray-700 whitespace-pre-wrap break-words pl-4">{JSON.stringify(metadata, null, 2)}</pre>
             </SidebarItem>
           </Sidebar>
 

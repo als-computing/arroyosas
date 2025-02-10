@@ -31,6 +31,7 @@ export const useGISAXS = ({}) => {
     const [ frameNumber, setFrameNumber ] = useState();
     const [ warningMessage, setWarningMessage ] = useState('');
     const [ heatmapSettings, setHeatmapSettings ] = useState(defaultHeatmapSettings);
+    const [ metadata, setMetadata ] = useState('');
 
     const ws = useRef(null);
     const isUserClosed = useRef(false);
@@ -56,7 +57,7 @@ export const useGISAXS = ({}) => {
                 // Convert Blob to ArrayBuffer for binary processing
                 const arrayBuffer = await event.data.arrayBuffer();
                 newMessage = msgpack.decode(new Uint8Array(arrayBuffer));
-                //console.log({newMessage})
+                console.log({newMessage})
 
             } else if (event.data instanceof ArrayBuffer) {
                 // Process ArrayBuffer directly
@@ -79,21 +80,20 @@ export const useGISAXS = ({}) => {
             }
 
             //handle fitted data parameters for line plots
-            if ('1D' in newMessage) {
-                const newPlot = processJSONPlot(newMessage['1D'], newMessage?.frame_number);
+            if ('curve' in newMessage) {
+                const newPlot = processJSONPlot(newMessage['curve'], newMessage?.frame_number);
                 setCurrentScatterPlot(newPlot);
                 updateCumulativePlot(newPlot, setCumulativeScatterPlots);
             }
 
             //handle heatmap data
-            if ('image' in newMessage) {
-                var width;
-                if ('with' in newMessage) {
-                    width = newMessage.with;
-                } else if ('width' in newMessage) {
-                    width = newMessage.width;
-                }
-                processAndDownsampleArrayData(newMessage.image,  width, newMessage.height, 1, setCurrentArayData);
+            if ('raw_frame' in newMessage) {
+                let newPlot = processAndDownsampleArrayData(newMessage.raw_frame,  newMessage.width, newMessage.height, 1);
+                setCurrentArayData(newPlot);
+            }
+
+            if ('msg_type' in newMessage) {
+                setMetadata(newMessage);
             }
         } catch (error) {
             console.error('Error processing WebSocket message:', error);
@@ -190,6 +190,7 @@ export const useGISAXS = ({}) => {
         closeWebSocket,
         heatmapSettings,
         handleHeatmapSettingChange,
-        warningMessage
+        warningMessage,
+        metadata,
     }
 }
