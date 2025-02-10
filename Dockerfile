@@ -5,7 +5,8 @@ WORKDIR /app
 COPY . /app
 
 RUN pip install --upgrade pip && \
-    pip install -e .[all]
+    pip install .
+    pip install .[all]
 
 RUN pip install debugpy
 

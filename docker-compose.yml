@@ -1,5 +1,7 @@
 services:
   #### Commented out for the time being...will be active soon!!!
+
+
   tiled:
     # see the file ./tiled/deploy/config.yml for detailed configuration of tiled
     image: ghcr.io/bluesky/tiled:0.1.0-b17
@@ -17,6 +19,15 @@ services:
       timeout: 5s
       retries: 3
     hostname: tiled
+    networks:
+      gisax_net1:
+  beamline_sim:
+    command: python -m arroyogisaxs.app.tiled_poller_sim_cli
+    image: ghcr.io/als-computing/arroyogisaxs:main
+    restart: unless-stopped
+    volumes:
+      - .:/app:Z
+      - ./settings.yaml:/app/settings.yaml:Z
     networks:
       gisax_net1:
 
