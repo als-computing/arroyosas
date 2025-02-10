@@ -1,4 +1,4 @@
-# Streaing GISAXS Analysis
+# Streaming GISAXS Analysis
 
 
 ## podman tips on ubunut
