@@ -95,7 +95,7 @@ class GISAXSResultStop(Stop, GISAXSMessage):
     function_timings: DataFrameModel
 
 
-class GISAXS1DReduction(GISAXSMessage):
+class GISAXS1DReduction(Event, GISAXSMessage):
     curve: DataFrameModel
     curve_tiled_url: str
     raw_frame: SerializableNumpyArrayModel

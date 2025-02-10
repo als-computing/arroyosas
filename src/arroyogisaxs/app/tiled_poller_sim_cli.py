@@ -39,9 +39,9 @@ async def process_images(
             data_type=DATA_TYPE,
             tiled_url="tbd://run_url",
         )
-
+        print("start")
         await socket.send(msgpack.packb(start.model_dump()))
-        await asyncio.sleep(pause)
+
         for frame_num in range(frames):
             # Create a test pattern image that changes slightly each time
             frame_number = int(time.time()) % 100  # Change pattern every second
@@ -53,10 +53,12 @@ async def process_images(
                 frame_number=frame_num,
                 tiled_url="tb://frame_url",
             )
-
+            print("event")
             await socket.send(msgpack.packb(event.model_dump()))
         stop = GISAXSRawStop(num_frames=frames)
+        print("stop")
         await socket.send(msgpack.packb(stop.model_dump()))
+        await asyncio.sleep(pause)
         print(f"Cycle {cycle_num} complete sent {frames} frames")
 
     print("All cycles complete")
@@ -64,7 +66,7 @@ async def process_images(
 
 
 @app.command()
-def main(cycles: int = 10000, frames: int = 100, pause: float = 5):
+def main(cycles: int = 10000, frames: int = 5, pause: float = 5):
     async def run():
         context = zmq.asyncio.Context()
         socket = context.socket(zmq.PUB)

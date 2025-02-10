@@ -20,22 +20,19 @@ services:
     networks:
       gisax_net1:
 
-  # processor:
-  #   command: python -m tr_ap_xps.apps.processor_cli
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile_processor
-  #   restart: unless-stopped
-  #   ports:
-  #     - "8001:8001"
-  #   volumes:
-  #     - .:/app:Z
-  #     - ./settings_container.yaml:/app/settings.yaml:Z
-  #   networks:
-  #     gisax_net:
-  #   depends_on:
-  #     tiled:
-  #       condition: service_healthy
+  viz_operator:
+    command: python -m arroyogisaxs.app.viz_operator_cli
+    build:
+      context: .
+    restart: unless-stopped
+    ports:
+      - "8021:8021"
+    volumes:
+      - .:/app:Z
+      - ./settings.yaml:/app/settings.yaml:Z
+    networks:
+      gisax_net1:
+
   # frontend:
   #   build:
   #     context: .

@@ -34,6 +34,7 @@ class ZMQListener(Listener):
                 message = msgpack.unpackb(raw_msg, raw=False)
                 message_type = message.get("msg_type")
                 if message_type == "start":
+                    logger.info(f"Received Start {message}")
                     message = GISAXSRawStart(**message)
                 elif message_type == "event":
                     image = SerializableNumpyArrayModel.deserialize_array(
@@ -42,6 +43,7 @@ class ZMQListener(Listener):
                     message["image"] = image
                     message = GISAXSRawEvent(**message)
                 elif message_type == "stop":
+                    logger.info(f"Received Stop {message}")
                     message = GISAXSRawStop(**message)
                 else:
                     logger.error(f"Unknown message type {message_type}")
