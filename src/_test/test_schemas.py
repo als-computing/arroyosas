@@ -11,6 +11,6 @@ def test_serializable_np():
         "array": {"data": arr.tobytes(), "dtype": "float32", "shape": (10, 10)}
     }
     test_arr = SerializableNumpyArrayModel.deserialize_array(
-        arr.tobytes(), dtype=arr.dtype.name, shape=arr.shape
+        {"data": arr.tobytes(), "dtype": arr.dtype.name, "shape": arr.shape}
     )
     assert numpy.array_equal(test_arr, serializable.array)
