@@ -33,17 +33,17 @@ services:
     networks:
       gisax_net1:
 
-  # frontend:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile_frontend
-  #   ports:
-  #     - "8080:80"
-  #   restart: unless-stopped
-  #   volumes:
-  #     - .:/app:Z
-  #   networks:
-  #     gisax_net:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile_frontend
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    volumes:
+      - .:/app:Z
+    networks:
+      gisax_net1:
 
   tiled_poller:
     command: python -m debugpy --listen 0.0.0.0:5678 --wait-for-client -m arroyogisaxs.app.tiled_poller_cli
