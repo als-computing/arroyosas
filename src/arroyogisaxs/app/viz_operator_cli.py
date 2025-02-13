@@ -3,6 +3,7 @@ import logging
 
 import typer
 import zmq
+import zmq.asyncio
 
 from arroyogisaxs.zmq import ZMQListener
 
@@ -22,14 +23,14 @@ async def start():
     logger.info("Starting Tiled Poller")
     logger.info("Getting settings")
     logger.info(f"{settings.viz_operator}")
+    logger.info(f"Listening to ZMQ on: {app_settings.viz_operator.zmq_listen_address}")
+    logger.inro(f"HWM: {app_settings.viz_operator.zmq_hwm}")
 
-    zmq_connect = f"tcp://{app_settings.listen_address}:{app_settings.listen_port}"
-    logger.info(zmq_connect)
     ctx = zmq.asyncio.Context()
     listen_zmq_socket = ctx.socket(zmq.SUB)
-    listen_zmq_socket.setsockopt(zmq.RCVHWM, 100000)
+    listen_zmq_socket.setsockopt(zmq.RCVHWM, app_settings.viz_operator.zmq_hwm)
     listen_zmq_socket.setsockopt(zmq.SUBSCRIBE, b"")
-    listen_zmq_socket.connect(zmq_connect)
+    listen_zmq_socket.connect(app_settings.viz_operator.zmq_listen_address)
 
     operator = OneDReductionOperator()
     ws_publisher = OneDWSResultPublisher(

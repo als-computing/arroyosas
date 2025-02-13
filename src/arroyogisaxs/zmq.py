@@ -1,10 +1,11 @@
 import logging
 
 import msgpack
+import zmq
 from arroyopy.listener import Listener
 from arroyopy.operator import Operator
 from arroyopy.publisher import Publisher
-from zmq.asyncio import Socket
+from zmq.asyncio import Context, Socket
 
 from .schemas import (
     GISAXSMessage,
@@ -17,7 +18,7 @@ from .schemas import (
 logger = logging.getLogger(__name__)
 
 
-class ZMQListener(Listener):
+class ZMQPubSubListener(Listener):
     """
     Takes messages from ZQM and deserializes them into GISAXSMessage objects
     """
@@ -57,8 +58,59 @@ class ZMQListener(Listener):
 
 
 class ZMQFramePublisher(Publisher):
-    async def start(self):
-        pass
+    async def start(self, zmq_socket: Socket):
+        self.zmq_socket = zmq_socket
 
     async def publish(self, message: GISAXSMessage) -> None:
-        pass
+        if isinstance(message, GISAXSRawStart) or isinstance(message, GISAXSRawStop):
+            message = msgpack.packb(message, use_bin_type=True)
+            await self.zmq_socket.send(message)
+        if isinstance(message, GISAXSRawEvent):
+            message = message.dict()
+            message["image"] = SerializableNumpyArrayModel.serialize_array(
+                message["image"]
+            )
+            message = msgpack.packb(message, use_bin_type=True)
+            await self.zmq_socket.send(message)
+        else:
+            logger.warning(f"Unknown message type: {type(message)}")
+
+    @classmethod
+    def from_settings(cls, settings) -> "ZMQFramePublisher":
+        context = Context()
+        zmq_socket = context.socket(zmq.PUB)
+        zmq_socket.connect(settings.zmq_publish_address)
+        return cls(zmq_socket)
+
+
+class ZMQBroker:
+    """
+    Creates the Dealer in REP-REQ pattern.
+    The router listens for requests on the router socket and forwards them to the dealer,
+    handling a round robin distribution of requests to workders who subscribe to the dealer.
+
+    """
+
+    def __init__(self, router_socket: Socket, dealer_socket: Socket, settings: dict):
+        self.router_socket = router_socket
+        self.dealer_socket = dealer_socket
+        self.settings = settings
+
+    def start(self):
+        logger.info("Starting ZMQ Dealer and router")
+        logger.info(f"Dealer address: {self.settings.zmq_dealer_address}")
+        logger.info(f"Router address: {self.settings.zmq_router_address}")
+        self.dealer_socket.bind(
+            self.settings.zmq_dealer_address
+        )  # Accept request from clients
+        self.router_socket.bind(
+            self.settings.zmq_router_address
+        )  # Distribute requests to workers
+        zmq.proxy(self.dealer_socket, self.router_socket)
+
+    @classmethod
+    def from_settings(cls, settings) -> "ZMQBroker":
+        context = Context()
+        frontend_router = context.socket(zmq.ROUTER)
+        backend_dealer = context.socket(zmq.DEALER)
+        return cls(frontend_router, backend_dealer)

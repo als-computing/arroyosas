@@ -2,54 +2,52 @@ import asyncio
 import logging
 
 import typer
+import zmq
 
+from ..config import settings
 from ..log_utils import setup_logger
-
-# import signal
-
+from ..lse.lse_operator import LatentSpaceOperator
+from ..websockets import OneDWSResultPublisher
+from ..zmq import ZMQBroker, ZMQFramePublisher, ZMQPubSubListener
 
 app = typer.Typer()
-logger = logging.getLogger("tr_ap_xps")
+logger = logging.getLogger("arroyogisaxs")
 setup_logger(logger)
 
 
 @app.command()
 async def start() -> None:
-    pass
-    # try:
-    #     logger.setLevel(app_settings.log_level.upper())
-    #     logger.debug("DEBUG LOGGING SET")
+    app_settings = settings.lse
+    logger.info("Getting settings")
+    logger.info(f"{settings.lse}")
 
-    #     received_sigterm = {"received": False}  # Define the variable received_sigterm
+    # start the ZMQBroker
+    # we may consider starting this in its own process
+    broker = ZMQBroker().from_settings(app_settings)
+    broker.start()
+    logger.info("Broker started")
 
-    #     # setup websocket server
-    #     operator = XPSOperator()
-    #     ws_publisher = XPSWSResultPublisher(
-    #         host=app_settings.websockets_publisher.host,
-    #         port=app_settings.websockets_publisher.port,
-    #     )
+    logger.info("Starting ZMQ PubSub Listener")
+    logger.info(f"ZMQPubSubListener settings: {app_settings}")
+    logger.info(f"Starting frame lister on {app_settings.zmq_listen_address}")
 
-    #     operator.add_publisher(ws_publisher)
-    #     operator.add_publisher(tiled_pub)
-    #     # connect to labview zmq
+    ctx = zmq.asyncio.Context()
+    listen_zmq_socket = ctx.socket(zmq.REQ)  # client to the broker
+    listen_zmq_socket.setsockopt(zmq.RCVHWM, app_settings.zma_router_hwm)
+    listen_zmq_socket.setsockopt(zmq.SUBSCRIBE, b"")
+    listen_zmq_socket.connect(app_settings.zmq_listen_address)
 
-    #     lv_zmq_socket = setup_zmq()
-    #     listener = XPSLabviewZMQListener(operator=operator, zmq_socket=lv_zmq_socket)
+    operator = LatentSpaceOperator()
+    ws_publisher = OneDWSResultPublisher(
+        host=app_settings.websocket_publish_host,
+        port=app_settings.websocket_publish_port,
+    )
+    zmq_publisher = ZMQFramePublisher().from_settings(app_settings)
+    operator.add_publisher(ws_publisher)
+    operator.add_publisher(zmq_publisher)
 
-    #     # Wait for both tasks to complete
-    #     await asyncio.gather(listener.start(), ws_publisher.start())
-
-    #     def handle_sigterm(signum, frame):
-    #         logger.info("SIGTERM received, stopping...")
-    #         received_sigterm["received"] = True
-    #         asyncio.create_task(listener.stop())
-    #         asyncio.create_task(ws_publisher.stop())
-
-    #     # Register the handler for SIGTERM
-    #     signal.signal(signal.SIGTERM, handle_sigterm)
-    # except Exception as e:
-    #     logger.error(f"Error setting up XPS processor {e}")
-    #     raise e
+    listener = ZMQPubSubListener(operator, listen_zmq_socket)
+    await asyncio.gather(listener.start(), ws_publisher.start())
 
 
 if __name__ == "__main__":
