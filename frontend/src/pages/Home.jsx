@@ -115,6 +115,9 @@ export default function Home() {
                 <TimelineHeatmapScatter arrayData={cumulativeArrayData} scatterData={cumulativeScatterPlots}/>
               </Widget>
 
+
+
+{/* 
               <Widget title='Timeline' width='w-full' defaultHeight='h-1/2'>
                 <TimelineHeatmapScatter demo={true}/>
               </Widget>
@@ -135,7 +138,7 @@ export default function Home() {
               </Widget>
               <Widget title={`Scan Timeline Demo`} width='w-1/2' minWidth="min-w-96" maxWidth='max-w-[1000px]' defaultHeight='h-1/2' maxHeight='max-h-[80%]' expandedWidth='w-full'>
                 <TimelineHeatmap demo={true}/>
-              </Widget>
+              </Widget> */}
             </div>
           </Main>
         </div>

@@ -178,5 +178,5 @@ async def main(publisher: GISAXSWSResultPublisher):
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    publisher = GISAXSWSResultPublisher(host="localhost", port=8001)
+    publisher = GISAXSWSResultPublisher(host="0.0.0.0", port=8001)
     asyncio.run(main(publisher))
