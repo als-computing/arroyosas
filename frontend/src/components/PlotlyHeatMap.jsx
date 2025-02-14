@@ -61,7 +61,7 @@ export default function PlotlyHeatMap({
                     },
                     yaxis: {
                         title: yAxisTitle,
-                        range: [0, array.length], // Dynamically adjust y-axis range
+                        range: [-0.5, array.length-0.5], // Dynamically adjust y-axis range
                         autorange: false,
                         tickmode: showTicks ? 'linear' : '', // tick marks should only appear when
                         tick0: 0, // Starting tick

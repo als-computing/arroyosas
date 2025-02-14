@@ -2,6 +2,54 @@ import { useEffect, useState } from "react";
 import Button from "../component_library/Button";
 export default function Mermaid() {
     const [ sampleText, setSampleText ] = useState('');
+    const chartItem = {
+        name: 'viz_op',
+
+    };
+
+    //the service item can also start recording plots
+    //how do we want to store plot data for each serviceItem?
+    const serviceItem = {
+        id: 'viz_op',
+        nickname: 'Viz Operator',
+        description: 'A visual operator that does something',
+        runStatus: false, //used to change color of item in mermaid
+        plotData: null, //displays a plot
+        isClickable: true, //boolean for allowing cursor hover effects
+    };
+
+    //after the mermaid plot is created, create react state for each item?
+
+
+
+    const graph = `
+        flowchart LR
+            style Mars1Group stroke:#bbb,stroke-width:4px,stroke-dasharray: 5,5,fill:none;
+            
+            btiled(Beamline Tiled) <--http--> framelisten(Frame Listener);
+            
+            subgraph Mars1Group["mars1.nsls2.bnl.gov"];
+                framelisten --zmq frame--> viz_op(Viz Operator);
+                framelisten --zmq frame + tiledurl--> lse_op(LSE Operator);
+                lse_op --websocket--> lse(Latent Space Explorer dash);
+        
+                lse <--http--> browser(Browser);
+                viz_op --http 1D reductions--> tiled(Tiled);
+                viz_op --websocket 2 tiled urls + data--> browser;
+                lse_op <--zmq raw frame--> lse_worker1(LSE Worker 1);
+                lse_op <--zmq raw frame--> lse_worker2(LSE Worker 2);
+                lse_op <--zmq raw frame--> lse_worker3(LSE Worker N);
+                lse_op --http feature vec and url--> tiled;
+        
+                browser <--http get data--> tiled;
+                tiled <----> postgres;
+                wf_viz(Workflow Viz) <--http--> browser;
+                wf_viz --> redis(Redis);
+                redis --> viz_op;
+        
+        
+            end;
+    `
 
 
     const attachEventHandler = () => {
@@ -116,34 +164,7 @@ export default function Mermaid() {
     }, []);
 
 
-    const graph = `
-flowchart LR
-    style Mars1Group stroke:#bbb,stroke-width:4px,stroke-dasharray: 5,5,fill:none;
-    
-    btiled(Beamline Tiled) <--http--> framelisten(Frame Listener);
-    
-    subgraph Mars1Group["mars1.nsls2.bnl.gov"];
-        framelisten --zmq frame--> viz_op(Viz Operator);
-        framelisten --zmq frame + tiledurl--> lse_op(LSE Operator);
-        lse_op --websocket--> lse(Latent Space Explorer dash);
 
-        lse <--http--> browser(Browser);
-        viz_op --http 1D reductions--> tiled(Tiled);
-        viz_op --websocket 2 tiled urls + data--> browser;
-        lse_op <--zmq raw frame--> lse_worker1(LSE Worker 1);
-        lse_op <--zmq raw frame--> lse_worker2(LSE Worker 2);
-        lse_op <--zmq raw frame--> lse_worker3(LSE Worker N);
-        lse_op --http feature vec and url--> tiled;
-
-        browser <--http get data--> tiled;
-        tiled <----> postgres;
-        wf_viz(Workflow Viz) <--http--> browser;
-        wf_viz --> redis(Redis);
-        redis --> viz_op;
-
-
-    end;
-    `
     return (
         <>
         <div className="mermaid">

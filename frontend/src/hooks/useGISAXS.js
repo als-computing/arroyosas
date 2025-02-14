@@ -23,8 +23,10 @@ const defaultHeatmapSettings = {
 export const useGISAXS = ({}) => {
     const [ messages, setMessages ] = useState([]);
     const [ currentArrayData, setCurrentArayData ] = useState([]);
+    const [ cumulativeArrayData, setCumulativeArrayData ] = useState([]);
     const [ currentScatterPlot, setCurrentScatterPlot ] = useState([]);
     const [ cumulativeScatterPlots, setCumulativeScatterPlots ] = useState([]);
+    const [ isExperimentRunning, setIsExperimentRunning ] = useState(false);
 
     const [ wsUrl, setWsUrl ] = useState(defaultWsUrl);
     const [ socketStatus, setSocketStatus ] = useState('closed');
@@ -52,6 +54,7 @@ export const useGISAXS = ({}) => {
         //process with webpack
         try {
             let newMessage;
+            let timestamp = dayjs().format('h:m:s a');
 
             if (event.data instanceof Blob) {
                 // Convert Blob to ArrayBuffer for binary processing
@@ -66,7 +69,7 @@ export const useGISAXS = ({}) => {
             } else {
                 // Assume JSON string for non-binary data
                 newMessage = JSON.parse(event.data);
-
+                console.log(newMessage);
             }
             var keyList = '';
             for (const key in newMessage) {
@@ -79,26 +82,58 @@ export const useGISAXS = ({}) => {
                 setFrameNumber(newMessage.frame_number);
             }
 
-            //handle fitted data parameters for line plots
             if ('curve' in newMessage) {
                 const newPlot = processJSONPlot(newMessage['curve'], newMessage?.frame_number);
                 setCurrentScatterPlot(newPlot);
                 updateCumulativePlot(newPlot, setCumulativeScatterPlots);
             }
 
-            //handle heatmap data
             if ('raw_frame' in newMessage) {
                 let newPlot = processAndDownsampleArrayData(newMessage.raw_frame,  newMessage.width, newMessage.height, 1);
                 setCurrentArayData(newPlot);
+                setCumulativeArrayData((prevState) => {
+                    var newState = [...prevState];
+                    var newPlotObject = {
+                        data: newPlot,
+                    };
+                    try {
+                        newPlotObject.metadata= {
+                            timestamp: timestamp,
+                            height: newMessage.height,
+                            width: newMessage.width,
+                            tiledUrl: newMessage.tiled_url,
+                            dataType: newMessage.data_type,
+                        }
+                    } catch (e) {
+                        console.error('Check keys in raw frame message: ', e);
+                    }
+                    newState.push(newPlotObject);
+                    return newState;
+                });
             }
 
             if ('msg_type' in newMessage) {
+                if (newMessage.msg_type === 'start') {
+                    resetAllData();
+                    setIsExperimentRunning(true);
+                    
+                }
+                if (newMessage.msg_type === 'stop') {
+                    setIsExperimentRunning(false);
+                }
                 setMetadata(newMessage);
             }
         } catch (error) {
             console.error('Error processing WebSocket message:', error);
         }
     };
+
+    const resetAllData = () => {
+        setCumulativeArrayData([]);
+        setCumulativeScatterPlots([]);
+        setCurrentArayData([]);
+        setCurrentScatterPlot([]);
+    }
 
     const handleWebsocketClose = (event) => {
         ws.current = false;
@@ -182,6 +217,8 @@ export const useGISAXS = ({}) => {
         currentArrayData,
         currentScatterPlot,
         cumulativeScatterPlots,
+        cumulativeArrayData,
+        isExperimentRunning,
         wsUrl,
         setWsUrl,
         frameNumber,
