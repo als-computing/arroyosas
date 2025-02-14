@@ -27,6 +27,8 @@ export const useGISAXS = ({}) => {
     const [ currentScatterPlot, setCurrentScatterPlot ] = useState([]);
     const [ cumulativeScatterPlots, setCumulativeScatterPlots ] = useState([]);
     const [ isExperimentRunning, setIsExperimentRunning ] = useState(false);
+    const [ isReductionTest, setIsReductionTest ] = useState(false);
+    const [ linecutYPosition, setLinecutYPosition ] = useState(50); //using 50 as a test, change default later
 
     const [ wsUrl, setWsUrl ] = useState(defaultWsUrl);
     const [ socketStatus, setSocketStatus ] = useState('closed');
@@ -85,7 +87,14 @@ export const useGISAXS = ({}) => {
             if ('curve' in newMessage) {
                 const newPlot = processJSONPlot(newMessage['curve'], newMessage?.frame_number);
                 setCurrentScatterPlot(newPlot);
-                updateCumulativePlot(newPlot, setCumulativeScatterPlots);
+                console.log({newPlot})
+                setCumulativeScatterPlots((prevState) => {
+                    var newState = [...prevState];
+                    newState.push(newPlot[0]);
+                    console.log({newState})
+                    return newState;
+                });
+                //updateCumulativePlot(newPlot, setCumulativeScatterPlots); //for use when showing all scatter plots on a single graph only
             }
 
             if ('raw_frame' in newMessage) {
@@ -120,6 +129,11 @@ export const useGISAXS = ({}) => {
                 }
                 if (newMessage.msg_type === 'stop') {
                     setIsExperimentRunning(false);
+                }
+                if (newMessage.scan_type === 'reduction') {
+                    setIsReductionTest(true);
+                } else {
+                    setIsReductionTest(false);
                 }
                 setMetadata(newMessage);
             }
@@ -219,6 +233,7 @@ export const useGISAXS = ({}) => {
         cumulativeScatterPlots,
         cumulativeArrayData,
         isExperimentRunning,
+        linecutYPosition,
         wsUrl,
         setWsUrl,
         frameNumber,
@@ -228,6 +243,7 @@ export const useGISAXS = ({}) => {
         heatmapSettings,
         handleHeatmapSettingChange,
         warningMessage,
+        isReductionTest,
         metadata,
     }
 }

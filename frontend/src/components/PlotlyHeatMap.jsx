@@ -18,6 +18,7 @@ export default function PlotlyHeatMap({
 }) {
     const plotContainer = useRef(null);
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+ 
 
     // Hook to update dimensions dynamically
     useEffect(() => {
