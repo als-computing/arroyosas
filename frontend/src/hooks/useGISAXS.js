@@ -87,11 +87,9 @@ export const useGISAXS = ({}) => {
             if ('curve' in newMessage) {
                 const newPlot = processJSONPlot(newMessage['curve'], newMessage?.frame_number);
                 setCurrentScatterPlot(newPlot);
-                console.log({newPlot})
                 setCumulativeScatterPlots((prevState) => {
                     var newState = [...prevState];
                     newState.push(newPlot[0]);
-                    console.log({newState})
                     return newState;
                 });
                 //updateCumulativePlot(newPlot, setCumulativeScatterPlots); //for use when showing all scatter plots on a single graph only

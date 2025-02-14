@@ -62,8 +62,8 @@ export default function Home() {
 
   //Automatically start the websocket connection on page load
   useEffect(() => {
-    //startWebSocket();
-    //return closeWebSocket;
+    startWebSocket();
+    return closeWebSocket;
   }, []);
 
     return (
