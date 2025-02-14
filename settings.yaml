@@ -1,0 +1,40 @@
+---
+logging_level: INFO
+
+tiled_poller:
+  publish_address: tcp://0.0.0.0:5000  #only safe in containers
+
+viz_operator:
+  zmq_listen_address: tcp://0.0.0.0:5000  #only safe in containers
+  zmq_hwm: 100000
+  redis_host: redis
+  redis_port: 6379
+
+
+  models:
+    - name: CNNAutoencoder
+      checkpoint_dir: /torch/cnnautoencoder
+      python_class: CNNAutoencoder
+      type: torch
+      proceosors: gpu
+
+    - name: PCA
+      dir: /dim_reduction/pca
+      current: PCA
+      type: joblib
+      processor: cpu
+
+
+  current_latent_space: CNNAutoencoder
+  current_dim_reduction: CNNAutoencoder
+    # - name: UMAP
+    #   directory: /dim_reduction/umap
+  current_reduction: PCA
+
+lse:
+  zmq_router_address: tcp://*:5555
+  zmq_router_hwm: 100000
+  zmq_dealer_address: tcp://*:5556
+  websocket_publish_host: 0.0.0.0
+  websocket_publish_port: 8021
+  zmq_publish_address: tcp://*:5557

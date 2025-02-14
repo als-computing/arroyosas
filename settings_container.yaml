@@ -1,0 +1,17 @@
+---
+logging_level: INFO
+redis_host: redis
+resis_port: 6379
+models:
+  models_root_dir: /data/models
+  torch_models:
+    - name: CNNAutoencoder
+      checkpoint_dir: /torch/cnnautoencoder
+      python_class: CNNAutoencoder
+
+  dim_reduction_models:
+    - name: PCA
+      dir: /dim_reduction/pca
+
+    # - name: UMAP
+    #   directory: /dim_reduction/umap

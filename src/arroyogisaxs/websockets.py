@@ -8,12 +8,20 @@ import numpy as np
 import websockets
 from arroyopy.publisher import Publisher
 
-from .schemas import GISAXSEvent, GISAXSStart, GISAXSStop
+from .schemas import GISAXSRawEvent, GISAXSRawStart, GISAXSRawStop
 
 logger = logging.getLogger(__name__)
 
 
-class GISAXSWSResultPublisher(Publisher):
+class GISAXSWS1DPublisher(Publisher):
+    """
+    A publisher class for sending XPSResult messages over a web sockets.
+    """
+
+    pass
+
+
+class OneDWSResultPublisher(Publisher):
     """
     A publisher class for sending XPSResult messages over a web sockets.
 
@@ -40,7 +48,7 @@ class GISAXSWSResultPublisher(Publisher):
         logger.info(f"Websocket server started at ws://{self.host}:{self.port}")
         await server.wait_closed()
 
-    async def publish(self, message: GISAXSEvent) -> None:
+    async def publish(self, message: GISAXSRawEvent) -> None:
         if self.connected_clients:  # Only send if there are clients connected
             asyncio.gather(
                 *(self.publish_ws(client, message) for client in self.connected_clients)
@@ -50,15 +58,17 @@ class GISAXSWSResultPublisher(Publisher):
         self,
         #  client: websockets.client.ClientConnection,
         client,
-        message: Union[GISAXSEvent | GISAXSStart | GISAXSStop],
+        message: Union[GISAXSRawEvent | GISAXSRawStart | GISAXSRawStop],
     ) -> None:
-        if isinstance(message, GISAXSStop):
+        if isinstance(message, GISAXSRawStop):
+            logger.info(f"WS Sending Stop {message}")
             self.current_start_message = None
             await client.send(json.dumps(message.model_dump()))
             return
 
-        if isinstance(message, GISAXSStart):
+        if isinstance(message, GISAXSRawStart):
             self.current_start_message = message
+            logger.info(f"WS Sending Start {message}")
             await client.send(json.dumps(message.model_dump()))
             return
 
@@ -69,10 +79,8 @@ class GISAXSWSResultPublisher(Publisher):
 
     async def websocket_handler(self, websocket):
         logger.info(f"New connection from {websocket.remote_address}")
-        if websocket.request.path != "/simImages":
-            logger.info(
-                f"Invalid path: {websocket.request.path}, we only support /simImages"
-            )
+        if websocket.request.path != "/viz":
+            logger.info(f"Invalid path: {websocket.request.path}, we only support /viz")
             return
         self.connected_clients.add(websocket)
         try:
@@ -82,6 +90,10 @@ class GISAXSWSResultPublisher(Publisher):
             # Remove the client when it disconnects
             self.connected_clients.remove(websocket)
             logger.info("Client disconnected")
+
+    @classmethod
+    def from_settings(cls, settings: dict) -> "OneDWSResultPublisher":
+        return cls(settings.host, settings.port)
 
 
 def convert_to_uint8(image: np.ndarray) -> bytes:
@@ -106,19 +118,20 @@ def convert_to_uint8(image: np.ndarray) -> bytes:
     return image_uint8.tobytes()
 
 
-def pack_images(message: GISAXSEvent) -> bytes:
+def pack_images(message: GISAXSRawEvent) -> bytes:
     """
     Pack all the images into a single msgpack message
     """
     try:
         return msgpack.packb(
             {
-                "image": convert_to_uint8(message.image.array),
-                "1D": message.one_d_reduction.df.to_json(),
-                "frame_number": message.image_info.frame_number,
-                "with": message.image_info.width,
-                "height": message.image_info.height,
-                "data_type": message.image_info.data_type,
+                "raw_frame": convert_to_uint8(message.raw_frame.array),
+                "curve": message.curve.df.to_json(),
+                "raw_frame_tiled_url": message.raw_frame_tiled_url,
+                "curve_tiled_url": message.curve_tiled_url,
+                "width": message.raw_frame.array.shape[0],
+                "height": message.raw_frame.array.shape[1],
+                "data_type": message.raw_frame.array.dtype.name,
             }
         )
     except Exception as e:
@@ -126,15 +139,15 @@ def pack_images(message: GISAXSEvent) -> bytes:
         raise e
 
 
-async def test_client(publisher: GISAXSWSResultPublisher, num_frames: int = 10):
+async def test_client(publisher: OneDWSResultPublisher, num_frames: int = 10):
     import time
 
     import pandas as pd
     from arroyopy.schemas import DataFrameModel, NumpyArrayModel
 
     from arroyogisaxs.schemas import (
-        GISAXSEvent,
         GISAXSImageInfo,
+        GISAXSRawEvent,
         GISAXSStart,
         GISAXSStop,
     )
@@ -162,7 +175,7 @@ async def test_client(publisher: GISAXSWSResultPublisher, num_frames: int = 10):
             }
 
             # Create GISAXSResult message
-            message = GISAXSEvent(
+            message = GISAXSRawEvent(
                 image_info=GISAXSImageInfo(**image_info),
                 image=NumpyArrayModel(array=image),
                 one_d_reduction=DataFrameModel(df=one_d_reduction),
@@ -172,7 +185,7 @@ async def test_client(publisher: GISAXSWSResultPublisher, num_frames: int = 10):
         await publisher.publish(GISAXSStop(num_frames=num_frames))
 
 
-async def main(publisher: GISAXSWSResultPublisher):
+async def main(publisher: OneDWSResultPublisher):
     await asyncio.gather(publisher.start(), test_client(publisher))
 
 
