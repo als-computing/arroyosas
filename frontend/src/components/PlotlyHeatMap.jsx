@@ -5,20 +5,21 @@ const plotlyColorScales = ['Viridis', 'Plasma', 'Inferno', 'Magma', 'Cividis'];
 
 export default function PlotlyHeatMap({
     array = [],
+    linecutYPosition=50,
+    linecutThickness = 2,
     title = '',
     xAxisTitle = '',
     yAxisTitle = '',
     colorScale = 'Viridis',
     verticalScaleFactor = 1, // Scale factor for content growth
     width = 'w-full',
-    height='h-full',
+    height = 'h-full',
     showTicks = false,
     tickStep = 10,
-    fixPlotHeightToParent=false
+    fixPlotHeightToParent = false
 }) {
     const plotContainer = useRef(null);
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
- 
 
     // Hook to update dimensions dynamically
     useEffect(() => {
@@ -34,7 +35,8 @@ export default function PlotlyHeatMap({
         return () => resizeObserver.disconnect();
     }, []);
 
-    const data = [
+    // Create the heatmap data
+    var data = [
         {
             z: array,
             type: 'heatmap',
@@ -45,8 +47,14 @@ export default function PlotlyHeatMap({
         },
     ];
 
-    // Calculate the height based on the number of rows in the array
-    const dynamicHeight = Math.max(array.length * verticalScaleFactor, 0); // Minimum height is 200px
+    // Calculate the y position for the horizontal line
+    let lineY = null;
+    if (linecutYPosition !== undefined && array.length > 0) {
+        lineY = array.length - linecutYPosition; // Convert from bottom index to y-axis coordinate
+    }
+
+    // Calculate the height dynamically based on the number of rows in the array
+    const dynamicHeight = Math.max(array.length * verticalScaleFactor, 200); // Minimum height is 200px
 
     return (
         <div className={`${height} ${width} rounded-b-md pb-6 flex-col content-end relative`} ref={plotContainer}>
@@ -58,15 +66,14 @@ export default function PlotlyHeatMap({
                     },
                     xaxis: {
                         title: xAxisTitle,
-                        //scaleanchor: "y", // Ensure squares remain proportional
                     },
                     yaxis: {
                         title: yAxisTitle,
-                        range: [-0.5, array.length-0.5], // Dynamically adjust y-axis range
+                        range: [-0.5, array.length - 0.5], // Dynamically adjust y-axis range
                         autorange: false,
-                        tickmode: showTicks ? 'linear' : '', // tick marks should only appear when
-                        tick0: 0, // Starting tick
-                        dtick: showTicks ? tickStep : 10000, // Tick step,
+                        tickmode: showTicks ? 'linear' : '', 
+                        tick0: 0, 
+                        dtick: showTicks ? tickStep : 10000, 
                         showticklabels: showTicks
                     },
                     autosize: true,
@@ -78,11 +85,26 @@ export default function PlotlyHeatMap({
                         t: 0,
                         b: 0,
                     },
+                    shapes: lineY !== null
+                        ? [
+                            {
+                                type: 'line',
+                                x0: 0,
+                                x1: array[0]?.length - 1 || 1, // Assuming non-empty array, width of heatmap
+                                y0: lineY,
+                                y1: lineY,
+                                line: {
+                                    color: 'red',
+                                    width: linecutThickness,
+                                },
+                            },
+                        ]
+                        : [],
                 }}
                 config={{ responsive: true }}
                 className="rounded-b-md"
             />
-            <div className="absolute bottom-0 left-0 right-0 text-center  text-md font-semibold">
+            <div className="absolute bottom-0 left-0 right-0 text-center text-md font-semibold">
                 {title}
             </div>
         </div>
