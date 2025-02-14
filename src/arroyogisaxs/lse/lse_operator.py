@@ -21,3 +21,7 @@ class LatentSpaceOperator(Operator):
         else:
             logger.warning(f"Unknown message type: {type(message)}")
         return None
+
+    @classmethod
+    def from_settings(cls, settings):
+        return cls()

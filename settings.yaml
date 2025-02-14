@@ -16,11 +16,13 @@ viz_operator:
       checkpoint_dir: /torch/cnnautoencoder
       python_class: CNNAutoencoder
       type: torch
+      proceosors: gpu
 
     - name: PCA
       dir: /dim_reduction/pca
       current: PCA
       type: joblib
+      processor: cpu
 
 
   current_latent_space: CNNAutoencoder

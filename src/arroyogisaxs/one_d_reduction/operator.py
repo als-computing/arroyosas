@@ -2,6 +2,7 @@ import logging
 
 from arroyopy.operator import Operator
 
+from ..kv_store import KVStore
 from ..schemas import GISAXS1DReduction, GISAXSRawEvent, GISAXSRawStart, GISAXSRawStop
 from .reduce import pixel_roi_horizontal_cut
 
@@ -9,9 +10,9 @@ logger = logging.getLogger(__name__)
 
 
 class OneDReductionOperator(Operator):
-    def __init__(self):
+    def __init__(self, kv_store: KVStore):
         super().__init__()
-        self.current_reduction_settings = None
+        self.kv_store = kv_store
 
     async def process(self, message):
         if isinstance(message, GISAXSRawStart):
@@ -34,6 +35,10 @@ class OneDReductionOperator(Operator):
                 raw_frame_tiled_url=self.current_run_url,
             )
             await self.publish(reduction_msg)
+
+    @classmethod
+    def create(cls, kv_store: KVStore) -> "OneDReductionOperator":
+        return cls(kv_store)
 
 
 def get_reduction_settings() -> dict:

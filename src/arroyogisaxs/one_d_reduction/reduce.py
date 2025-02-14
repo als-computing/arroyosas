@@ -1,13 +1,7 @@
 import numpy as np
 import zmq
 
-from .conversions import (
-    get_azimuthal_integrator,
-    pix_to_alpha_f,
-    pix_to_theta_f,
-    q_parallel,
-    q_z,
-)
+from .conversions import pix_to_alpha_f, pix_to_theta_f, q_parallel, q_z
 
 host = "127.0.0.1"
 port = "5001"
@@ -110,92 +104,6 @@ def pixel_roi_horizontal_cut(
     elif output_unit == "q":
         qp = q_parallel(wavelength, tf, af, incident_angle)
         return (qp, cut_average, errors)
-
-
-def integrate1d_azimuthal(
-    image,
-    mask,
-    beamcenter_x,
-    beamcenter_y,
-    sample_detector_dist,
-    wavelength,
-    pix_size,
-    tilt,
-    rotation,
-    polarization_factor,
-    num_bins,
-    chi_min,
-    chi_max,
-    inner_radius,
-    outer_radius,
-    output_unit,  # Always q for now
-):
-    azimuthal_integrator = get_azimuthal_integrator(
-        beamcenter_x,
-        beamcenter_y,
-        wavelength,
-        sample_detector_dist,
-        tilt,
-        rotation,
-        pix_size,
-    )
-
-    result = azimuthal_integrator.integrate1d(
-        data=np.copy(image),
-        mask=np.copy(mask),
-        npt=num_bins,
-        correctSolidAngle=True,
-        error_model="poisson",
-        # radial_range=(inner_radius, outer_radius),
-        azimuth_range=(chi_min, chi_max),
-        polarization_factor=polarization_factor,
-    )
-
-    return result
-
-
-def integrate1d_radial(
-    image,
-    mask,
-    beamcenter_x,
-    beamcenter_y,
-    sample_detector_dist,
-    wavelength,
-    pix_size,
-    tilt,
-    rotation,
-    polarization_factor,
-    num_bins,
-    chi_min,
-    chi_max,
-    inner_radius,
-    outer_radius,
-    output_unit,  # Always q for now
-):
-    azimuthal_integrator = get_azimuthal_integrator(
-        beamcenter_x,
-        beamcenter_y,
-        wavelength,
-        sample_detector_dist,
-        tilt,
-        rotation,
-        pix_size,
-    )
-
-    result = azimuthal_integrator.integrate_radial(
-        # Copying here due to issue with memory ownership
-        # line 323, in pyFAI.ext.splitBBoxCSR.CsrIntegrator.integrate_ng
-        # "ValueError: buffer source array is read-only"
-        data=np.copy(image),
-        mask=mask,
-        npt=num_bins,
-        correctSolidAngle=True,
-        # radial_range=(inner_radius, outer_radius),
-        azimuth_range=(chi_min, chi_max),
-        polarization_factor=polarization_factor,
-    )
-
-    return result
 
 
 if __name__ == "__main__":

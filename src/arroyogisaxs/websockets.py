@@ -91,6 +91,10 @@ class OneDWSResultPublisher(Publisher):
             self.connected_clients.remove(websocket)
             logger.info("Client disconnected")
 
+    @classmethod
+    def from_settings(cls, settings: dict) -> "OneDWSResultPublisher":
+        return cls(settings.host, settings.port)
+
 
 def convert_to_uint8(image: np.ndarray) -> bytes:
     """

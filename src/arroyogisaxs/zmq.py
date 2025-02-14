@@ -2,6 +2,7 @@ import logging
 
 import msgpack
 import zmq
+import zmq.asyncio
 from arroyopy.listener import Listener
 from arroyopy.operator import Operator
 from arroyopy.publisher import Publisher
@@ -56,9 +57,17 @@ class ZMQPubSubListener(Listener):
     async def stop(self):
         pass
 
+    @classmethod
+    def from_settings(cls, settings: dict, operator: Operator) -> "ZMQPubSubListener":
+        context = Context()
+        zmq_socket = context.socket(zmq.SUB)
+        zmq_socket.connect(settings.zmq_address)
+        zmq_socket.setsockopt_string(zmq.SUBSCRIBE, "")
+        return cls(operator, zmq_socket)
+
 
 class ZMQFramePublisher(Publisher):
-    async def start(self, zmq_socket: Socket):
+    def __init__(self, zmq_socket: Socket):
         self.zmq_socket = zmq_socket
 
     async def publish(self, message: GISAXSMessage) -> None:
@@ -79,7 +88,7 @@ class ZMQFramePublisher(Publisher):
     def from_settings(cls, settings) -> "ZMQFramePublisher":
         context = Context()
         zmq_socket = context.socket(zmq.PUB)
-        zmq_socket.connect(settings.zmq_publish_address)
+        zmq_socket.connect(settings.zmq_address)
         return cls(zmq_socket)
 
 
@@ -91,26 +100,27 @@ class ZMQBroker:
 
     """
 
-    def __init__(self, router_socket: Socket, dealer_socket: Socket, settings: dict):
-        self.router_socket = router_socket
-        self.dealer_socket = dealer_socket
-        self.settings = settings
+    def __init__(
+        self, zmq_dealer_address: str, zmq_router_address: str, router_hwm: int
+    ):
+        self.zmq_dealer_address = zmq_dealer_address
+        self.zmq_router_address = zmq_router_address
+        self.router_hwm = router_hwm
 
-    def start(self):
+    async def start(self):
         logger.info("Starting ZMQ Dealer and router")
-        logger.info(f"Dealer address: {self.settings.zmq_dealer_address}")
-        logger.info(f"Router address: {self.settings.zmq_router_address}")
-        self.dealer_socket.bind(
-            self.settings.zmq_dealer_address
-        )  # Accept request from clients
-        self.router_socket.bind(
-            self.settings.zmq_router_address
-        )  # Distribute requests to workers
-        zmq.proxy(self.dealer_socket, self.router_socket)
-
-    @classmethod
-    def from_settings(cls, settings) -> "ZMQBroker":
-        context = Context()
+        logger.info(f"Dealer address: {self.zmq_dealer_address}")
+        logger.info(f"Router address: {self.zmq_router_address}")
+        context = zmq.asyncio.Context()
         frontend_router = context.socket(zmq.ROUTER)
         backend_dealer = context.socket(zmq.DEALER)
-        return cls(frontend_router, backend_dealer)
+        backend_dealer.bind(self.zmq_dealer_address)  # Accept request from clients
+        frontend_router.bind(self.zmq_router_address)  # Distribute requests to workers
+        zmq.proxy(frontend_router, backend_dealer)
+        logger.info("Proxy started")
+
+    @classmethod
+    def from_settings(cls, settings: dict) -> "ZMQBroker":
+        return cls(
+            settings.dealer_address, settings.router_address, settings.router_hwm
+        )
