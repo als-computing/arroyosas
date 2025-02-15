@@ -1,14 +1,6 @@
-from typing import Literal
-
-from arroyopy.schemas import (
-    DataFrameModel,
-    Event,
-    Message,
-    NumpyArrayModel,
-    Start,
-    Stop,
-)
-from pydantic import BaseModel
+import numpy as np
+from arroyopy.schemas import DataFrameModel, Event, Message, Start, Stop
+from pydantic import BaseModel, field_serializer, field_validator
 
 """
     This module defines schemas for GISAXS messages and events using
@@ -28,22 +20,49 @@ from pydantic import BaseModel
 """
 
 
+class SerializableNumpyArrayModel(BaseModel):
+    """
+    Custom Pydantic model for serializing NumPy arrays.
+    """
+
+    array: np.ndarray
+
+    @field_serializer("array")
+    def serialize_array(self, value: np.ndarray):
+        """Convert NumPy array to a dictionary with bytes and dtype"""
+        return {
+            "data": value.tobytes(),
+            "dtype": str(value.dtype.name),
+            "shape": value.shape,
+        }
+
+    @field_validator("array", mode="before")
+    @classmethod
+    def deserialize_array(cls, value):
+        """Convert bytes back to NumPy array"""
+        if isinstance(value, dict) and "data" in value:
+            return np.frombuffer(value["data"], dtype=np.dtype(value["dtype"])).reshape(
+                value["shape"]
+            )
+        return value
+
+    class Config:
+        arbitrary_types_allowed = True
+
+
 class GISAXSMessage(Message):
     pass
 
 
-class GISAXSStart(Start, GISAXSMessage):
+class GISAXSRawStart(Start, GISAXSMessage):
     msg_type: str = "start"
-
-
-class GISAXSImageInfo(BaseModel):
-    frame_number: int
     width: int
     height: int
     data_type: str
+    tiled_url: str
 
 
-class GISAXSEvent(Event, GISAXSMessage):
+class GISAXSRawEvent(Event, GISAXSMessage):
     """
 
     LabVIEW Message:
@@ -53,13 +72,12 @@ class GISAXSEvent(Event, GISAXSMessage):
     }
     """
 
-    msg_type: str = Literal["event"]
-    image: NumpyArrayModel
-    image_info: GISAXSImageInfo
-    one_d_reduction: DataFrameModel
+    msg_type: str = "event"
+    image: SerializableNumpyArrayModel
+    frame_number: int
 
 
-class GISAXSStop(Stop, GISAXSMessage):
+class GISAXSRawStop(Stop, GISAXSMessage):
     """
     {
         "msg_type": "stop",
@@ -68,10 +86,17 @@ class GISAXSStop(Stop, GISAXSMessage):
 
     """
 
-    pass
-    # num_frames: int = Field(..., alias="Num Frames")
+    msg_type: str = "stop"
+    num_frames: int
 
 
 class GISAXSResultStop(Stop, GISAXSMessage):
-    msg_type: str = Literal["result_stop"]
+    msg_type: str = "result_stop"
     function_timings: DataFrameModel
+
+
+class GISAXS1DReduction(Event, GISAXSMessage):
+    curve: DataFrameModel
+    curve_tiled_url: str
+    raw_frame: SerializableNumpyArrayModel
+    raw_frame_tiled_url: str

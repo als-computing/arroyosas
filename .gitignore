@@ -179,3 +179,7 @@ node_modules/
 .archive/
 
 # arroyo/
+
+persist/
+
+data/models/
