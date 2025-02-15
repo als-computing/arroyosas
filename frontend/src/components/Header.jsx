@@ -1,6 +1,8 @@
 import Status from "./Status";
 const als_logo = "/images/als_logo_wheel.png";
-const bnl_logo = "images/bnl_logo.png";
+const ml_logo = "images/mlexchange_logo.png";
+const mwet_logo = "images/mwet_logo.png";
+const illumine_logo = "images/illumine_logo.png";
 
 
 export default function Header({isExperimentRunning=false, showStatus=false, statusMessage=""}) {
@@ -13,8 +15,12 @@ export default function Header({isExperimentRunning=false, showStatus=false, sta
                 </div>
             }
             <img src={als_logo} alt="als logo" className="h-8 w-auto"/>
-            <h1 className="text-4xl text-sky-900">SMI Live Data Viewer</h1>
-            <img src={bnl_logo} alt="bnl logo" className="h-8 w-auto"/>
+            <h1 className="text-4xl text-sky-900">GISAXS Data Viewer</h1>
+            <img src={ml_logo} alt="bnl logo" className="h-8 w-auto"/>
+            <img src={mwet_logo} alt="bnl logo" className="h-8 w-auto"/>
+            <img src={illumine_logo} alt="bnl logo" className="h-8 w-auto"/>
+
+
         </header>
     )
 }
