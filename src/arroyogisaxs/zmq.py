@@ -116,12 +116,12 @@ class ZMQBroker:
         logger.info(f"Dealer address: {self.zmq_dealer_address}")
         logger.info(f"Router address: {self.zmq_router_address}")
         context = zmq.asyncio.Context()
-        frontend_router = context.socket(zmq.ROUTER)
-        backend_dealer = context.socket(zmq.DEALER)
-        backend_dealer.bind(self.zmq_dealer_address)  # Accept request from clients
-        frontend_router.bind(self.zmq_router_address)  # Distribute requests to workers
+        router_socket = context.socket(zmq.ROUTER)
+        dealte_socket = context.socket(zmq.DEALER)
+        dealte_socket.bind(self.zmq_dealer_address)  # Accept request from clients
+        router_socket.bind(self.zmq_router_address)  # Distribute requests to workers
         logger.info("Starting Proxy")
-        zmq.proxy(frontend_router, backend_dealer)
+        zmq.proxy(router_socket, dealte_socket)
 
     @classmethod
     def from_settings(cls, settings: dict) -> "ZMQBroker":

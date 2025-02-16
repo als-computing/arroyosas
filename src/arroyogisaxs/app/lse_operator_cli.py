@@ -26,7 +26,7 @@ async def start() -> None:
 
     ws_publisher = OneDWSResultPublisher.from_settings(app_settings.ws_publisher)
     zmq_publisher = ZMQFramePublisher.from_settings(app_settings.zmq_publisher)
-    # operator.add_publisher(ws_publisher)
+    operator.add_publisher(ws_publisher)
     operator.add_publisher(zmq_publisher)
 
     listener = ZMQFrameListener.from_settings(app_settings.listener, operator)

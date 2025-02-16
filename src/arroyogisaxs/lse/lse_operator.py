@@ -26,8 +26,8 @@ class LatentSpaceOperator(Operator):
             logger.info("Received Start Message")
             await self.publish(message)
         elif isinstance(message, GISAXSRawEvent):
-            await self.dispatch(message)
-            # lse_event = await self.publish(message)
+            result = await self.dispatch(message)
+            await self.publish(result)
         elif isinstance(message, GISAXSStop):
             logger.info("Received Stop Message")
             await self.publish(message)
@@ -51,7 +51,7 @@ class LatentSpaceOperator(Operator):
     def from_settings(cls, settings):
         # Connect to the ZMQ Router/Dealer as a client
         context = zmq.asyncio.Context()
-        socket = context.socket(zmq.DEALER)
+        socket = context.socket(zmq.REQ)
         socket.setsockopt(zmq.SNDHWM, 10000)  # Allow up to 10,000 messages
         socket.setsockopt(zmq.RCVHWM, 10000)
         socket.connect(settings.zmq_broker.router_address)
