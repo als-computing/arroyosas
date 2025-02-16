@@ -11,15 +11,15 @@ from zmq.asyncio import Context, Socket
 from .schemas import (
     GISAXSMessage,
     GISAXSRawEvent,
-    GISAXSRawStart,
-    GISAXSRawStop,
+    GISAXSStart,
+    GISAXSStop,
     SerializableNumpyArrayModel,
 )
 
 logger = logging.getLogger(__name__)
 
 
-class ZMQPubSubListener(Listener):
+class ZMQFrameListener(Listener):
     """
     Takes messages from ZQM and deserializes them into GISAXSMessage objects
     """
@@ -37,8 +37,9 @@ class ZMQPubSubListener(Listener):
                 message_type = message.get("msg_type")
                 if message_type == "start":
                     logger.info(f"Received Start {message}")
-                    message = GISAXSRawStart(**message)
+                    message = GISAXSStart(**message)
                 elif message_type == "event":
+                    logger.debug("Received event")
                     image = SerializableNumpyArrayModel.deserialize_array(
                         message["image"]
                     )
@@ -46,7 +47,7 @@ class ZMQPubSubListener(Listener):
                     message = GISAXSRawEvent(**message)
                 elif message_type == "stop":
                     logger.info(f"Received Stop {message}")
-                    message = GISAXSRawStop(**message)
+                    message = GISAXSStop(**message)
                 else:
                     logger.error(f"Unknown message type {message_type}")
                     continue
@@ -58,11 +59,14 @@ class ZMQPubSubListener(Listener):
         pass
 
     @classmethod
-    def from_settings(cls, settings: dict, operator: Operator) -> "ZMQPubSubListener":
+    def from_settings(cls, settings: dict, operator: Operator) -> "ZMQFrameListener":
         context = Context()
         zmq_socket = context.socket(zmq.SUB)
         zmq_socket.connect(settings.zmq_address)
         zmq_socket.setsockopt_string(zmq.SUBSCRIBE, "")
+        zmq_socket.setsockopt(zmq.SNDHWM, 10000)  # Allow up to 10,000 messages
+        zmq_socket.setsockopt(zmq.RCVHWM, 10000)
+        logger.info(f"Listening for frames on {settings.zmq_address}")
         return cls(operator, zmq_socket)
 
 
@@ -71,7 +75,7 @@ class ZMQFramePublisher(Publisher):
         self.zmq_socket = zmq_socket
 
     async def publish(self, message: GISAXSMessage) -> None:
-        if isinstance(message, GISAXSRawStart) or isinstance(message, GISAXSRawStop):
+        if isinstance(message, GISAXSStart) or isinstance(message, GISAXSStop):
             message = msgpack.packb(message, use_bin_type=True)
             await self.zmq_socket.send(message)
         if isinstance(message, GISAXSRawEvent):
@@ -116,8 +120,8 @@ class ZMQBroker:
         backend_dealer = context.socket(zmq.DEALER)
         backend_dealer.bind(self.zmq_dealer_address)  # Accept request from clients
         frontend_router.bind(self.zmq_router_address)  # Distribute requests to workers
+        logger.info("Starting Proxy")
         zmq.proxy(frontend_router, backend_dealer)
-        logger.info("Proxy started")
 
     @classmethod
     def from_settings(cls, settings: dict) -> "ZMQBroker":

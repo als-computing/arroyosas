@@ -11,8 +11,8 @@ import zmq.asyncio
 from ..config import settings
 from ..schemas import (
     GISAXSRawEvent,
-    GISAXSRawStart,
-    GISAXSRawStop,
+    GISAXSStart,
+    GISAXSStop,
     SerializableNumpyArrayModel,
 )
 
@@ -22,8 +22,8 @@ onto ZMQ, taking care of pydantic messages, serialization and msgpack
 """
 
 
-FRAME_WIDTH = 100
-FRAME_HEIGHT = 100
+FRAME_WIDTH = 1000
+FRAME_HEIGHT = 1000
 DATA_TYPE = "float32"
 
 app = typer.Typer()
@@ -33,7 +33,7 @@ async def process_images(
     socket: zmq.asyncio.Socket, cycles: int, frames: int, pause: float
 ):
     for cycle_num in range(cycles):
-        start = GISAXSRawStart(
+        start = GISAXSStart(
             width=FRAME_WIDTH,
             height=FRAME_HEIGHT,
             data_type=DATA_TYPE,
@@ -55,7 +55,7 @@ async def process_images(
             )
             print("event")
             await socket.send(msgpack.packb(event.model_dump()))
-        stop = GISAXSRawStop(num_frames=frames)
+        stop = GISAXSStop(num_frames=frames)
         print("stop")
         await socket.send(msgpack.packb(stop.model_dump()))
         await asyncio.sleep(pause)
@@ -66,11 +66,11 @@ async def process_images(
 
 
 @app.command()
-def main(cycles: int = 10000, frames: int = 5, pause: float = 5):
+def main(cycles: int = 10000, frames: int = 50, pause: float = 5):
     async def run():
         context = zmq.asyncio.Context()
         socket = context.socket(zmq.PUB)
-        address = f"tcp://{settings.tiled_poller.publish_address}:{settings.tiled_poller.publish_port}"
+        address = settings.tiled_poller.publish_address
         print(f"Connecting to {address}")
         socket.bind(address)
         await process_images(socket, cycles, frames, pause)

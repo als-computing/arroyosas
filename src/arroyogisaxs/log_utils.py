@@ -7,5 +7,5 @@ def setup_logger(logger: logging.Logger, log_level: str = "INFO"):
     handler.setFormatter(formatter)
     logger.addHandler(handler)
     logger.setLevel(logging.DEBUG)
-    logger.setLevel(log_level.upper())
+    # logger.setLevel(log_level.upper())
     logger.debug("DEBUG LOGGING SET")

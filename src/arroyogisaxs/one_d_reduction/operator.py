@@ -3,7 +3,7 @@ import logging
 from arroyopy.operator import Operator
 
 from ..kv_store import KVStore
-from ..schemas import GISAXS1DReduction, GISAXSRawEvent, GISAXSRawStart, GISAXSRawStop
+from ..schemas import GISAXS1DReduction, GISAXSRawEvent, GISAXSStart, GISAXSStop
 from .reduce import pixel_roi_horizontal_cut
 
 logger = logging.getLogger(__name__)
@@ -15,13 +15,13 @@ class OneDReductionOperator(Operator):
         self.kv_store = kv_store
 
     async def process(self, message):
-        if isinstance(message, GISAXSRawStart):
+        if isinstance(message, GISAXSStart):
             logger.info(f"Processing Start {message}")
             self.current_reduction_settings = get_reduction_settings()
             logger.info("")
             await self.publish(message)
 
-        if isinstance(message, GISAXSRawStop):
+        if isinstance(message, GISAXSStop):
             logger.info(f"Processing Stop {message}")
             await self.publish(message)
 
