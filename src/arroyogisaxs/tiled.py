@@ -7,7 +7,7 @@ from arroyopy.operator import Operator
 from arroyopy.publisher import Publisher
 from tiled.client.container import Container
 
-from .schemas import GISAXS1DReduction, GISAXSRawEvent, GISAXSRawStart, GISAXSRawStop
+from .schemas import GISAXS1DReduction, GISAXSRawEvent, GISAXSStart, GISAXSStop
 
 
 class Tiled1DPublisher(Publisher):
@@ -39,7 +39,7 @@ class TiledPollingFrameListener(Listener):
             # current and send GISAXSStart message
             if current_tiled_run is None:
                 current_tiled_run = most_recent_run(self.beamline_runs_tiled)
-                start_message = GISAXSRawStart(
+                start_message = GISAXSStart(
                     width=current_tiled_run.width,
                     height=current_tiled_run.height,
                     data_type=current_tiled_run.data_type,
@@ -49,7 +49,7 @@ class TiledPollingFrameListener(Listener):
             # If run has stop document, send GISAXSStop message and
             # set_current_run to None, sent_frames to [] and continue
             if current_tiled_run.has_stop_document():
-                stop_message = GISAXSRawStop(num_frames=len(sent_frames))
+                stop_message = GISAXSStop(num_frames=len(sent_frames))
                 await self.operator.process(stop_message)
                 current_tiled_run = None
                 sent_frames = []

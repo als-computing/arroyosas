@@ -1,13 +1,18 @@
-import asyncio
 import logging
 
 import msgpack
 import typer
 import zmq
+import zmq.asyncio
 
 from ..config import settings
 from ..log_utils import setup_logger
 from ..lse.lse_reducer import LatentSpaceReducer
+from ..schemas import (
+    GISAXSLatentSpaceEvent,
+    GISAXSRawEvent,
+    SerializableNumpyArrayModel,
+)
 
 app = typer.Typer()
 logger = logging.getLogger("arroyogisaxs")
@@ -15,29 +20,48 @@ setup_logger(logger)
 
 
 @app.command()
-async def start() -> None:
-    app_settings = settings.lse
+def start() -> None:
     logger.info("Getting settings")
-    logger.info(f"{settings.lse}")
+    logger.info(f"{settings}")
 
     context = zmq.Context()
     client_socket = context.socket(zmq.REP)  # worker to the broker
-    client_socket.connect(app_settings.zmq_router_address)
-    logger.info(f"Connected to broker at {app_settings.zmq_router_address}")
-    reducer = LatentSpaceReducer().with_models_loaded()
-
+    client_socket.connect(settings.lse_operator.zmq_broker.dealer_address)
+    logger.info(
+        f"Connected to broker dealer at {settings.lse_operator.zmq_broker.dealer_address}"
+    )
+    reducer = LatentSpaceReducer.from_settings(settings.lse_reducer)
+    logger.info("Listening for messages")
     while True:
+        response_sent = False
         try:
-            raw_msg = await client_socket.recv()
+            raw_msg = client_socket.recv()
             message = msgpack.unpackb(raw_msg, raw=False)
             message_type = message.get("msg_type")
             if message_type != "event":
                 continue
-            latent_space = await reducer.reduce(message)
-            await client_socket.send(msgpack.packb(latent_space, use_bin_type=True))
+            image = SerializableNumpyArrayModel.deserialize_array(message["image"])
+            message["image"] = image
+            event = GISAXSRawEvent(**message)
+            # logger.debug("calculating latent space")
+
+            latent_space = reducer.reduce(event)
+            # logger.debug("latent space returned")
+            return_message = GISAXSLatentSpaceEvent(
+                tiled_url="foo",
+                feature_vector=latent_space[0].tolist(),
+                index=message.get("frame_number"),
+            )
+            client_socket.send(
+                msgpack.packb(return_message.model_dump(), use_bin_type=True)
+            )
+            response_sent = True
+            # logger.debug("LSE returned")
         except Exception as e:
             logger.error(f"Error processing message: {e}")
+            if not response_sent:
+                client_socket.send(b"ERROR")
 
 
 if __name__ == "__main__":
-    asyncio.run(start())
+    start()

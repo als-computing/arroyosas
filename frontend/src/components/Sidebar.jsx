@@ -4,10 +4,11 @@ const hamburgerIcon = <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBo
 </svg>
 
 
-export default function Sidebar({ children }) {
+export default function Sidebar({isSidebarClosed=()=>{}, children }) {
     const [isCollapsed, setIsCollapsed] = useState(false);
 
     const toggleSidebar = () => {
+        isSidebarClosed(!isCollapsed);
         setIsCollapsed(!isCollapsed);
     };
 

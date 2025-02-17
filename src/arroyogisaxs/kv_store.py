@@ -2,18 +2,16 @@ import json
 
 import redis
 
-KEY_CURRENT_REDUCTION_PARAMS = "current_reduction_params"
-
 
 class KVStore:
-    def __init__(self, redis_server: redis.Redis):
-        self.redis_server = redis.Redis(host="localhost", port=6379, db=0)
+    def __init__(self, redis_conn: redis.Redis):
+        self.redis_conn = redis_conn
 
     def get(self, key: str):
-        return self.redis_server.get(key)
+        return self.redis_conn.get(key)
 
     def set(self, key: str, value):
-        self.redis_server.set(key, value)
+        self.redis_conn.set(key, value)
 
     def get_json(self, key: str):
         value_s = self.get(key)
@@ -29,5 +27,8 @@ class KVStore:
 
     @classmethod
     def from_settings(cls, settings: dict) -> "KVStore":
-        redis_server = redis.Redis(host=settings.host, port=settings.port)
-        return cls(redis_server)
+        pool = redis.ConnectionPool(
+            host=settings.host, port=settings.port, decode_responses=True
+        )
+        redis_conn = redis.Redis(connection_pool=pool)
+        return cls(redis_conn)

@@ -54,7 +54,7 @@ class GISAXSMessage(Message):
     pass
 
 
-class GISAXSRawStart(Start, GISAXSMessage):
+class GISAXSStart(Start, GISAXSMessage):
     msg_type: str = "start"
     width: int
     height: int
@@ -75,9 +75,16 @@ class GISAXSRawEvent(Event, GISAXSMessage):
     msg_type: str = "event"
     image: SerializableNumpyArrayModel
     frame_number: int
+    tiled_url: str
 
 
-class GISAXSRawStop(Stop, GISAXSMessage):
+class GISAXSLatentSpaceEvent(Event, GISAXSMessage):
+    tiled_url: str
+    feature_vector: list[float]
+    index: int
+
+
+class GISAXSStop(Stop, GISAXSMessage):
     """
     {
         "msg_type": "stop",

@@ -8,7 +8,7 @@ import numpy as np
 import websockets
 from arroyopy.publisher import Publisher
 
-from .schemas import GISAXSRawEvent, GISAXSRawStart, GISAXSRawStop
+from .schemas import GISAXSRawEvent, GISAXSStart, GISAXSStop
 
 logger = logging.getLogger(__name__)
 
@@ -58,15 +58,15 @@ class OneDWSResultPublisher(Publisher):
         self,
         #  client: websockets.client.ClientConnection,
         client,
-        message: Union[GISAXSRawEvent | GISAXSRawStart | GISAXSRawStop],
+        message: Union[GISAXSRawEvent | GISAXSStart | GISAXSStop],
     ) -> None:
-        if isinstance(message, GISAXSRawStop):
+        if isinstance(message, GISAXSStop):
             logger.info(f"WS Sending Stop {message}")
             self.current_start_message = None
             await client.send(json.dumps(message.model_dump()))
             return
 
-        if isinstance(message, GISAXSRawStart):
+        if isinstance(message, GISAXSStart):
             self.current_start_message = message
             logger.info(f"WS Sending Start {message}")
             await client.send(json.dumps(message.model_dump()))
@@ -189,7 +189,7 @@ async def main(publisher: OneDWSResultPublisher):
     await asyncio.gather(publisher.start(), test_client(publisher))
 
 
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-    publisher = OneDWSResultPublisher(host="localhost", port=8001)
-    asyncio.run(main(publisher))
+# if __name__ == "__main__":
+#     logging.basicConfig(level=logging.INFO)
+#     publisher = GISAXSWSResultPublisher(host="0.0.0.0", port=8001)
+#     asyncio.run(main(publisher))

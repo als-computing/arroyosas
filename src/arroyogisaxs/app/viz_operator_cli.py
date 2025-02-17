@@ -3,7 +3,7 @@ import logging
 
 import typer
 
-from arroyogisaxs.zmq import ZMQPubSubListener
+from arroyogisaxs.zmq import ZMQFrameListener
 
 from ..config import settings
 from ..kv_store import KVStore
@@ -22,11 +22,10 @@ async def start():
     logger.info("Starting Tiled Poller")
     logger.info("Getting settings")
     logger.info(f"{settings.viz_operator}")
-
     operator = OneDReductionOperator.create(KVStore.from_settings(app_settings.redis))
     ws_publisher = OneDWSResultPublisher.from_settings(app_settings.ws_publisher)
     operator.add_publisher(ws_publisher)
-    listener = ZMQPubSubListener.from_settings(app_settings.listener, operator)
+    listener = ZMQFrameListener.from_settings(app_settings.listener, operator)
     await asyncio.gather(listener.start(), ws_publisher.start())
 
 
