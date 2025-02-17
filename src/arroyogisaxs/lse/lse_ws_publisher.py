@@ -13,17 +13,9 @@ from ..schemas import GISAXSLatentSpaceEvent, GISAXSStart, GISAXSStop
 logger = logging.getLogger(__name__)
 
 
-class LSEWSPublisher(Publisher):
-    """
-    A publisher class for sending XPSResult messages over a web sockets.
-    """
-
-    pass
-
-
 class LSEWSResultPublisher(Publisher):
     """
-    A publisher class for sending XPSResult messages over a web sockets.
+    A publisher class for sending dimensionality reduction information
 
     """
 
@@ -56,8 +48,7 @@ class LSEWSResultPublisher(Publisher):
 
     async def publish_ws(
         self,
-        #  client: websockets.client.ClientConnection,
-        client,
+        client: websockets.ServerConnection,
         message: Union[GISAXSLatentSpaceEvent | GISAXSStart | GISAXSStop],
     ) -> None:
         if isinstance(message, GISAXSStop):
@@ -72,15 +63,20 @@ class LSEWSResultPublisher(Publisher):
             await client.send(json.dumps(message.model_dump()))
             return
 
-        # send image data separately to client memory issues
-        # image_bundle = await asyncio.to_thread(pack_images, message)
-        # await client.send(image_bundle)
+        if isinstance(message, GISAXSLatentSpaceEvent):
+            # send image data separately to client memory issues
+            message = {
+                "tiled_uri": "foo",
+                "index": 0,
+                "feature_vector": message.feature_vector,
+            }
+            await client.send(json.dumps(message))
 
     async def websocket_handler(self, websocket):
         logger.info(f"New connection from {websocket.remote_address}")
-        if websocket.request.path != "/viz":
-            logger.info(f"Invalid path: {websocket.request.path}, we only support /viz")
-            return
+        # if websocket.request.path != "/viz":
+        #     logger.info(f"Invalid path: {websocket.request.path}, we only support /viz")
+        #     return
         self.connected_clients.add(websocket)
         try:
             # Keep the connection open and do nothing until the client disconnects

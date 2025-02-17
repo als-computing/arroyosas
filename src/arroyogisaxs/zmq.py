@@ -39,7 +39,7 @@ class ZMQFrameListener(Listener):
                     logger.info(f"Received Start {message}")
                     message = GISAXSStart(**message)
                 elif message_type == "event":
-                    logger.debug("Received event")
+                    # logger.debug("Received event")
                     image = SerializableNumpyArrayModel.deserialize_array(
                         message["image"]
                     )
@@ -53,7 +53,7 @@ class ZMQFrameListener(Listener):
                     continue
                 await self.operator.process(message)
             except Exception as e:
-                logger.error(f"Error processing message: {e}")
+                logger.exception(f"Error processing message: {e}")
 
     async def stop(self):
         pass

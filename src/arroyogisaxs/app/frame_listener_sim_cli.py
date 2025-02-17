@@ -21,9 +21,8 @@ Simulates however we are going to get images and sends them
 onto ZMQ, taking care of pydantic messages, serialization and msgpack
 """
 
-
-FRAME_WIDTH = 1000
-FRAME_HEIGHT = 1000
+FRAME_WIDTH = 1475
+FRAME_HEIGHT = 619
 DATA_TYPE = "float32"
 
 app = typer.Typer()
@@ -45,7 +44,7 @@ async def process_images(
         for frame_num in range(frames):
             # Create a test pattern image that changes slightly each time
             frame_number = int(time.time()) % 100  # Change pattern every second
-            image = np.zeros((FRAME_WIDTH, FRAME_HEIGHT), dtype=DATA_TYPE)
+            image = np.random.rand(FRAME_WIDTH, FRAME_HEIGHT).astype(DATA_TYPE)
             np.fill_diagonal(image, frame_number % 255)
 
             event = GISAXSRawEvent(

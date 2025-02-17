@@ -40,10 +40,13 @@ class LatentSpaceOperator(Operator):
             message = message.model_dump()
             message = msgpack.packb(message, use_bin_type=True)
             await self.proxy_socket.send(message)
-            logger.debug("sent frame to broker")
+            # logger.debug("sent frame to broker")
             response = await self.proxy_socket.recv()
-            logger.debug("response from broker")
-            return response
+            if response == b"ERROR":
+                logger.debug("Worker reported an error")
+                return None
+            # logger.debug("response from broker")
+            return GISAXSLatentSpaceEvent(**msgpack.unpackb(response))
         except Exception as e:
             logger.error(f"Error sending message to broker {e}")
 

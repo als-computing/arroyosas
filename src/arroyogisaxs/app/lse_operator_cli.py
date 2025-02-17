@@ -6,8 +6,8 @@ import typer
 from ..config import settings
 from ..log_utils import setup_logger
 from ..lse.lse_operator import LatentSpaceOperator
-from ..websockets import OneDWSResultPublisher
-from ..zmq import ZMQFrameListener, ZMQFramePublisher
+from ..lse.lse_ws_publisher import LSEWSResultPublisher
+from ..zmq import ZMQFrameListener
 
 app = typer.Typer()
 logger = logging.getLogger("arroyogisaxs")
@@ -24,10 +24,9 @@ async def start() -> None:
     logger.info(f"ZMQPubSubListener settings: {app_settings}")
     operator = LatentSpaceOperator.from_settings(app_settings)
 
-    ws_publisher = OneDWSResultPublisher.from_settings(app_settings.ws_publisher)
-    zmq_publisher = ZMQFramePublisher.from_settings(app_settings.zmq_publisher)
+    # ws_publisher = OneDWSResultPublisher.from_settings(app_settings.ws_publisher)
+    ws_publisher = LSEWSResultPublisher.from_settings(app_settings.ws_publisher)
     operator.add_publisher(ws_publisher)
-    operator.add_publisher(zmq_publisher)
 
     listener = ZMQFrameListener.from_settings(app_settings.listener, operator)
     await asyncio.gather(listener.start(), ws_publisher.start())

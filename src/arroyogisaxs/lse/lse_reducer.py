@@ -55,7 +55,7 @@ class LatentSpaceReducer:
         self.curent_dim_reduction_model = self.get_dim_reduction_model()
         self.current_transform = self.get_transform()
 
-    def reduce(self, message: GISAXSRawEvent):
+    def reduce(self, message: GISAXSRawEvent) -> np.ndarray:
         # 1. Encode the image into a latent space. For now we assume
         pil = Image.fromarray(message.image.array)
         tensor = self.current_transform(pil)

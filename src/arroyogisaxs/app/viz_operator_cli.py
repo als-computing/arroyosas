@@ -22,7 +22,6 @@ async def start():
     logger.info("Starting Tiled Poller")
     logger.info("Getting settings")
     logger.info(f"{settings.viz_operator}")
-
     operator = OneDReductionOperator.create(KVStore.from_settings(app_settings.redis))
     ws_publisher = OneDWSResultPublisher.from_settings(app_settings.ws_publisher)
     operator.add_publisher(ws_publisher)
