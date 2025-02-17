@@ -5,8 +5,8 @@ import redis
 import typer
 
 from ..config import settings
-from ..kv_store import KVStore
 from ..log_utils import setup_logger
+from ..redis import RedisConn
 from ..tiled import Tiled1DPublisher
 from ..viz_reduce import GISAXSVizReduceOperator
 from ..websockets import GISAXSWS1DPublisher
@@ -35,7 +35,7 @@ async def start() -> None:
         redis_client = redis.Redis(
             host=app_settings.redis.host, port=app_settings.redis.port, db=0
         )
-        shared_settings = KVStore(redis_client)  # redis or kvrocks
+        shared_settings = RedisConn(redis_client)  # redis or kvrocks
         operator = GISAXSVizReduceOperator(shared_settings)
         tiled_1d_pub = GISAXSWS1DPublisher()
         ws_1D_publisher = Tiled1DPublisher()

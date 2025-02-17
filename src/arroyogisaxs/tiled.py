@@ -5,6 +5,8 @@ from functools import reduce
 from arroyopy.listener import Listener
 from arroyopy.operator import Operator
 from arroyopy.publisher import Publisher
+from tiled.client import from_uri
+from tiled.client.base import BaseClient
 from tiled.client.container import Container
 
 from .schemas import GISAXS1DReduction, GISAXSRawEvent, GISAXSStart, GISAXSStop
@@ -107,3 +109,9 @@ def unsent_frame_numbers(sent_frames: list, num_frames: int):
 
     # Combine both lists
     return gaps + extra_numbers
+
+
+def get_nested_client(client: BaseClient, path) -> BaseClient:
+    # Wow this is slow!
+    client = from_uri(client.uri + path, api_key=client.context.api_key)
+    return client

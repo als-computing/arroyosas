@@ -1,6 +1,5 @@
 ---
 logging_level: INFO
-
 tiled_poller:
   publish_address: tcp://0.0.0.0:5000  #only safe in containers
 
@@ -47,3 +46,12 @@ viz_operator:
   redis:
     host: kvrocks
     port: 6666
+  tiled:
+    raw:
+      # uri: http://tiled:8000
+      uri: https://tiled.nsls2.bnl.gov
+      # api_key: "env[TILED_API_KEY]"
+
+smi_tiled_image_path: /primary/data/pil900KW_image
+
+dynaconf_merge: true

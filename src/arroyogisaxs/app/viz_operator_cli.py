@@ -6,7 +6,6 @@ import typer
 from arroyogisaxs.zmq import ZMQFrameListener
 
 from ..config import settings
-from ..kv_store import KVStore
 from ..log_utils import setup_logger
 from ..one_d_reduction.operator import OneDReductionOperator
 from ..websockets import OneDWSResultPublisher
@@ -22,7 +21,9 @@ async def start():
     logger.info("Starting Tiled Poller")
     logger.info("Getting settings")
     logger.info(f"{settings.viz_operator}")
-    operator = OneDReductionOperator.create(KVStore.from_settings(app_settings.redis))
+    operator = OneDReductionOperator.from_settings(
+        app_settings, settings.smi_tiled_image_path
+    )
     ws_publisher = OneDWSResultPublisher.from_settings(app_settings.ws_publisher)
     operator.add_publisher(ws_publisher)
     listener = ZMQFrameListener.from_settings(app_settings.listener, operator)
