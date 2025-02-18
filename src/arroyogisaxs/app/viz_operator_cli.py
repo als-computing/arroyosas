@@ -8,7 +8,8 @@ from arroyogisaxs.zmq import ZMQFrameListener
 from ..config import settings
 from ..log_utils import setup_logger
 from ..one_d_reduction.operator import OneDReductionOperator
-from ..websockets import OneDWSResultPublisher
+from ..tiled import TiledProcessedPublisher
+from ..websockets import OneDWSPublisher
 
 app = typer.Typer()
 logger = logging.getLogger("arroyogisaxs")
@@ -24,8 +25,12 @@ async def start():
     operator = OneDReductionOperator.from_settings(
         app_settings, settings.smi_tiled_image_path
     )
-    ws_publisher = OneDWSResultPublisher.from_settings(app_settings.ws_publisher)
+    tiled_event_publisher = TiledProcessedPublisher.from_settings(
+        settings.tiled_processed
+    )
+    ws_publisher = OneDWSPublisher.from_settings(app_settings.ws_publisher)
     operator.add_publisher(ws_publisher)
+    operator.add_publisher(tiled_event_publisher)
     listener = ZMQFrameListener.from_settings(app_settings.listener, operator)
     await asyncio.gather(listener.start(), ws_publisher.start())
 

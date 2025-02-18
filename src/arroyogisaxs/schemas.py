@@ -56,6 +56,8 @@ class GISAXSMessage(Message):
 
 class GISAXSStart(Start, GISAXSMessage):
     msg_type: str = "start"
+    run_name: str
+    run_id: str
     width: int
     height: int
     data_type: str
@@ -63,15 +65,6 @@ class GISAXSStart(Start, GISAXSMessage):
 
 
 class GISAXSRawEvent(Event, GISAXSMessage):
-    """
-
-    LabVIEW Message:
-    {
-        "msg_type": "event",
-        "Frame Number": 1
-    }
-    """
-
     msg_type: str = "event"
     image: SerializableNumpyArrayModel
     frame_number: int
@@ -85,14 +78,6 @@ class GISAXSLatentSpaceEvent(Event, GISAXSMessage):
 
 
 class GISAXSStop(Stop, GISAXSMessage):
-    """
-    {
-        "msg_type": "stop",
-        "Num Frames": 1
-    }
-
-    """
-
     msg_type: str = "stop"
     num_frames: int
 
@@ -103,7 +88,5 @@ class GISAXSResultStop(Stop, GISAXSMessage):
 
 
 class GISAXS1DReduction(Event, GISAXSMessage):
-    curve: DataFrameModel
-    curve_tiled_url: str
+    curve: SerializableNumpyArrayModel
     raw_frame: SerializableNumpyArrayModel
-    raw_frame_tiled_url: str

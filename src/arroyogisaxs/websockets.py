@@ -13,15 +13,7 @@ from .schemas import GISAXSRawEvent, GISAXSStart, GISAXSStop
 logger = logging.getLogger(__name__)
 
 
-class GISAXSWS1DPublisher(Publisher):
-    """
-    A publisher class for sending XPSResult messages over a web sockets.
-    """
-
-    pass
-
-
-class OneDWSResultPublisher(Publisher):
+class OneDWSPublisher(Publisher):
     """
     A publisher class for sending XPSResult messages over a web sockets.
 
@@ -92,7 +84,7 @@ class OneDWSResultPublisher(Publisher):
             logger.info("Client disconnected")
 
     @classmethod
-    def from_settings(cls, settings: dict) -> "OneDWSResultPublisher":
+    def from_settings(cls, settings: dict) -> "OneDWSPublisher":
         return cls(settings.host, settings.port)
 
 
@@ -139,7 +131,7 @@ def pack_images(message: GISAXSRawEvent) -> bytes:
         raise e
 
 
-async def test_client(publisher: OneDWSResultPublisher, num_frames: int = 10):
+async def test_client(publisher: OneDWSPublisher, num_frames: int = 10):
     import time
 
     import pandas as pd
@@ -185,7 +177,7 @@ async def test_client(publisher: OneDWSResultPublisher, num_frames: int = 10):
         await publisher.publish(GISAXSStop(num_frames=num_frames))
 
 
-async def main(publisher: OneDWSResultPublisher):
+async def main(publisher: OneDWSPublisher):
     await asyncio.gather(publisher.start(), test_client(publisher))
 
 

@@ -1,5 +1,6 @@
 import asyncio
 import time
+from datetime import datetime
 
 # from arroyopy.schemas import NumpyArrayModel
 import msgpack
@@ -32,11 +33,15 @@ async def process_images(
     socket: zmq.asyncio.Socket, cycles: int, frames: int, pause: float
 ):
     for cycle_num in range(cycles):
+        # Get current time formatted as YYYY-MM-DD HH:MM:SS
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         start = GISAXSStart(
             width=FRAME_WIDTH,
             height=FRAME_HEIGHT,
             data_type=DATA_TYPE,
             tiled_url="tbd://run_url",
+            run_name="test_run",
+            run_id=str(current_time),
         )
         print("start")
         await socket.send(msgpack.packb(start.model_dump()))

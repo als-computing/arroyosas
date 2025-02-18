@@ -52,6 +52,9 @@ viz_operator:
       uri: https://tiled.nsls2.bnl.gov
       # api_key: "env[TILED_API_KEY]"
 
+tiled_processed:
+  uri: http://tiled:8000
+
 smi_tiled_image_path: /primary/data/pil900KW_image
 
 dynaconf_merge: true
