@@ -183,3 +183,5 @@ node_modules/
 persist/
 
 data/models/
+
+.settings.yaml

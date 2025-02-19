@@ -11,10 +11,16 @@ import torch
 import torchvision.transforms as transforms
 from PIL import Image
 
-from ..config import settings as default_settings
 from ..schemas import GISAXSRawEvent
 
 logger = logging.getLogger(__name__)
+
+
+# message = {
+#     "tiled_uri": DATA_TILED_URI,
+#     "index": index,
+#     "feature_vector": latent_vector.tolist(),
+# }
 
 
 class LatentSpaceReducer:
@@ -27,7 +33,12 @@ class LatentSpaceReducer:
     agorithm to a 2D space. The results are saved to a Tiled dataset.
     """
 
-    def __init__(self, settings):
+    def __init__(
+        self, current_latent_space: str, current_dim_reduction: str, models_config
+    ):
+        self.current_latent_space = current_latent_space
+        self.current_dim_reduction = current_dim_reduction
+        self.models_config = models_config
         # Check for CUDA else use CPU
         # needs to be members of the reducer class
         if torch.cuda.is_available():
@@ -37,20 +48,21 @@ class LatentSpaceReducer:
             device = torch.device("cpu")
             logger.info("Using CPU")
         self.device = device
-        self.settings = settings
         self.model_cache = {}
-        self.current_ls_model = self.get_ls_model()
+
+        # Load the models now
+        self.current_torch_model = self.get_ls_model()
         self.curent_dim_reduction_model = self.get_dim_reduction_model()
         self.current_transform = self.get_transform()
 
-    def reduce(self, message: GISAXSRawEvent):
+    def reduce(self, message: GISAXSRawEvent) -> np.ndarray:
         # 1. Encode the image into a latent space. For now we assume
         pil = Image.fromarray(message.image.array)
         tensor = self.current_transform(pil)
         ls_is_on_gpu = False
         if (
             self.device == torch.device("cuda")
-            and self.current_ls_model["config"].type == "torch"
+            and self.current_latent_space["config"].type == "torch"
         ):
             ls_is_on_gpu = True
 
@@ -70,30 +82,37 @@ class LatentSpaceReducer:
         return f_vec
 
     def get_ls_model(self):
-        current_name = self.settings.current_latent_space
-        return self.get_model(current_name)
+        ls_model_name = self.current_latent_space
+        logger.info(f"Loading Latent Space model {self.current_latent_space}")
+        model = self.get_model(ls_model_name)
+        logger.info("Latent Space Model Loaded")
+        return model
 
     def get_dim_reduction_model(self):
-        current_name = self.settings.current_dim_reduction
-        return self.get_model(current_name)
+        dim_reduction_name = self.current_dim_reduction
+        logger.info(f"Loading Dimensionality Reduction Model {dim_reduction_name}")
+        model = self.get_model(dim_reduction_name)
+        logger.info("Dimensionality Reduction model loaded")
+        return model
 
     def get_model(self, name: str):
         # check for model in configured models
-        for model_config in self.settings.models:
+        current_model_config = None
+        for model_config in self.models_config:
             if model_config.name == name:
-                current_model = model_config
+                current_model_config = model_config
                 break
-        if model_config is None:
+        if current_model_config is None:
             raise ValueError(f"Current model {name} is not found in models")
 
         # check if model is in cache. If not, load it and add to cache
-        if current_model.name not in self.model_cache:
+        if current_model_config.name not in self.model_cache:
             loaded_model = self.load_model(model_config)
-            self.model_cache[current_model.name] = {
+            self.model_cache[current_model_config.name] = {
                 "model": loaded_model,
                 "config": model_config,
             }
-        return self.model_cache[current_model.name]
+        return self.model_cache[current_model_config.name]
 
     def load_model(self, model_config):
         if model_config.type == "torch":
@@ -159,18 +178,16 @@ class LatentSpaceReducer:
         return torch_models
 
     @classmethod
-    def with_models_loaded(cls, settings) -> "LatentSpaceReducer":
-        if settings is None:
-            settings = default_settings
-        reducer = cls(settings)
-        # Load the models now
-        reducer.current_torch_model = reducer.get_ls_model()
-        reducer.curent_dim_reduction_model = reducer.get_dim_reduction_model()
-        reducer.current_transform = reducer.get_transform()
+    def from_settings(cls, settings) -> "LatentSpaceReducer":
+        reducer = cls(
+            settings.current_latent_space,
+            settings.current_dim_reduction,
+            settings.models,
+        )
 
         return reducer
 
 
-if __name__ == "__main__":
-    reducer = LatentSpaceReducer.with_models_loaded(default_settings.lse)
-    reducer.reduce()
+# if __name__ == "__main__":
+#     reducer = LatentSpaceReducer.from_settings(default_settings.lse)
+#     reducer.reduce()
