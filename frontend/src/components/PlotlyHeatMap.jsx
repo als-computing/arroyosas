@@ -3,9 +3,16 @@ import Plot from 'react-plotly.js';
 
 const plotlyColorScales = ['Viridis', 'Plasma', 'Inferno', 'Magma', 'Cividis'];
 
+const linecutSample = {
+    xStart: 0,
+    xEnd: 5,
+    yStart: 60,
+    yEnd: 70
+}
+
 export default function PlotlyHeatMap({
     array = [],
-    linecutYPosition=50,
+    linecutData=linecutSample,
     linecutThickness = 2,
     title = '',
     xAxisTitle = '',
@@ -49,8 +56,8 @@ export default function PlotlyHeatMap({
 
     // Calculate the y position for the horizontal line
     let lineY = null;
-    if (linecutYPosition !== undefined && array.length > 0) {
-        lineY = array.length - linecutYPosition; // Convert from bottom index to y-axis coordinate
+    if (linecutData !== undefined && array.length > 0) {
+        lineY = array.length - linecutData.yStart; // Convert from bottom index to y-axis coordinate
     }
 
     // Calculate the height dynamically based on the number of rows in the array
@@ -85,7 +92,7 @@ export default function PlotlyHeatMap({
                         t: 0,
                         b: 0,
                     },
-                    shapes: lineY !== null
+                    shapes: linecutData !== null
                         ? [
                             {
                                 type: 'line',

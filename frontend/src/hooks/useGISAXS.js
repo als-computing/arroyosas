@@ -96,7 +96,18 @@ export const useGISAXS = ({}) => {
             }
 
             if ('raw_frame' in newMessage) {
-                let newPlot = processAndDownsampleArrayData(newMessage.raw_frame,  newMessage.width, newMessage.height, 1);
+                const maxArrayElements = 10000; //largest number of array elements we want to display in Plotly to avoid performance issues
+                var downsampleFactor = Math.max(Math.sqrt(newMessage.raw_frame.length / maxArrayElements), 1);
+                let newPlot = processAndDownsampleArrayData(newMessage.raw_frame,  newMessage.width, newMessage.height, downsampleFactor);
+                if (downsampleFactor > 1) {
+                    const width = newPlot[0].length;
+                    const height = newPlot.length;
+                    const elements = width * height;
+                    console.log("Downsampled frame, new dimensions: " + width + " x " + height + " = " + elements);
+                }
+                console.log("newPlot dim1: " + newPlot.length);
+                console.log("newPlot dim2: " + newPlot[0].length);
+                console.log("original array length: " + newMessage.raw_frame.length);
                 setCurrentArayData(newPlot);
                 setCumulativeArrayData((prevState) => {
                     var newState = [...prevState];
