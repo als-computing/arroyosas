@@ -105,9 +105,6 @@ export const useGISAXS = ({}) => {
                     const elements = width * height;
                     console.log("Downsampled frame, new dimensions: " + width + " x " + height + " = " + elements);
                 }
-                console.log("newPlot dim1: " + newPlot.length);
-                console.log("newPlot dim2: " + newPlot[0].length);
-                console.log("original array length: " + newMessage.raw_frame.length);
                 setCurrentArayData(newPlot);
                 setCumulativeArrayData((prevState) => {
                     var newState = [...prevState];
