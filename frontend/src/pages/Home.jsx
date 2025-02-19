@@ -102,7 +102,7 @@ export default function Home() {
               <Widget title='Most Recent' width='w-full' defaultHeight='h-1/2'>
                 <div className="flex w-full h-full pt-4">
                   <div className="w-1/2 h-full">
-                    <PlotlyHeatMap array={currentArrayData} title='' xAxisTitle='' yAxisTitle='' width='w-full' fixPlotHeightToParent={true} showTicks={heatmapSettings.showTicks.value} tickStep={heatmapSettings.tickStep.value}/>              
+                    <PlotlyHeatMap array={currentArrayData} flipArray={heatmapSettings.flipImg.value} title='' xAxisTitle='' yAxisTitle='' width='w-full' fixPlotHeightToParent={true} showTicks={heatmapSettings.showTicks.value} tickStep={heatmapSettings.tickStep.value}/>              
                   </div>
                   <div className="w-1/2 h-fulkl">
                     <PlotlyScatterMultiple data={currentScatterPlot} title='All Plots' xAxisTitle='x' yAxisTitle='y'/>                  

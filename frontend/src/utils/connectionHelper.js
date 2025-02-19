@@ -5,7 +5,7 @@
 const getWsUrl = () => {
     const currentWebsiteIP = window.location.hostname;
     const pathname = "/viz";
-    const port = ":8021";
+    const port = ":8001";
     var wsUrl;
 
     if (process.env.REACT_APP_WEBSOCKET_URL) {

@@ -9,9 +9,10 @@ export const getTiled = () => {
 export const getSearchResults = async (searchPath, cb, mock = false) => {
     try {
         const sampleTiledUrl = "http://127.0.0.1:8000/api/v1/array/full/exp01/ML_exp01-144J-22_id836920_?slice=158,::1,::1"
-        const response = await axios.get(sampleTiledUrl);
-        console.log({response});
+        const response = await axios.get(searchPath);
+        //console.log({response});
         //cb(response.data);
+        return response.data;
     } catch (error) {
         console.error('Error searching path: ', error);
     }

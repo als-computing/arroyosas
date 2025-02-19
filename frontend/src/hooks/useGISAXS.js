@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import msgpack from 'msgpack-lite';
 import dayjs from 'dayjs';
 import { getWsUrl } from '../utils/connectionHelper';
-import { processAndDownsampleArrayData, processJSONPlot, updateCumulativePlot } from '../utils/plotHelper';
+import { processAndDownsampleArrayData, processJSONPlot, flip2DArray, updateCumulativePlot } from '../utils/plotHelper';
 
 const defaultWsUrl = getWsUrl();
 const defaultHeatmapSettings = {
@@ -17,6 +17,12 @@ const defaultHeatmapSettings = {
         type: 'boolean',
         value: false,
         description: 'Toggles the display of tickmarks on the heatmap graphs, where tickmarks represent the frame count at that row.'
+    },
+    flipImg: {
+        label: 'Flip Image',
+        type: 'boolean',
+        value: true,
+        description: 'Adjusts the Plotly heatmap display to flip the image over the horizontal axis'
     }
 };
 
@@ -96,7 +102,7 @@ export const useGISAXS = ({}) => {
             }
 
             if ('raw_frame' in newMessage) {
-                const maxArrayElements = 10000; //largest number of array elements we want to display in Plotly to avoid performance issues
+                const maxArrayElements = 90000000; //largest number of array elements we want to display in Plotly to avoid performance issues
                 var downsampleFactor = Math.max(Math.sqrt(newMessage.raw_frame.length / maxArrayElements), 1);
                 let newPlot = processAndDownsampleArrayData(newMessage.raw_frame,  newMessage.width, newMessage.height, downsampleFactor);
                 if (downsampleFactor > 1) {

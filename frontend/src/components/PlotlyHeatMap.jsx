@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
+import { flip2DArray } from '../utils/plotHelper';
 import Plot from 'react-plotly.js';
 
 const plotlyColorScales = ['Viridis', 'Plasma', 'Inferno', 'Magma', 'Cividis'];
@@ -23,10 +24,12 @@ export default function PlotlyHeatMap({
     height = 'h-full',
     showTicks = false,
     tickStep = 10,
-    fixPlotHeightToParent = false
+    fixPlotHeightToParent = false,
+    flipArray = false
 }) {
     const plotContainer = useRef(null);
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+    //console.log({array})
 
     // Hook to update dimensions dynamically
     useEffect(() => {
@@ -45,7 +48,7 @@ export default function PlotlyHeatMap({
     // Create the heatmap data
     var data = [
         {
-            z: array,
+            z: flipArray ? flip2DArray(array) : array,
             type: 'heatmap',
             colorscale: colorScale,
             zmin: 0,

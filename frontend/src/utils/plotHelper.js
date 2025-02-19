@@ -139,6 +139,14 @@ export const processAndDownsampleArrayData = (data = [], width, height, scaleFac
     return newData;
 };
 
+export const flip2DArray = (array) => {
+    //flips an array about the horizontal axis
+    let newFlippedArray = [];
+    for (let i=array.length-1; i>=0; i--) {
+        newFlippedArray.push(array[i]);
+    }
+    return newFlippedArray;
+}
 
 export  function generateEggData(size, maxVal=255, offset=2) {
     const center = size / offset; // Center of the Egg
