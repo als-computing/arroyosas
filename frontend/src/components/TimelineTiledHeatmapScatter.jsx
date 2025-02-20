@@ -31,7 +31,7 @@ const generateSampleScatterPlots = (n=1) => {
 };
 
 
-export default function TimelineTiledHeatmapScatter ({tiledLinks=[], demo=false, flipArray=true}) {
+export default function TimelineTiledHeatmapScatter ({tiledLinks=[], demo=false, flipArray=true, linecutData=null}) {
     const [ index, setIndex ] = useState(0);
     const [ heatmapArray, setHeatmapArray ] = useState(null);
     const [ scatterPlot, setScatterPlot ] = useState(null);
@@ -108,6 +108,7 @@ export default function TimelineTiledHeatmapScatter ({tiledLinks=[], demo=false,
                                 fixPlotHeightToParent={true} 
                                 title={"frame " + index + " - " + tiledLinks[index].timestamp} 
                                 flipArray={flipArray}
+                                linecutData={linecutData}
                             />
                         }
                     </div>

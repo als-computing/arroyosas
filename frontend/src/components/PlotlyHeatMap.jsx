@@ -5,17 +5,17 @@ import Plot from 'react-plotly.js';
 const plotlyColorScales = ['Viridis', 'Plasma', 'Inferno', 'Magma', 'Cividis'];
 
 const linecutSample = {
-    xStart: 0,
-    xEnd: 5,
-    yStart: 60,
-    yEnd: 70
+    x0: 0,
+    x1: 1000,
+    y0: 60,
+    y1: 70,
+    thickness: 1
 }
 
 export default function PlotlyHeatMap({
     array = [],
     preserveAspectRatio = true,
-    linecutData=linecutSample,
-    linecutThickness = 2,
+    linecutData=null,
     title = '',
     xAxisTitle = '',
     yAxisTitle = '',
@@ -125,13 +125,13 @@ export default function PlotlyHeatMap({
                         ? [
                             {
                                 type: 'line',
-                                x0: linecutData.xStart, //0
-                                x1: linecutData.xEnd, //array[0]?.length - 1 || 1, // Assuming non-empty array, width of heatmap
-                                y0: linecutData.yStart, //lineY,
-                                y1: linecutData.yEnd, //lineY,
+                                x0: Math.max(linecutData.x0, 0),
+                                x1: Math.min(linecutData.x1, array[0].length - 1), 
+                                y0: linecutData.y0, 
+                                y1: linecutData.y1,
                                 line: {
                                     color: 'red',
-                                    width: linecutThickness,
+                                    width: linecutData.thickness,
                                 },
                             },
                         ]

@@ -145,8 +145,20 @@ export const useGISAXS = ({}) => {
 
             if ('linecut' in newMessage) {
                 //parse the linecut - TODO - this has not been tested
-
-                const myLinecut = newMessage.linecut;
+                const parameters = newMessage.linecut;
+                try {
+                    var linecut = {
+                        x0: parameters.x_min,
+                        x1: parameters.x_max,
+                        y0: parameters.cut_pos_y, //assumed it is always a flat horizontal line
+                        y1: parameters.cut_pos_y,
+                        thickness: parameters.cut_half_width*2
+                    };
+                    setLinecutData(linecut);
+                } catch (e) {
+                    console.error('Error formatting linecut data from ws message: ', e);
+                    console.log({parameters});
+                }
 
                 //replace this with the appropriate values from myLinecut
                 const linecutSample = {
@@ -156,7 +168,8 @@ export const useGISAXS = ({}) => {
                     yEnd: 70
                 };
 
-                setLinecutData(linecutSample);
+
+
             }
 
             if ('msg_type' in newMessage) {
