@@ -42,6 +42,7 @@ export default function Home() {
     handleHeatmapSettingChange,
     warningMessage,
     metadata,
+    linecutData
   } = useGISAXS({});
 
   var statusMessage;
@@ -68,7 +69,6 @@ export default function Home() {
 
     return (
       <div className="flex-col h-screen w-screen">
-
         <div className="h-16 shadow-lg">
           <Header isExperimentRunning={isExperimentRunning} showStatus={isSidebarClosed} statusMessage={statusMessage}/>
         </div>
@@ -102,7 +102,18 @@ export default function Home() {
               <Widget title='Most Recent' width='w-full' defaultHeight='h-1/2'>
                 <div className="flex w-full h-full pt-4">
                   <div className="w-1/2 h-full">
-                    <PlotlyHeatMap array={currentArrayData} flipArray={heatmapSettings.flipImg.value} title='' xAxisTitle='' yAxisTitle='' width='w-full' fixPlotHeightToParent={true} showTicks={heatmapSettings.showTicks.value} tickStep={heatmapSettings.tickStep.value}/>              
+                    <PlotlyHeatMap 
+                      array={currentArrayData}
+                      linecutData={linecutData} 
+                      flipArray={heatmapSettings.flipImg.value} 
+                      title='' 
+                      xAxisTitle='' 
+                      yAxisTitle='' 
+                      width='w-full' 
+                      fixPlotHeightToParent={true} 
+                      showTicks={heatmapSettings.showTicks.value} 
+                      tickStep={heatmapSettings.tickStep.value}
+                    />              
                   </div>
                   <div className="w-1/2 h-fulkl">
                     <PlotlyScatterMultiple data={currentScatterPlot} title='All Plots' xAxisTitle='x' yAxisTitle='y'/>                  

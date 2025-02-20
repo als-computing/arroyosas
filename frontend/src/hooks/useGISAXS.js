@@ -35,6 +35,7 @@ export const useGISAXS = ({}) => {
     const [ isExperimentRunning, setIsExperimentRunning ] = useState(false);
     const [ isReductionTest, setIsReductionTest ] = useState(false);
     const [ linecutYPosition, setLinecutYPosition ] = useState(50); //using 50 as a test, change default later
+    const [ linecutData, setLinecutData ] = useState(null);
 
     const [ wsUrl, setWsUrl ] = useState(defaultWsUrl);
     const [ socketStatus, setSocketStatus ] = useState('closed');
@@ -131,6 +132,22 @@ export const useGISAXS = ({}) => {
                     newState.push(newPlotObject);
                     return newState;
                 });
+            };
+
+            if ('linecut' in newMessage) {
+                //parse the linecut - TODO - this has not been tested
+
+                const myLinecut = newMessage.linecut;
+
+                //replace this with the appropriate values from myLinecut
+                const linecutSample = {
+                    xStart: 0,
+                    xEnd: 5,
+                    yStart: 60,
+                    yEnd: 70
+                };
+
+                setLinecutData(linecutSample);
             }
 
             if ('msg_type' in newMessage) {
@@ -257,5 +274,6 @@ export const useGISAXS = ({}) => {
         warningMessage,
         isReductionTest,
         metadata,
+        linecutData
     }
 }

@@ -42,7 +42,6 @@ export default function PlotlyHeatMap({
             } else {
                 const containerAR = height / width;
                 const arrayAR = aspectRatio.current; //need ref to avoid stale closure
-                console.log({arrayAR})
                 if (arrayAR > containerAR) {
                     const scaledContainerWidth = height / arrayAR;
                     setDimensions({width: scaledContainerWidth, height: height});
@@ -85,7 +84,8 @@ export default function PlotlyHeatMap({
 
     // Calculate the y position for the horizontal line
     let lineY = null;
-    if (linecutData !== undefined && array.length > 0) {
+    if (linecutData && array.length > 0) {
+        // TODO - verify if this has any issues when flip image is set to true
         lineY = array.length - linecutData.yStart; // Convert from bottom index to y-axis coordinate
     }
 
@@ -125,10 +125,10 @@ export default function PlotlyHeatMap({
                         ? [
                             {
                                 type: 'line',
-                                x0: 0,
-                                x1: array[0]?.length - 1 || 1, // Assuming non-empty array, width of heatmap
-                                y0: lineY,
-                                y1: lineY,
+                                x0: linecutData.xStart, //0
+                                x1: linecutData.xEnd, //array[0]?.length - 1 || 1, // Assuming non-empty array, width of heatmap
+                                y0: linecutData.yStart, //lineY,
+                                y1: linecutData.yEnd, //lineY,
                                 line: {
                                     color: 'red',
                                     width: linecutThickness,
