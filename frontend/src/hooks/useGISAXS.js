@@ -47,6 +47,7 @@ export const useGISAXS = ({}) => {
 
     const ws = useRef(null);
     const isUserClosed = useRef(false);
+    const reconnectionAttempts = useRef(0);
 
 
 
@@ -227,11 +228,10 @@ export const useGISAXS = ({}) => {
             console.log(`WebSocket ${event.currentTarget.url} closed unexpectedly at ${dayjs().format('h:mm:ss A')}`);
 
             // Reconnection logic
-            const maxAttempts = 0; // Number of attempts to reconnect
-            let attempts = 0;
+            const maxAttempts = 5; // Number of attempts to reconnect
 
             const tryReconnect = () => {
-                if (attempts >= maxAttempts) {
+                if (reconnectionAttempts.current >= maxAttempts) {
                     setWarningMessage("Failed to reconnect to WebSocket after multiple attempts.");
                     return;
                 }
@@ -239,8 +239,8 @@ export const useGISAXS = ({}) => {
                     //ws has restarted
                     return;
                 } else {
-                    attempts++;
-                    console.log(`Reconnection attempt ${attempts}`);
+                    reconnectionAttempts.current = reconnectionAttempts.current + 1;
+                    console.log(`Reconnection attempt ${reconnectionAttempts.current}`);
                     startWebSocket();
                 }
             };
