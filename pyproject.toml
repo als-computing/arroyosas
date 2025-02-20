@@ -16,6 +16,7 @@ dependencies = [
     "msgpack",
     "numpy",
     "Pillow",
+    "bluesky-tiled-plugins==2.0.0b57",
     "pyzmq",
     "tqdm",
     "typer",

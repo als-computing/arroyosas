@@ -92,7 +92,7 @@ class ZMQFramePublisher(Publisher):
     def from_settings(cls, settings) -> "ZMQFramePublisher":
         context = Context()
         zmq_socket = context.socket(zmq.PUB)
-        zmq_socket.connect(settings.zmq_address)
+        zmq_socket.connect(settings.address)
         return cls(zmq_socket)
 
 

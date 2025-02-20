@@ -1,60 +1,55 @@
 ---
 logging_level: INFO
+
 tiled_poller:
-  publish_address: tcp://0.0.0.0:5000  #only safe in containers
-
-
-
-lse_reducer:
-  models:
-    - name: CNNAutoencoder
-      state_dict: ./models/cnn_autoencoder/model_state_dict.npz
-      python_class: CNNAutoencoder
-      python_file: ./models/cnn_autoencoder/model.py
-      type: torch
-
-    - name: UMAP
-      file: ./models/umap/quick_test.joblib
-      type: joblib
-
-  current_latent_space: CNNAutoencoder
-  current_dim_reduction: UMAP
-
-lse_operator:
-  ws_publisher:
-    host: 0.0.0.0
-    port: 8765
-  zmq_publisher: # ???
-    zmq_address: tcp://0.0.0.0:5557
-  listener:
-    zmq_address: tcp://0.0.0.0:5000
-  zmq_broker:
-    router_address: tcp://0.0.0.0:5555
-    router_hwm: 100000
-    dealer_address: tcp://0.0.0.0:5556
-lse_publisher:
-  ws_publisher:
-    host: 0.0.0.0
-    port: 8021
+  zmq_frame_publisher:
+    address: tcp://0.0.0.0:5000  #only safe in containers
+  poll_interval: 5 # seconds
+  uri: https://tiled.nsls2.bnl.gov
+  api_key: "@format {env[TILED_LIVE_API_KEY]}"
+  runs_segments:
+    - smi
+    - raw
+  frames_segments:
+    - primary
+    - data
+    - pil900KW_image
 
 viz_operator:
-  ws_publisher:
-    host: 0.0.0.0
-    port: 8021
-  listener:
-    zmq_address: tcp://0.0.0.0:5000  #only safe in containers
-  redis:
-    host: kvrocks
-    port: 6666
-  tiled:
-    raw:
-      # uri: http://tiled:8000
-      uri: https://tiled.nsls2.bnl.gov
-      # api_key: "env[TILED_API_KEY]"
+  zmq_listen_address: tcp://0.0.0.0:5000  #only safe in containers
+  zmq_hwm: 100000
+  redis_host: redis
+  redis_port: 6379
 
-tiled_processed:
-  uri: http://tiled:8000
 
-smi_tiled_image_path: /primary/data/pil900KW_image
+  models:
+    - name: CNNAutoencoder
+      checkpoint_dir: /torch/cnnautoencoder
+      python_class: CNNAutoencoder
+      type: torch
+      proceosors: gpu
 
-dynaconf_merge: true
+    - name: PCA
+      dir: /dim_reduction/pca
+      current: PCA
+      type: joblib
+      processor: cpu
+
+
+  current_latent_space: CNNAutoencoder
+  current_dim_reduction: CNNAutoencoder
+    # - name: UMAP
+    #   directory: /dim_reduction/umap
+  current_reduction: PCA
+
+lse:
+  zmq_router_address: tcp://*:5555
+  zmq_router_hwm: 100000
+  zmq_dealer_address: tcp://*:5556
+  websocket_publish_host: 0.0.0.0
+  websocket_publish_port: 8021
+  zmq_publish_address: tcp://*:5557
+
+
+frame_publisher:
+  zmp_publish_address: tcp://*:5558

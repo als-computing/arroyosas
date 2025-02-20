@@ -21,11 +21,72 @@ from .schemas import (
     GISAXSRawEvent,
     GISAXSStart,
     GISAXSStop,
+    SerializableNumpyArrayModel,
 )
 
 RUNS_CONTAINER_NAME = "runs"
 
 logger = logging.getLogger(__name__)
+
+
+class TiledTestframeListener(Listener):
+    def __init__(self, tiled_array: ArrayClient):
+        super().__init__()
+        self.tiled_array = tiled_array
+
+    async def start(self):
+        while True:
+            # Get the most recent run
+            for frame in self.tiled_array:
+                print(frame)
+            # # if cent_tiled_run = most_recent_run(self.beamline_runs_tiled)
+            # start_message = GISAXSStart(
+            #     width=current_tiled_run.width,
+            #     height=current_tiled_run.height,
+            #     data_type=current_tiled_run.data_type,
+            # )
+            # await self.operator.process(start_message)
+
+            # # If run has stop document, send GISAXSStop message and
+            # # set_current_run to None, sent_frames to [] and continue
+            # if current_tiled_run.has_stop_document():
+            #     stop_message = GISAXSStop(num_frames=len(sent_frames))
+            #     await self.operator.process(stop_message)
+            #     current_tiled_run = None
+            #     sent_frames = []
+            #     continue
+
+            # # How many frames in this run?
+            # # if len(sent_frames) == num_frames, continue
+            # # if len(sent_frames) < num_frames, get the next N frames and
+            # #   for each new frame
+            # #        construct a GISAXSRawEvent and call operator.process()
+            # #        add frame number to sent_frames
+            # frames_array = sub_container(current_tiled_run, self.tiled_frame_segments)
+
+            # if sent_frames == frames_array.shape[0]:
+            #     # Sleep for poll_interval
+            #     await asyncio.sleep(self.poll_paust_sec)
+            #     continue
+            # unsents = unsent_frame_numbers(sent_frames, frames_array.shape[0])
+            # for unsent_frame in unsents:
+            #     array = frames_array[unsent_frame]
+            #     raw_event = GISAXSRawEvent(image=array, frame_number=len(sent_frames))
+            #     await self.operator.process(raw_event)
+            #     sent_frames.append(unsent_frame)
+
+    async def stop(self):
+        pass
+
+    async def listen(self):
+        pass
+
+    @classmethod
+    def from_uri(cls, tiled_uri: str, path: str):
+        client = from_uri(tiled_uri)
+        tiled_node = from_uri(client.uri + path)
+        node = from_uri(tiled_node)
+        return cls(node)
 
 
 class TiledPollingFrameListener(Listener):
@@ -34,58 +95,86 @@ class TiledPollingFrameListener(Listener):
         operator: Operator,
         beamline_runs_tiled: Container,
         tiled_frame_segments: list,
-        poll_paust_sec: int,
+        poll_pause_sec: int,
     ):
         self.beamline_runs_tiled = beamline_runs_tiled
-        self.poll_paust_sec = poll_paust_sec
+        self.poll_pause_sec = poll_pause_sec
         self.tiled_frame_segments = tiled_frame_segments
         self.operator = operator
 
     async def start(self):
-        current_tiled_run = None
+        current_run = None
         sent_frames = []
         # loop = asyncio.get_event_loop()
         while True:
-            # Get the most recent run
+            try:
+                # Get the most recent run
 
-            # if current_tiled_run is None, get the most recent run, set it to
-            # current and send GISAXSStart message
-            if current_tiled_run is None:
-                current_tiled_run = most_recent_run(self.beamline_runs_tiled)
+                # if current_tiled_run is None, get the most recent run, set it to
+                # current and send GISAXSStart message
+                if current_run is None:
+                    most_recent_run = get_most_recent_run(self.beamline_runs_tiled)
+                    current_run = most_recent_run
+                    logger.info(
+                        f"New run: {current_run.metadata['start']['scan_id']} {current_run.metadata['start']['uid']}"
+                    )
+                if current_run.start["scan_id"] == most_recent_run.start["scan_id"]:
+                    logger.debug("No new runs")
+                    await asyncio.sleep(self.poll_pause_sec)
+                    continue
+                    # We have a new
+                current_run = most_recent_run
+                logger.info(
+                    f"New run: {current_run.metadata['start']['scan_id']} {current_run.metadata['start']['uid']}"
+                )
+                data = current_run[tuple(self.tiled_frame_segments.to_list())]
                 start_message = GISAXSStart(
-                    width=current_tiled_run.width,
-                    height=current_tiled_run.height,
-                    data_type=current_tiled_run.data_type,
+                    width=data.shape[0],
+                    height=data.shape[1],
+                    data_type=data.dtype.name,
+                    tiled_url=current_run.uri,
+                    run_name=str(current_run.metadata["start"]["scan_id"]),
+                    run_id=current_run.metadata["start"]["uid"],
                 )
                 await self.operator.process(start_message)
+                # How many frames in this run?
+                # if len(sent_frames) == num_frames, continue
+                # if len(sent_frames) < num_frames, get the next N frames and
+                #   for each new frame
+                #        construct a GISAXSRawEvent and call operator.process()
+                #        add frame number to sent_frames
+                frames_array = sub_container(current_run, self.tiled_frame_segments)
 
-            # If run has stop document, send GISAXSStop message and
-            # set_current_run to None, sent_frames to [] and continue
-            if current_tiled_run.has_stop_document():
-                stop_message = GISAXSStop(num_frames=len(sent_frames))
-                await self.operator.process(stop_message)
-                current_tiled_run = None
-                sent_frames = []
-                continue
-
-            # How many frames in this run?
-            # if len(sent_frames) == num_frames, continue
-            # if len(sent_frames) < num_frames, get the next N frames and
-            #   for each new frame
-            #        construct a GISAXSRawEvent and call operator.process()
-            #        add frame number to sent_frames
-            frames_array = sub_container(current_tiled_run, self.tiled_frame_segments)
-
-            if sent_frames == frames_array.shape[0]:
-                # Sleep for poll_interval
-                await asyncio.sleep(self.poll_paust_sec)
-                continue
-            unsents = unsent_frame_numbers(sent_frames, frames_array.shape[0])
-            for unsent_frame in unsents:
-                array = frames_array[unsent_frame]
-                raw_event = GISAXSRawEvent(image=array, frame_number=len(sent_frames))
-                await self.operator.process(raw_event)
-                sent_frames.append(unsent_frame)
+                if len(sent_frames) == frames_array.shape[0]:
+                    # Sleep for poll_interval
+                    await asyncio.sleep(self.poll_paust_sec)
+                    continue
+                # the shape of these arrays changs from (1, n, x, y) to (n, 1, x, x)
+                frames_index = 0
+                if frames_array.shape[1] == 1:
+                    frames_index = 1
+                unsents = unsent_frame_numbers(
+                    sent_frames, frames_array.shape[frames_index]
+                )
+                for unsent_frame in unsents:
+                    array = frames_array[unsent_frame]
+                    image = SerializableNumpyArrayModel(array=array)
+                    raw_event = GISAXSRawEvent(
+                        image=image,
+                        frame_number=unsent_frame,
+                        tiled_url=current_run.uri,
+                    )
+                    await self.operator.process(raw_event)
+                    sent_frames.append(unsent_frame)
+                    # If run has stop document, send GISAXSStop message and
+                # set_current_run to None, sent_frames to [] and continue
+                if current_run.metadata["stop"]:
+                    stop_message = GISAXSStop(num_frames=len(sent_frames))
+                    await self.operator.process(stop_message)
+                    sent_frames = []
+                    continue
+            except Exception as e:
+                logger.exception(f"Error in polling loop: {e}")
 
     async def stop(self):
         pass
@@ -93,13 +182,29 @@ class TiledPollingFrameListener(Listener):
     async def listen(self):
         pass
 
+    @classmethod
+    def from_settings(cls, settings: dict, operator: Operator):
+        tiled_runs_segments = settings.runs_segments
+        poll_pause_sec = settings.poll_interval
+        client = from_uri(
+            settings.uri,
+            api_key=settings.api_key,
+        )
+        run_container = client[tuple(tiled_runs_segments.to_list())]
+        return cls(
+            operator,
+            run_container,
+            tiled_frame_segments=settings.frames_segments,
+            poll_pause_sec=poll_pause_sec,
+        )
+
 
 class TiledRawFrameOperator(Operator):
     async def process(self, message: GISAXS1DReduction) -> GISAXS1DReduction:
         pass
 
 
-def most_recent_run(tiled_runs: Container):
+def get_most_recent_run(tiled_runs: Container):
     uid = tiled_runs.keys()[-1]
     return tiled_runs[uid]
 
@@ -110,6 +215,8 @@ def sub_container(run: Container, segments: list):
 
 
 def unsent_frame_numbers(sent_frames: list, num_frames: int):
+    if len(sent_frames) == 0:
+        return list(range(num_frames))
     # Find the gaps in my_list
     gaps = [
         i for i in range(min(sent_frames), max(sent_frames) + 1) if i not in sent_frames
@@ -142,8 +249,7 @@ class TiledProcessedPublisher(Publisher):
             logger.error("No run node found. Probably started after start message.")
             return
         elif isinstance(message, GISAXSStop):
-            # Write metrics for the scan
-            pass
+            return
 
         if isinstance(message, GISAXS1DReduction):
             if self.one_d_array_node is None:
@@ -155,16 +261,14 @@ class TiledProcessedPublisher(Publisher):
                 await asyncio.to_thread(self.update_1d_node, message)
 
         if isinstance(message, GISAXSLatentSpaceEvent):
-            print("event")
             if self.dim_reduced_array_node is None:
-                print(("not there"))
                 dim_reduced_array_node = await asyncio.to_thread(
                     create_dim_reduction_node, self.run_node, message
                 )
                 self.dim_reduced_array_node = dim_reduced_array_node
             else:
                 print("there")
-                print(self.dim_reduced_array_node)
+                # print(self.dim_reduced_array_node)
                 await asyncio.to_thread(self.update_ls_nodes, message)
 
     def update_1d_nodes(self, message: GISAXS1DReduction) -> None:
@@ -179,7 +283,7 @@ class TiledProcessedPublisher(Publisher):
     @classmethod
     def from_settings(cls, settings: dict):
         client = from_uri(settings.uri, api_key=settings.api_key)
-        root_container = get_root_container(client)
+        root_container = get_run_container(client)
         return cls(root_container)
 
 
@@ -194,12 +298,6 @@ def create_dim_reduction_node(run_node: Container, message: GISAXS1DReduction) -
     arr = np.array(message.feature_vector)
     dim_reduction_node = run_node.write_array(arr[np.newaxis, :], key="dim_reduction")
     return dim_reduction_node
-
-
-def get_root_container(client: BaseClient) -> Container:
-    if RUNS_CONTAINER_NAME not in client:
-        return client.create_container(RUNS_CONTAINER_NAME)
-    return client[RUNS_CONTAINER_NAME]
 
 
 def get_run_container(
