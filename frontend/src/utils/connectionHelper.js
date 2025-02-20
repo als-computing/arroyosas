@@ -5,7 +5,7 @@
 const getWsUrl = () => {
     const currentWebsiteIP = window.location.hostname;
     const pathname = "/viz"; 
-    const port = ":8083";
+    const port = window.location.port;
     var wsUrl;
 
     const wsProtocol = window.location.protocol === "https:"
@@ -15,7 +15,7 @@ const getWsUrl = () => {
     if (process.env.REACT_APP_WEBSOCKET_URL) {
         wsUrl = process.env.REACT_APP_WEBSOCKET_URL; //defined at top level .env file, accessed at build time
     } else {
-        wsUrl = wsProtocol + currentWebsiteIP + port + pathname; //default when ran locally
+        wsUrl = wsProtocol + currentWebsiteIP + ":" + port + pathname; //default when ran locally
     }
 
     return wsUrl;
