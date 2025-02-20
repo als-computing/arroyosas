@@ -18,8 +18,13 @@ tiled_poller:
 viz_operator:
   zmq_listen_address: tcp://0.0.0.0:5000  #only safe in containers
   zmq_hwm: 100000
-  redis_host: redis
-  redis_port: 6379
+  tiled:
+    raw:
+      uri: https://tiled.nsls2.bnl.gov
+      api_key: "@format {env[TILED_LIVE_API_KEY]}"
+  redis:
+    host: redis
+    port: 6379
 
 
   models:

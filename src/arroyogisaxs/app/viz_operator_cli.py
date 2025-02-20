@@ -22,9 +22,7 @@ async def start():
     logger.info("Starting Tiled Poller")
     logger.info("Getting settings")
     logger.info(f"{settings.viz_operator}")
-    operator = OneDReductionOperator.from_settings(
-        app_settings, settings.smi_tiled_image_path
-    )
+    operator = OneDReductionOperator.from_settings(app_settings)
     tiled_event_publisher = TiledProcessedPublisher.from_settings(
         settings.tiled_processed
     )

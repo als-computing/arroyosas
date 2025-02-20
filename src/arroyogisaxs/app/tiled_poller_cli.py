@@ -21,7 +21,7 @@ async def start(tiled_url: str, zmq_url: str, poll_interval: int = 5):
         f"Starting Tiled Poller with tiled_url: {tiled_url}, zmq_url: {zmq_url}, poll_interval: {poll_interval}"
     )
     operator = TiledRawFrameOperator()
-    publisher = ZMQFramePublisher.from_settings(app_settings.zmq_publisher)
+    publisher = ZMQFramePublisher.from_settings(app_settings.zmq_frame_publisher)
 
     operator.add_publisher(publisher)
     listener = TiledPollingFrameListener.from_settings(app_settings, operator)
