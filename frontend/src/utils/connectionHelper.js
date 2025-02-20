@@ -4,8 +4,8 @@
  */
 const getWsUrl = () => {
     const currentWebsiteIP = window.location.hostname;
-    const pathname = "/viz";
-    const port = ":8001";
+    const pathname = "/viz"; 
+    const port = ":8083";
     var wsUrl;
 
     const wsProtocol = window.location.protocol === "https:"
