@@ -70,8 +70,7 @@ export const useGISAXS = ({}) => {
                 // Convert Blob to ArrayBuffer for binary processing
                 const arrayBuffer = await event.data.arrayBuffer();
                 newMessage = msgpack.decode(new Uint8Array(arrayBuffer));
-                console.log({newMessage})
-
+                console.log({newMessage});
             } else if (event.data instanceof ArrayBuffer) {
                 // Process ArrayBuffer directly
                 newMessage = msgpack.decode(new Uint8Array(event.data));

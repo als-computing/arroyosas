@@ -8,7 +8,7 @@ name: Create and publish frontend image
 
 on:
   push:
-    branches: ['main']
+    branches: ['main', 'frontend']
     tags: ['v*']
 
 env:
