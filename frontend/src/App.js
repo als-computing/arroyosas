@@ -7,7 +7,8 @@ export default function App() {
     return (
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="services" element={<Services />} />
+        <Route path="*" element={<Home />} />
+        <Route path="/services" element={<Services />} />
         <Route path="/alternate" element={<HomeAlternate />} />
       </Routes>
     )

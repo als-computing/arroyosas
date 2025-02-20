@@ -144,7 +144,13 @@ export const useGISAXS = ({}) => {
             }
 
             if ('linecut' in newMessage) {
-                //parse the linecut - TODO - this has not been tested
+                //expected dictionary in websocket message
+/*                 var linecut = {
+                    x_min: 'integer',
+                    x_max: 'integer',
+                    cut_pos_y: 'integer',
+                    cut_half_width: 'integer'
+                } */
                 const parameters = newMessage.linecut;
                 try {
                     var linecut = {
