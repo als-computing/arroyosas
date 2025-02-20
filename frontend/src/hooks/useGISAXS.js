@@ -210,6 +210,7 @@ export const useGISAXS = ({}) => {
 
     const handleWebsocketClose = (event) => {
         ws.current = false;
+        setSocketStatus('closed');
         if (isUserClosed.current === true) {
             //do nothing, the user forced the websocket to close
             console.log('user closed websocket');
@@ -226,7 +227,7 @@ export const useGISAXS = ({}) => {
             console.log(`WebSocket ${event.currentTarget.url} closed unexpectedly at ${dayjs().format('h:mm:ss A')}`);
 
             // Reconnection logic
-            const maxAttempts = 2; // Number of attempts to reconnect
+            const maxAttempts = 0; // Number of attempts to reconnect
             let attempts = 0;
 
             const tryReconnect = () => {
@@ -250,6 +251,7 @@ export const useGISAXS = ({}) => {
 
     const startWebSocket = () => {
         setWarningMessage('');
+        setSocketStatus('connecting');
 
         ws.current = new WebSocket(wsUrl);
 
@@ -260,7 +262,8 @@ export const useGISAXS = ({}) => {
 
         ws.current.onerror = (error) => {
             console.error('Error with ws: ' + error);
-            setWarningMessage("Error connecting websocket: Check port/path and verify processor running");
+            let timestamp = dayjs().format('h:m:s a');
+            setWarningMessage("Connection Error at " + timestamp);
         }
 
         ws.current.onmessage = (event) => {
@@ -273,6 +276,7 @@ export const useGISAXS = ({}) => {
     };
 
     const closeWebSocket = () => {
+        isUserClosed.current = true; //this function is only able to be called by the user
         try {
             ws.current.close();
         } catch (error) {
@@ -280,7 +284,6 @@ export const useGISAXS = ({}) => {
             return;
         }
         setSocketStatus('closed');
-        isUserClosed.current = true; //this function is only able to be called by the user
     };
 
 
