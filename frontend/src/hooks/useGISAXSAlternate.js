@@ -26,13 +26,12 @@ const defaultHeatmapSettings = {
     }
 };
 
-export const useGISAXS = ({}) => {
+export const useGISAXSAlternate = ({}) => {
     const [ messages, setMessages ] = useState([]);
     const [ currentArrayData, setCurrentArayData ] = useState([]);
     const [ cumulativeArrayData, setCumulativeArrayData ] = useState([]);
     const [ currentScatterPlot, setCurrentScatterPlot ] = useState([]);
     const [ cumulativeScatterPlots, setCumulativeScatterPlots ] = useState([]);
-    const [ tiledLinks, setTiledLinks ] = useState([]);
     const [ isExperimentRunning, setIsExperimentRunning ] = useState(false);
     const [ isReductionTest, setIsReductionTest ] = useState(false);
     const [ linecutYPosition, setLinecutYPosition ] = useState(50); //using 50 as a test, change default later
@@ -70,7 +69,8 @@ export const useGISAXS = ({}) => {
                 // Convert Blob to ArrayBuffer for binary processing
                 const arrayBuffer = await event.data.arrayBuffer();
                 newMessage = msgpack.decode(new Uint8Array(arrayBuffer));
-                console.log({newMessage});
+                console.log({newMessage})
+
             } else if (event.data instanceof ArrayBuffer) {
                 // Process ArrayBuffer directly
                 newMessage = msgpack.decode(new Uint8Array(event.data));
@@ -134,37 +134,10 @@ export const useGISAXS = ({}) => {
                 });
             };
 
-            if ('raw_frame_tiled_url' in newMessage) {
-                const links = {
-                    image: newMessage.raw_frame_tiled_url,
-                    curve: newMessage?.curve_tiled_url,
-                    timestamp: timestamp
-                };
-                setTiledLinks((prevState) => [...prevState, links]);
-            }
-
             if ('linecut' in newMessage) {
-                //expected dictionary in websocket message
-/*                 var linecut = {
-                    x_min: 'integer',
-                    x_max: 'integer',
-                    cut_pos_y: 'integer',
-                    cut_half_width: 'integer'
-                } */
-                const parameters = newMessage.linecut;
-                try {
-                    var linecut = {
-                        x0: parameters.x_min,
-                        x1: parameters.x_max,
-                        y0: parameters.cut_pos_y, //assumed it is always a flat horizontal line
-                        y1: parameters.cut_pos_y,
-                        thickness: parameters.cut_half_width*2
-                    };
-                    setLinecutData(linecut);
-                } catch (e) {
-                    console.error('Error formatting linecut data from ws message: ', e);
-                    console.log({parameters});
-                }
+                //parse the linecut - TODO - this has not been tested
+
+                const myLinecut = newMessage.linecut;
 
                 //replace this with the appropriate values from myLinecut
                 const linecutSample = {
@@ -174,8 +147,7 @@ export const useGISAXS = ({}) => {
                     yEnd: 70
                 };
 
-
-
+                setLinecutData(linecutSample);
             }
 
             if ('msg_type' in newMessage) {
@@ -204,8 +176,6 @@ export const useGISAXS = ({}) => {
         setCumulativeScatterPlots([]);
         setCurrentArayData([]);
         setCurrentScatterPlot([]);
-        setTiledLinks([]);
-        setFrameNumber(0);
     }
 
     const handleWebsocketClose = (event) => {
@@ -304,7 +274,6 @@ export const useGISAXS = ({}) => {
         warningMessage,
         isReductionTest,
         metadata,
-        linecutData,
-        tiledLinks
+        linecutData
     }
 }

@@ -14,11 +14,10 @@ export default function Header({isExperimentRunning=false, showStatus=false, sta
                     <p className="text-sm font-light pl-2">{statusMessage}</p>
                 </div>
             }
-            <img src={als_logo} alt="als logo" className="h-8 w-auto"/>
-            <h1 className="text-4xl text-sky-900">GISAXS Data Viewer</h1>
-            <img src={illumine_logo} alt="bnl logo" className="h-8 w-auto"/>
-
-
+            <h1 className="text-4xl text-sky-900 px-8">GISAXS Data Viewer</h1>
+            <img src={illumine_logo} alt="illumine logo" className="h-8 w-auto"/>
+            <img src={ml_logo} alt="ml exchange logo" className="h-8 w-auto"/>
+            <img src={mwet_logo} alt="mwet logo" className="h-8 w-auto"/>
         </header>
     )
 }

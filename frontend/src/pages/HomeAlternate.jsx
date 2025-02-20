@@ -11,7 +11,6 @@ import PlotlyScatterMultiple from "../components/PlotlyScatterMultiple";
 import ConsoleViewer from "../components/ConsoleViewer";
 import TimelineHeatmap from '../components/TimelineHeatmap';
 import TimelineHeatmapScatter from '../components/TimelineHeatmapScatter';
-import TimelineTiledHeatmapScatter from '../components/TimelineTiledHeatmapScatter';
 import Button from "../component_library/Button";
 import TextField from "../component_library/TextField";
 import ScanMetadata from "../components/ScanMetadata";
@@ -20,15 +19,16 @@ import FormContainer from "../component_library/FormContainer";
 import Status from '../components/Status';
 import { phosphorIcons } from '../assets/icons';
 
-import { useAPXPS } from "../hooks/useAPXPS";
-import { useGISAXS } from '../hooks/useGISAXS';
-export default function Home() {
+import { useGISAXSAlternate } from '../hooks/useGISAXSAlternate';
+export default function HomeAlternate() {
   const [ isSidebarClosed, setIsSidebarClosed ] = useState(false)
 
   const {
     messages,
     currentArrayData,
     currentScatterPlot,
+    cumulativeScatterPlots,
+    cumulativeArrayData,
     isExperimentRunning,
     isReductionTest,
     wsUrl,
@@ -41,9 +41,8 @@ export default function Home() {
     handleHeatmapSettingChange,
     warningMessage,
     metadata,
-    linecutData,
-    tiledLinks
-  } = useGISAXS({});
+    linecutData
+  } = useGISAXSAlternate({});
 
   var statusMessage;
   if (isExperimentRunning && isReductionTest) {
@@ -62,10 +61,10 @@ export default function Home() {
 
 
   //Automatically start the websocket connection on page load
-  useEffect(() => {
+/*   useEffect(() => {
     startWebSocket();
     return closeWebSocket;
-  }, []);
+  }, []); */
 
     return (
       <div className="flex-col h-screen w-screen">
@@ -122,8 +121,8 @@ export default function Home() {
               </Widget>
 
               {/* Timeline of All Scans */}
-              <Widget title='Timeline' width='w-full' defaultHeight='h-1/2'>
-                <TimelineTiledHeatmapScatter tiledLinks={tiledLinks} flipArray={heatmapSettings.flipImg.value} linecutData={linecutData}/>
+              <Widget title='Timeline - Fully Cached In Memory ' width='w-full' defaultHeight='h-1/2'>
+                <TimelineHeatmapScatter arrayData={cumulativeArrayData} scatterData={cumulativeScatterPlots}/>
               </Widget>
 
             </div>
