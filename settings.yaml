@@ -25,6 +25,9 @@ viz_operator:
   redis:
     host: redis
     port: 6379
+  ws_publisher:
+    host: 0.0.0.0
+    port: 8020
 
 
   models:
