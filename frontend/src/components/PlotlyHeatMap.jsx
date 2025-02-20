@@ -60,11 +60,11 @@ export default function PlotlyHeatMap({
     }, []);
 
     useEffect(() => {
-        console.log('array use effect')
+        //console.log('array use effect')
         if (array.length > 0) {
             var currentAR = array.length / array[0].length;
             if (aspectRatio.current !== currentAR) {
-                console.log('set new AR')
+                //console.log('set new AR')
                 aspectRatio.current = currentAR;
             }
         }

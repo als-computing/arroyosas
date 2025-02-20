@@ -32,6 +32,7 @@ export const useGISAXS = ({}) => {
     const [ cumulativeArrayData, setCumulativeArrayData ] = useState([]);
     const [ currentScatterPlot, setCurrentScatterPlot ] = useState([]);
     const [ cumulativeScatterPlots, setCumulativeScatterPlots ] = useState([]);
+    const [ tiledLinks, setTiledLinks ] = useState([]);
     const [ isExperimentRunning, setIsExperimentRunning ] = useState(false);
     const [ isReductionTest, setIsReductionTest ] = useState(false);
     const [ linecutYPosition, setLinecutYPosition ] = useState(50); //using 50 as a test, change default later
@@ -134,6 +135,15 @@ export const useGISAXS = ({}) => {
                 });
             };
 
+            if ('raw_frame_tiled_url' in newMessage) {
+                const links = {
+                    image: newMessage.raw_frame_tiled_url,
+                    curve: newMessage?.curve_tiled_url,
+                    timestamp: timestamp
+                };
+                setTiledLinks((prevState) => [...prevState, links]);
+            }
+
             if ('linecut' in newMessage) {
                 //parse the linecut - TODO - this has not been tested
 
@@ -176,6 +186,8 @@ export const useGISAXS = ({}) => {
         setCumulativeScatterPlots([]);
         setCurrentArayData([]);
         setCurrentScatterPlot([]);
+        setTiledLinks([]);
+        setFrameNumber(0);
     }
 
     const handleWebsocketClose = (event) => {
@@ -274,6 +286,7 @@ export const useGISAXS = ({}) => {
         warningMessage,
         isReductionTest,
         metadata,
-        linecutData
+        linecutData,
+        tiledLinks
     }
 }

@@ -11,6 +11,7 @@ import PlotlyScatterMultiple from "../components/PlotlyScatterMultiple";
 import ConsoleViewer from "../components/ConsoleViewer";
 import TimelineHeatmap from '../components/TimelineHeatmap';
 import TimelineHeatmapScatter from '../components/TimelineHeatmapScatter';
+import TimelineTiledHeatmapScatter from '../components/TimelineTiledHeatmapScatter';
 import Button from "../component_library/Button";
 import TextField from "../component_library/TextField";
 import ScanMetadata from "../components/ScanMetadata";
@@ -28,8 +29,6 @@ export default function Home() {
     messages,
     currentArrayData,
     currentScatterPlot,
-    cumulativeScatterPlots,
-    cumulativeArrayData,
     isExperimentRunning,
     isReductionTest,
     wsUrl,
@@ -42,7 +41,8 @@ export default function Home() {
     handleHeatmapSettingChange,
     warningMessage,
     metadata,
-    linecutData
+    linecutData,
+    tiledLinks
   } = useGISAXS({});
 
   var statusMessage;
@@ -115,7 +115,7 @@ export default function Home() {
                       tickStep={heatmapSettings.tickStep.value}
                     />              
                   </div>
-                  <div className="w-1/2 h-fulkl">
+                  <div className="w-1/2 h-full">
                     <PlotlyScatterMultiple data={currentScatterPlot} title='All Plots' xAxisTitle='x' yAxisTitle='y'/>                  
                   </div>
                 </div>
@@ -123,33 +123,9 @@ export default function Home() {
 
               {/* Timeline of All Scans */}
               <Widget title='Timeline' width='w-full' defaultHeight='h-1/2'>
-                <TimelineHeatmapScatter arrayData={cumulativeArrayData} scatterData={cumulativeScatterPlots}/>
+                <TimelineTiledHeatmapScatter tiledLinks={tiledLinks}/>
               </Widget>
 
-
-
-{/* 
-              <Widget title='Timeline' width='w-full' defaultHeight='h-1/2'>
-                <TimelineHeatmapScatter demo={true}/>
-              </Widget>
-
-              <Widget 
-                title={isReductionTest ? 'Reduction Test Results' : `Frame #${frameNumber}`} 
-                width='w-1/2' minWidth="min-w-96" maxWidth='max-w-[1000px]' defaultHeight='h-1/2' maxHeight='max-h-[800px]' expandedWidth='w-full'>
-                <PlotlyHeatMap array={currentArrayData} title='Most Recent Scan' xAxisTitle='' yAxisTitle='' width='w-full' fixPlotHeightToParent={true} showTicks={heatmapSettings.showTicks.value} tickStep={heatmapSettings.tickStep.value}/>
-              </Widget>
-              <Widget title={`Scan Timeline`} width='w-1/2' minWidth="min-w-96" maxWidth='max-w-[1000px]' defaultHeight='h-1/2' maxHeight='max-h-[80%]' expandedWidth='w-full'>
-                <TimelineHeatmap cumulativeArrayData={cumulativeArrayData}/>
-              </Widget>
-              <Widget title='All 1D Plots' width='w-full' defaultHeight='h-1/2'>
-                  <PlotlyScatterMultiple data={cumulativeScatterPlots} title='All Plots' xAxisTitle='x' yAxisTitle='y'/>
-              </Widget>
-              <Widget title='1D Plots' width='w-full' defaultHeight='h-1/2'>
-                  <PlotlyScatterMultiple data={currentScatterPlot} title='Most Recent Plot' xAxisTitle='x' yAxisTitle='y'/>
-              </Widget>
-              <Widget title={`Scan Timeline Demo`} width='w-1/2' minWidth="min-w-96" maxWidth='max-w-[1000px]' defaultHeight='h-1/2' maxHeight='max-h-[80%]' expandedWidth='w-full'>
-                <TimelineHeatmap demo={true}/>
-              </Widget> */}
             </div>
           </Main>
         </div>
