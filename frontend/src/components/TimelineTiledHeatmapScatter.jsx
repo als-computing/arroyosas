@@ -48,11 +48,7 @@ export default function TimelineTiledHeatmapScatter ({tiledLinks=[], demo=false,
     const getNewHeatmap = async (url) => {
         const rawArray = await fetchData(url);
         if (!rawArray) return;
-        if (flipArray) {
-            setHeatmapArray(flip2DArray(rawArray));
-        } else {
-            setHeatmapArray(rawArray);
-        }
+        setHeatmapArray(rawArray);
     };
 
     const getNewScatterPlot = async (url) => {
@@ -111,6 +107,7 @@ export default function TimelineTiledHeatmapScatter ({tiledLinks=[], demo=false,
                                 array={heatmapArray} 
                                 fixPlotHeightToParent={true} 
                                 title={"frame " + index + " - " + tiledLinks[index].timestamp} 
+                                flipArray={flipArray}
                             />
                         }
                     </div>

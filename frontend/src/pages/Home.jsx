@@ -123,7 +123,7 @@ export default function Home() {
 
               {/* Timeline of All Scans */}
               <Widget title='Timeline' width='w-full' defaultHeight='h-1/2'>
-                <TimelineTiledHeatmapScatter tiledLinks={tiledLinks}/>
+                <TimelineTiledHeatmapScatter tiledLinks={tiledLinks} flipArray={heatmapSettings.flipImg.value}/>
               </Widget>
 
             </div>
