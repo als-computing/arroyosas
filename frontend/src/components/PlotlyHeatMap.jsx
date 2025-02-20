@@ -13,6 +13,7 @@ const linecutSample = {
 
 export default function PlotlyHeatMap({
     array = [],
+    preserveAspectRatio = true,
     linecutData=linecutSample,
     linecutThickness = 2,
     title = '',
@@ -28,22 +29,47 @@ export default function PlotlyHeatMap({
     flipArray = false
 }) {
     const plotContainer = useRef(null);
+    const aspectRatio = useRef(1);
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
     //console.log({array})
 
     // Hook to update dimensions dynamically
-    useEffect(() => {
-        const resizeObserver = new ResizeObserver((entries) => {
-            if (entries[0]) {
-                const { width, height } = entries[0].contentRect;
-                setDimensions({ width, height });
+    const resizeObserver = new ResizeObserver((entries) => {
+        if (entries[0]) {
+            const { width, height } = entries[0].contentRect;
+            if (!preserveAspectRatio) {
+                setDimensions({width, height});
+            } else {
+                const containerAR = height / width;
+                const arrayAR = aspectRatio.current; //need ref to avoid stale closure
+                console.log({arrayAR})
+                if (arrayAR > containerAR) {
+                    const scaledContainerWidth = height / arrayAR;
+                    setDimensions({width: scaledContainerWidth, height: height});
+                } else {
+                    const scaledContainerHeight = width * arrayAR;
+                    setDimensions({width: width, height: scaledContainerHeight});
+                }
             }
-        });
+        }
+    });
+    useEffect(() => {
         if (plotContainer.current) {
             resizeObserver.observe(plotContainer.current);
         }
         return () => resizeObserver.disconnect();
     }, []);
+
+    useEffect(() => {
+        console.log('array use effect')
+        if (array.length > 0) {
+            var currentAR = array.length / array[0].length;
+            if (aspectRatio.current !== currentAR) {
+                console.log('set new AR')
+                aspectRatio.current = currentAR;
+            }
+        }
+    }, [array]);
 
     // Create the heatmap data
     var data = [
@@ -67,7 +93,7 @@ export default function PlotlyHeatMap({
     const dynamicHeight = Math.max(array.length * verticalScaleFactor, 200); // Minimum height is 200px
 
     return (
-        <div className={`${height} ${width} rounded-b-md pb-6 flex-col content-end relative`} ref={plotContainer}>
+        <div className={`${height} ${width} rounded-b-md pb-6 flex items-center justify-center relative`} ref={plotContainer}>
             <Plot
                 data={data}
                 layout={{
@@ -86,9 +112,9 @@ export default function PlotlyHeatMap({
                         dtick: showTicks ? tickStep : 10000, 
                         showticklabels: showTicks
                     },
-                    autosize: true,
+                    autosize: false,
                     width: dimensions.width,
-                    height: fixPlotHeightToParent ? dimensions.height : dynamicHeight, // Dynamically set height
+                    height: dimensions.height,//fixPlotHeightToParent ? dimensions.height : dynamicHeight, // Dynamically set height
                     margin: {
                         l: showTicks ? 50 : 10,
                         r: 10,
