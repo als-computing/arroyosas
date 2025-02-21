@@ -1,6 +1,12 @@
 import json
+import logging
 
 import redis.asyncio as redis
+from arroyogisaxs.config import settings
+from arroyogisaxs.log_utils import setup_logger
+
+logger = logging.getLogger(__name__)
+setup_logger(logger, log_level=settings.logging_level)
 
 
 class RedisConn:
@@ -31,7 +37,7 @@ class RedisConn:
         channel_name = "scattering"
         await pubsub.subscribe(channel_name)  # Subscribe to the channel
 
-        print(f"Listening for messages on '{channel_name}'...")
+        logger.info(f"Listening for messages on '{channel_name}'...")
 
         async for message in pubsub.listen():
             if (

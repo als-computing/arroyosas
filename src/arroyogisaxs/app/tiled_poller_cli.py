@@ -11,9 +11,10 @@ from ..log_utils import setup_logger
 
 app = typer.Typer()
 logger = logging.getLogger("arroyogisaxs")
-setup_logger(logger)
-app_settings = settings.tiled_poller
 
+app_settings = settings.tiled_poller
+setup_logger(logger, log_level=settings.logging_level)
+             
 
 @app.command()
 async def start(tiled_url: str, zmq_url: str, poll_interval: int = 5):
@@ -25,7 +26,6 @@ async def start(tiled_url: str, zmq_url: str, poll_interval: int = 5):
 
     operator.add_publisher(publisher)
     listener = TiledPollingFrameListener.from_settings(app_settings, operator)
-    # await asyncio.gather(listener.start(), publisher.start())
     await asyncio.gather(listener.start())
 
 

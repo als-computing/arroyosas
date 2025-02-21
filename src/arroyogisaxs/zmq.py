@@ -39,7 +39,7 @@ class ZMQFrameListener(Listener):
                     logger.info(f"Received Start {message}")
                     message = GISAXSStart(**message)
                 elif message_type == "event":
-                    # logger.debug("Received event")
+                    logger.debug("Received event")
                     image = SerializableNumpyArrayModel.deserialize_array(
                         message["image"]
                     )
@@ -75,14 +75,16 @@ class ZMQFramePublisher(Publisher):
         self.zmq_socket = zmq_socket
 
     async def publish(self, message: GISAXSMessage) -> None:
+        logger.debug(f"Publishing message: {message.msg_type}")
         if isinstance(message, GISAXSStart) or isinstance(message, GISAXSStop):
-            message = msgpack.packb(message, use_bin_type=True)
+            message = msgpack.packb(message.model_dump(), use_bin_type=True)
             await self.zmq_socket.send(message)
+            return
         if isinstance(message, GISAXSRawEvent):
-            message = message.dict()
-            message["image"] = SerializableNumpyArrayModel.serialize_array(
-                message["image"]
-            )
+            message = message.model_dump()
+            # message["image"] = SerializableNumpyArrayModel.serialize_array(
+            #     message["image"]["array"]
+            # )
             message = msgpack.packb(message, use_bin_type=True)
             await self.zmq_socket.send(message)
         else:

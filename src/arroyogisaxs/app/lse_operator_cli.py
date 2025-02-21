@@ -27,11 +27,11 @@ async def start() -> None:
 
     # ws_publisher = OneDWSResultPublisher.from_settings(app_settings.ws_publisher)
     ws_publisher = LSEWSResultPublisher.from_settings(app_settings.ws_publisher)
-    tiled_event_publisher = TiledProcessedPublisher.from_settings(
-        settings.tiled_processed
-    )
+    # tiled_event_publisher = TiledProcessedPublisher.from_settings(
+    #     settings.tiled_processed
+    # )
     operator.add_publisher(ws_publisher)
-    operator.add_publisher(tiled_event_publisher)
+    # operator.add_publisher(tiled_event_publisher)
 
     listener = ZMQFrameListener.from_settings(app_settings.listener, operator)
     await asyncio.gather(listener.start(), ws_publisher.start())

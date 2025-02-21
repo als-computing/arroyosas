@@ -2,6 +2,7 @@ import asyncio
 import logging
 import operator
 from functools import reduce
+import time
 from typing import Union
 
 import numpy as np
@@ -18,6 +19,7 @@ from tiled.client.container import Container
 from .schemas import (
     GISAXS1DReduction,
     GISAXSLatentSpaceEvent,
+    GISAXSMessage,
     GISAXSRawEvent,
     GISAXSStart,
     GISAXSStop,
@@ -101,8 +103,12 @@ class TiledPollingFrameListener(Listener):
         self.poll_pause_sec = poll_pause_sec
         self.tiled_frame_segments = tiled_frame_segments
         self.operator = operator
-
+        self.starting_up = True
+    
     async def start(self):
+        await asyncio.to_thread(self._start) 
+
+    def _start(self):
         current_run = None
         sent_frames = []
         # loop = asyncio.get_event_loop()
@@ -112,17 +118,19 @@ class TiledPollingFrameListener(Listener):
 
                 # if current_tiled_run is None, get the most recent run, set it to
                 # current and send GISAXSStart message
+               
                 if current_run is None:
                     most_recent_run = get_most_recent_run(self.beamline_runs_tiled)
                     current_run = most_recent_run
                     logger.info(
                         f"New run: {current_run.metadata['start']['scan_id']} {current_run.metadata['start']['uid']}"
                     )
-                if current_run.start["scan_id"] == most_recent_run.start["scan_id"]:
+                if not self.starting_up and current_run.start["scan_id"] == most_recent_run.start["scan_id"]:
                     logger.debug("No new runs")
-                    await asyncio.sleep(self.poll_pause_sec)
+                    time.sleep(self.poll_pause_sec)
                     continue
                     # We have a new
+                self.starting_up = False
                 current_run = most_recent_run
                 logger.info(
                     f"New run: {current_run.metadata['start']['scan_id']} {current_run.metadata['start']['uid']}"
@@ -136,7 +144,7 @@ class TiledPollingFrameListener(Listener):
                     run_name=str(current_run.metadata["start"]["scan_id"]),
                     run_id=current_run.metadata["start"]["uid"],
                 )
-                await self.operator.process(start_message)
+                asyncio.run(self.operator.process(start_message))
                 # How many frames in this run?
                 # if len(sent_frames) == num_frames, continue
                 # if len(sent_frames) < num_frames, get the next N frames and
@@ -144,33 +152,38 @@ class TiledPollingFrameListener(Listener):
                 #        construct a GISAXSRawEvent and call operator.process()
                 #        add frame number to sent_frames
                 frames_array = sub_container(current_run, self.tiled_frame_segments)
-
+                logger.debug(f"Frames array shape: {frames_array.shape}")
                 if len(sent_frames) == frames_array.shape[0]:
                     # Sleep for poll_interval
-                    await asyncio.sleep(self.poll_paust_sec)
+                    time.sleep(self.poll_pause_sec)
                     continue
                 # the shape of these arrays changs from (1, n, x, y) to (n, 1, x, x)
                 frames_index = 0
-                if frames_array.shape[1] == 1:
+                if frames_array.shape[0] == 1:
                     frames_index = 1
                 unsents = unsent_frame_numbers(
                     sent_frames, frames_array.shape[frames_index]
                 )
+                logger.debug(f"Unsent frames: {unsents}")
                 for unsent_frame in unsents:
-                    array = frames_array[unsent_frame]
+                    if frames_index == 1:
+                        array = frames_array[0, unsent_frame]
+                    else:
+                        array = frames_array[unsent_frame]
                     image = SerializableNumpyArrayModel(array=array)
                     raw_event = GISAXSRawEvent(
                         image=image,
                         frame_number=unsent_frame,
                         tiled_url=current_run.uri,
                     )
-                    await self.operator.process(raw_event)
+                    logger.debug(f"Sending frame {unsent_frame}")
+                    asyncio.run(self.operator.process(raw_event))
                     sent_frames.append(unsent_frame)
                     # If run has stop document, send GISAXSStop message and
                 # set_current_run to None, sent_frames to [] and continue
                 if current_run.metadata["stop"]:
                     stop_message = GISAXSStop(num_frames=len(sent_frames))
-                    await self.operator.process(stop_message)
+                    asyncio.run(self.operator.process(stop_message))
                     sent_frames = []
                     continue
             except Exception as e:
@@ -200,8 +213,11 @@ class TiledPollingFrameListener(Listener):
 
 
 class TiledRawFrameOperator(Operator):
-    async def process(self, message: GISAXS1DReduction) -> GISAXS1DReduction:
-        pass
+    def __init__(self):
+        super().__init__()
+  
+    async def process(self, message: GISAXSMessage) -> GISAXSMessage:
+        await self.publish(message)
 
 
 def get_most_recent_run(tiled_runs: Container):
@@ -283,7 +299,8 @@ class TiledProcessedPublisher(Publisher):
     @classmethod
     def from_settings(cls, settings: dict):
         client = from_uri(settings.uri, api_key=settings.api_key)
-        root_container = get_runs_container(client)
+        segments = settings.root_segments
+        root_container = get_runs_container(client, segments)
         return cls(root_container)
 
 
@@ -300,10 +317,12 @@ def create_dim_reduction_node(run_node: Container, message: GISAXS1DReduction) -
     return dim_reduction_node
 
 
-def get_runs_container(client: Container) -> Container:
-    if RUNS_CONTAINER_NAME not in client:
-        return client.create_container(RUNS_CONTAINER_NAME)
-    return client[RUNS_CONTAINER_NAME]
+def get_runs_container(client: Container, root_segments: list) -> Container:
+    seg_tuple = tuple(root_segments.to_list())
+    viz_processed_container = client[seg_tuple]
+    if RUNS_CONTAINER_NAME not in viz_processed_container:
+        return viz_processed_container.create_container(RUNS_CONTAINER_NAME)
+    return viz_processed_container[RUNS_CONTAINER_NAME]
 
 
 def get_run_container(
