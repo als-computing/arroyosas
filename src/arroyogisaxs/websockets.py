@@ -8,7 +8,7 @@ import numpy as np
 import websockets
 from arroyopy.publisher import Publisher
 
-from .schemas import GISAXSRawEvent, GISAXSStart, GISAXSStop
+from .schemas import GISAXS1DReduction, GISAXSStart, GISAXSStop, SerializableNumpyArrayModel
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ class OneDWSPublisher(Publisher):
         logger.info(f"Websocket server started at ws://{self.host}:{self.port}")
         await server.wait_closed()
 
-    async def publish(self, message: GISAXSRawEvent) -> None:
+    async def publish(self, message: GISAXS1DReduction) -> None:
         if self.connected_clients:  # Only send if there are clients connected
             asyncio.gather(
                 *(self.publish_ws(client, message) for client in self.connected_clients)
@@ -50,7 +50,7 @@ class OneDWSPublisher(Publisher):
         self,
         #  client: websockets.client.ClientConnection,
         client,
-        message: Union[GISAXSRawEvent | GISAXSStart | GISAXSStop],
+        message: Union[GISAXS1DReduction | GISAXSStart | GISAXSStop],
     ) -> None:
         if isinstance(message, GISAXSStop):
             logger.info(f"WS Sending Stop {message}")
@@ -110,15 +110,16 @@ def convert_to_uint8(image: np.ndarray) -> bytes:
     return image_uint8.tobytes()
 
 
-def pack_images(message: GISAXSRawEvent) -> bytes:
+def pack_images(message: GISAXS1DReduction) -> bytes:
     """
     Pack all the images into a single msgpack message
     """
     try:
+        message.raw_frame.array = convert_to_uint8(message.raw_frame.array)
         return msgpack.packb(
             {
-                "raw_frame": convert_to_uint8(message.raw_frame.array),
-                "curve": message.curve.df.to_json(),
+                "raw_frame": convert_to_uint8(message.raw_frame.model_dump()),
+                "curve": message.curve.model_dump(),
                 "raw_frame_tiled_url": message.raw_frame_tiled_url,
                 "curve_tiled_url": message.curve_tiled_url,
                 "width": message.raw_frame.array.shape[0],

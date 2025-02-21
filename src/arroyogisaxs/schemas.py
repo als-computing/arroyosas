@@ -89,4 +89,6 @@ class GISAXSResultStop(Stop, GISAXSMessage):
 
 class GISAXS1DReduction(Event, GISAXSMessage):
     curve: SerializableNumpyArrayModel
+    curve_tiled_url: str
     raw_frame: SerializableNumpyArrayModel
+    raw_frame_tiled_url: str
