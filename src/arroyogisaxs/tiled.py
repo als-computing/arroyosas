@@ -292,7 +292,7 @@ class TiledProcessedPublisher(Publisher):
                     # print(self.dim_reduced_array_node)
                     await asyncio.to_thread(self.update_ls_nodes, message)
         except Exception as e:
-            logger.error(f"Error in publisher: {e}")    
+            logger.error(f"Error in publisher: {e}")  
 
     def update_1d_nodes(self, message: GISAXS1DReduction) -> None:
         patch_tiled_frame(self.one_d_array_node, message.curve.array)

@@ -115,11 +115,10 @@ def pack_images(message: GISAXS1DReduction) -> bytes:
     Pack all the images into a single msgpack message
     """
     try:
-        message.raw_frame.array = convert_to_uint8(message.raw_frame.array)
         return msgpack.packb(
             {
-                "raw_frame": convert_to_uint8(message.raw_frame.model_dump()),
-                "curve": message.curve.model_dump(),
+                "raw_frame": convert_to_uint8(message.raw_frame.array),
+                "curve": convert_to_uint8(message.curve.array),
                 "raw_frame_tiled_url": message.raw_frame_tiled_url,
                 "curve_tiled_url": message.curve_tiled_url,
                 "width": message.raw_frame.array.shape[0],
