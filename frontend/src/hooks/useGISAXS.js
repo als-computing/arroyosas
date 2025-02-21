@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import msgpack from 'msgpack-lite';
 import dayjs from 'dayjs';
 import { getWsUrl } from '../utils/connectionHelper';
-import { processAndDownsampleArrayData, processJSONPlot, flip2DArray, updateCumulativePlot } from '../utils/plotHelper';
+import { processAndDownsampleArrayData, processJSONPlot, flip2DArray, updateCumulativePlot, process1DArray } from '../utils/plotHelper';
 
 const defaultWsUrl = getWsUrl();
 const defaultHeatmapSettings = {
@@ -118,7 +118,8 @@ export const useGISAXS = ({}) => {
             }
 
             if ('curve' in newMessage) {
-                const newPlot = processJSONPlot(newMessage['curve'], newMessage?.frame_number);
+                //const newPlot = processJSONPlot(newMessage['curve'], newMessage?.frame_number);
+                const newPlot = process1DArray(newMessage['curve'], newMessage?.frame_number);
                 setCurrentScatterPlot(newPlot);
                 setCumulativeScatterPlots((prevState) => {
                     var newState = [...prevState];
