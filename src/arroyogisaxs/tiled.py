@@ -283,7 +283,7 @@ class TiledProcessedPublisher(Publisher):
     @classmethod
     def from_settings(cls, settings: dict):
         client = from_uri(settings.uri, api_key=settings.api_key)
-        root_container = get_run_container(client)
+        root_container = get_runs_container(client)
         return cls(root_container)
 
 
@@ -298,6 +298,12 @@ def create_dim_reduction_node(run_node: Container, message: GISAXS1DReduction) -
     arr = np.array(message.feature_vector)
     dim_reduction_node = run_node.write_array(arr[np.newaxis, :], key="dim_reduction")
     return dim_reduction_node
+
+
+def get_runs_container(client: Container) -> Container:
+    if RUNS_CONTAINER_NAME not in client:
+        return client.create_container(RUNS_CONTAINER_NAME)
+    return client[RUNS_CONTAINER_NAME]
 
 
 def get_run_container(

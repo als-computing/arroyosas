@@ -6,7 +6,7 @@ tiled_poller:
     address: tcp://0.0.0.0:5000  #only safe in containers
   poll_interval: 5 # seconds
   uri: https://tiled.nsls2.bnl.gov
-  api_key: "@format {env[TILED_LIVE_API_KEY]}"
+  api_key: "@format {env[TILED_API_KEY]}"
   runs_segments:
     - smi
     - raw
@@ -15,8 +15,27 @@ tiled_poller:
     - data
     - pil900KW_image
 
+tiled_processed:
+  uri: https://tiled.nsls2.bnl.gov
+  api_key: "@format {env[TILED_LIVE_API_KEY]}"
+
+
+  models:
+    - name: CNNAutoencoder
+      checkpoint_dir: /torch/cnnautoencoder
+      python_class: CNNAutoencoder
+      type: torch
+      proceosors: gpu
+
+    - name: PCA
+      dir: /dim_reduction/pca
+      current: PCA
+      type: joblib
+      processor: cpu
+
 viz_operator:
-  zmq_listen_address: tcp://0.0.0.0:5000  #only safe in containers
+  listener:
+    zmq_address: tcp://0.0.0.0:5000  #only safe in containers
   zmq_hwm: 100000
   tiled:
     raw:
@@ -57,6 +76,18 @@ lse:
   websocket_publish_host: 0.0.0.0
   websocket_publish_port: 8021
   zmq_publish_address: tcp://*:5557
+
+lse_operator:
+  ws_publisher:
+    host: 0.0.0.0
+    port: 8765
+  zmq_publisher: # ???
+    zmq_address: tcp://0.0.0.0:5557
+  listener:
+    zmq_address: tcp://0.0.0.0:5000
+  zmq_broker:
+    router_address: tcp://0.0.0.0:5555
+    router_hwm: 100000
 
 
 frame_publisher:
