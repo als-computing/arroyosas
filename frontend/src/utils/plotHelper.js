@@ -9,27 +9,32 @@ const sampleScatterData = [
 ];
 
 export const process1DArray = (array=[], frameNumber='N/A') => {
-    if (Array.isArray(array)) {
-        var xValues = [];
-        var yValues = [];
-        for (let i=0; i<array.length; i++) {
-            xValues.push(i);
-            yValues.push(array[i]);
-        }
-        const newPlot = [
-            {
-                x: xValues,
-                y: yValues,
-                type: 'scatter',
-                mode: 'lines+markers',
-                marker: {color: 'red'},
-                name: `frame ${frameNumber}`
+    try{
+        if (array.length > 0) {
+            var xValues = [];
+            var yValues = [];
+            for (let i=0; i<array.length; i++) {
+                xValues.push(i);
+                yValues.push(array[i]);
             }
-        ]
-        return newPlot;
-    } else {
-        console.log('Received invalid data type in 1D array processor:');
-        console.log({array});
+            const newPlot = [
+                {
+                    x: xValues,
+                    y: yValues,
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    marker: {color: 'red'},
+                    name: `frame ${frameNumber}`
+                }
+            ]
+            return newPlot;
+        } else {
+            console.log('Received invalid data type in 1D array processor:');
+            console.log({array});
+            return false;
+        }
+    } catch(e) {
+        console.error('Received bad 1D array data:', e);
         return false;
     }
 }
