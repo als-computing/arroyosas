@@ -36,44 +36,51 @@ class OneDReductionOperator(Operator):
         )
 
     async def process(self, message):
-        if isinstance(message, GISAXSStart):
-            logger.info(f"Processing Start {message}")
-            self.current_scan_metadata = message
-            logger.info("Calculating mask")
-            reduction_settings = await self.redis_conn.get_json(REDUCTION_CONFIG_KEY)
-            self.mask = await asyncio.to_thread(self.calculate_mask, reduction_settings)
-            await self.publish(message)
+        try:
+            if isinstance(message, GISAXSStart):
+                logger.info(f"Processing Start {message}")
+                self.current_scan_metadata = message
+                logger.info("Calculating mask")
+                reduction_settings = await self.redis_conn.get_json(REDUCTION_CONFIG_KEY)
+                # self.mask = await asyncio.to_thread(self.calculate_mask, reduction_settings)
+                self.mask = None
+                await self.publish(message)
 
-        if isinstance(message, GISAXSStop):
-            logger.info(f"Processing Stop {message}")
-            self.current_scan_metadata = None
-            self.current_reduction_settings = None
-            await self.publish(message)
+            if isinstance(message, GISAXSStop):
+                logger.info(f"Processing Stop {message}")
+                self.current_scan_metadata = None
+                self.current_reduction_settings = None
+                await self.publish(message)
 
-        if isinstance(message, GISAXSRawEvent):
-            if self.current_scan_metadata is None:
-                logger.error(
-                    "No current scan metadata. Perhaps the Viz Operator was started mid-scan?"
+            if isinstance(message, GISAXSRawEvent):
+                if self.current_scan_metadata is None:
+                    logger.error(
+                        "No current scan metadata. Perhaps the Viz Operator was started mid-scan?"
+                    )
+                    return
+                reduction_settings = await self.redis_conn.get_json(REDUCTION_CONFIG_KEY)
+                if reduction_settings is None or len(reduction_settings) == 0:
+                    logger.error("No reduction settings found")
+                    return
+                reduction_settings.pop("input_uri_data")
+                reduction_settings.pop("input_uri_mask")
+                # masked_image = message.image.array + self.mask
+                masked_image = message.image.array
+                reduction_settings["masked_image"] = masked_image
+                reduction, _, _ = await asyncio.to_thread(
+                    pixel_roi_horizontal_cut, **reduction_settings
                 )
-                return
-            reduction_settings = await self.redis_conn.get_json(REDUCTION_CONFIG_KEY)
-            if reduction_settings is None:
-                logger.error("No reduction settings found")
-                return
-            reduction_settings.pop("input_uri_data")
-            reduction_settings.pop("input_uri_mask")
-            masked_image = message.image.array + self.mask
-            reduction_settings["masked_image"] = masked_image
-            reduction, _, _ = await asyncio.to_thread(
-                pixel_roi_horizontal_cut, **reduction_settings
-            )
-            #
-            serializable_reduction = SerializableNumpyArrayModel(array=reduction)
-            reduction_msg = GISAXS1DReduction(
-                curve=serializable_reduction,  # just the qparrallel, not the cut_average or errors
-                raw_frame=message.image,
-            )
-            await self.publish(reduction_msg)
+                #
+                serializable_reduction = SerializableNumpyArrayModel(array=reduction)
+                reduction_msg = GISAXS1DReduction(
+                    curve=serializable_reduction,  # just the qparrallel, not the cut_average or errors
+                    curve_tiled_url="curve",
+                    raw_frame=message.image,
+                    raw_frame_tiled_url=message.tiled_url,
+                )
+                await self.publish(reduction_msg)
+        except Exception as e:
+            logger.error(f"Error in process: {e}")
 
     def calculate_mask(self, reduction_settings: dict):
         beamstop = (
@@ -93,9 +100,9 @@ class OneDReductionOperator(Operator):
             )
             reduction_msg = GISAXS1DReduction(
                 curve=reduction[0],
-                curve_tiled_url=self.current_run_url,
+                curve_tiled_url="curve", 
                 raw_frame=None,
-                raw_frame_tiled_url=None,
+                raw_frame_tiled_url=self.current_run_url,
             )
 
             await self.publish(reduction_msg)
@@ -111,9 +118,10 @@ class OneDReductionOperator(Operator):
             mask_uri = reduction_settings.pop("input_uri_mask")
             image_container = get_nested_client(self.tiled_client, mask_uri)
             image = image_container
-            mask = self.calculate_mask(reduction_settings)
-            masked_image = image[0][0] + mask.T
-            reduction_settings["masked_image"] = masked_image
+            # mask = self.calculate_mask(reduction_settings)
+            # masked_image = image[0][0] + mask.T
+            # reduction_settings["masked_image"] = masked_image
+            reduction_settings["masked_image"] = image
             reduction = pixel_roi_horizontal_cut(**reduction_settings)
             return reduction
         except Exception as e:

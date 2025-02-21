@@ -36,14 +36,14 @@ class ZMQFrameListener(Listener):
                 message = msgpack.unpackb(raw_msg, raw=False)
                 message_type = message.get("msg_type")
                 if message_type == "start":
-                    logger.info(f"Received Start {message}")
+                    logger.debug(f"Received Start {message}")
                     message = GISAXSStart(**message)
                 elif message_type == "event":
                     logger.debug("Received event")
-                    image = SerializableNumpyArrayModel.deserialize_array(
-                        message["image"]
-                    )
-                    message["image"] = image
+                    # image = SerializableNumpyArrayModel.deserialize_array(
+                    #     message["image"]
+                    # )
+                   
                     message = GISAXSRawEvent(**message)
                 elif message_type == "stop":
                     logger.info(f"Received Stop {message}")
@@ -66,7 +66,7 @@ class ZMQFrameListener(Listener):
         zmq_socket.setsockopt_string(zmq.SUBSCRIBE, "")
         zmq_socket.setsockopt(zmq.SNDHWM, 10000)  # Allow up to 10,000 messages
         zmq_socket.setsockopt(zmq.RCVHWM, 10000)
-        logger.info(f"Listening for frames on {settings.zmq_address}")
+        logger.info(f"##### Listening for frames on {settings.zmq_address}")
         return cls(operator, zmq_socket)
 
 
@@ -94,7 +94,8 @@ class ZMQFramePublisher(Publisher):
     def from_settings(cls, settings) -> "ZMQFramePublisher":
         context = Context()
         zmq_socket = context.socket(zmq.PUB)
-        zmq_socket.connect(settings.address)
+        zmq_socket.bind(settings.address)
+        logger.info(f"##### Publishing frames to {settings.address}")
         return cls(zmq_socket)
 
 

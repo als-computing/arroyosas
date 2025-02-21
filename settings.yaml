@@ -18,7 +18,7 @@ tiled_poller:
     
 viz_operator:
   listener:
-    zmq_address: tcp://0.0.0.0:5000  #only safe in containers
+    zmq_address: tcp://tiled_poller:5000  #only safe in containers
   tiled:
     raw:
       uri: https://tiled.nsls2.bnl.gov

@@ -158,9 +158,9 @@ class TiledPollingFrameListener(Listener):
                     time.sleep(self.poll_pause_sec)
                     continue
                 # the shape of these arrays changs from (1, n, x, y) to (n, 1, x, x)
-                frames_index = 0
-                if frames_array.shape[0] == 1:
-                    frames_index = 1
+                frames_index = 1
+                if frames_array.shape[1] == 1:
+                    frames_index = 0
                 unsents = unsent_frame_numbers(
                     sent_frames, frames_array.shape[frames_index]
                 )
@@ -169,7 +169,7 @@ class TiledPollingFrameListener(Listener):
                     if frames_index == 1:
                         array = frames_array[0, unsent_frame]
                     else:
-                        array = frames_array[unsent_frame]
+                        array = frames_array[unsent_frame, 0]
                     image = SerializableNumpyArrayModel(array=array)
                     raw_event = GISAXSRawEvent(
                         image=image,
@@ -204,6 +204,10 @@ class TiledPollingFrameListener(Listener):
             api_key=settings.api_key,
         )
         run_container = client[tuple(tiled_runs_segments.to_list())]
+        logger.info(f"#### Listening for runs at {run_container.uri}")
+        logger.info(f"#### Polling interval: {poll_pause_sec}")
+        logger.info(f"#### Frames segments: {settings.frames_segments}")
+
         return cls(
             operator,
             run_container,
@@ -256,36 +260,39 @@ class TiledProcessedPublisher(Publisher):
 
     async def publish(self, message: Union[GISAXSStart | GISAXS1DReduction]) -> None:
         # run_client = get_nested_client(self.client, self.run_path)
-        if isinstance(message, GISAXSStart):
-            self.run_node = await asyncio.to_thread(
-                get_run_container, self.root_container, message
-            )
-            return
-        if self.run_node is None:
-            logger.error("No run node found. Probably started after start message.")
-            return
-        elif isinstance(message, GISAXSStop):
-            return
-
-        if isinstance(message, GISAXS1DReduction):
-            if self.one_d_array_node is None:
-                one_d_array_node = await asyncio.to_thread(
-                    create_one_d_node, self.run_node, message
+        try:
+            if isinstance(message, GISAXSStart):
+                self.run_node = await asyncio.to_thread(
+                    get_run_container, self.root_container, message
                 )
-                self.one_d_array_node = one_d_array_node
-            else:
-                await asyncio.to_thread(self.update_1d_node, message)
+                return
+            if self.run_node is None:
+                logger.error("No run node found. Probably started after start message.")
+                return
+            elif isinstance(message, GISAXSStop):
+                return
 
-        if isinstance(message, GISAXSLatentSpaceEvent):
-            if self.dim_reduced_array_node is None:
-                dim_reduced_array_node = await asyncio.to_thread(
-                    create_dim_reduction_node, self.run_node, message
-                )
-                self.dim_reduced_array_node = dim_reduced_array_node
-            else:
-                print("there")
-                # print(self.dim_reduced_array_node)
-                await asyncio.to_thread(self.update_ls_nodes, message)
+            if isinstance(message, GISAXS1DReduction):
+                if self.one_d_array_node is None:
+                    one_d_array_node = await asyncio.to_thread(
+                        create_one_d_node, self.run_node, message
+                    )
+                    self.one_d_array_node = one_d_array_node
+                else:
+                    await asyncio.to_thread(self.update_1d_nodes, message)
+
+            if isinstance(message, GISAXSLatentSpaceEvent):
+                if self.dim_reduced_array_node is None:
+                    dim_reduced_array_node = await asyncio.to_thread(
+                        create_dim_reduction_node, self.run_node, message
+                    )
+                    self.dim_reduced_array_node = dim_reduced_array_node
+                else:
+                    print("there")
+                    # print(self.dim_reduced_array_node)
+                    await asyncio.to_thread(self.update_ls_nodes, message)
+        except Exception as e:
+            logger.error(f"Error in publisher: {e}")    
 
     def update_1d_nodes(self, message: GISAXS1DReduction) -> None:
         patch_tiled_frame(self.one_d_array_node, message.curve.array)
