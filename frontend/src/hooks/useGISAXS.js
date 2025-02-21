@@ -48,6 +48,8 @@ export const useGISAXS = ({}) => {
     const ws = useRef(null);
     const isUserClosed = useRef(false);
     const reconnectionAttempts = useRef(0);
+    const websocketMessageCount = useRef(0);
+
 
 
 
@@ -71,7 +73,30 @@ export const useGISAXS = ({}) => {
                 // Convert Blob to ArrayBuffer for binary processing
                 const arrayBuffer = await event.data.arrayBuffer();
                 newMessage = msgpack.decode(new Uint8Array(arrayBuffer));
-                console.log({newMessage});
+                if (websocketMessageCount.current < 10) {
+                    console.log({newMessage});
+                    websocketMessageCount.current = websocketMessageCount.current + 1;
+                } else {
+                    if (websocketMessageCount.current === 10) {
+                        console.log('Exceeded allowable message prints, suppressing future websocket messages');
+                        websocketMessageCount.current = websocketMessageCount.current + 1;
+                    }
+                }/* 
+                var websocketMessage = {}
+                for (var key in newMessage) {
+                    if (key === 'raw_frame') {
+                        websocketMessage['raw_frame'] = 'data (too long to print)';
+                    } else {
+                        if (key === 'curve') {
+                            websocketMessage['curve'] = 'data (too long to print)'
+                        } else {
+                            websocketMessage[key] = newMessage[key];
+                        }
+
+                    }
+                }
+                console.log({websocketMessage})
+                 */
             } else if (event.data instanceof ArrayBuffer) {
                 // Process ArrayBuffer directly
                 newMessage = msgpack.decode(new Uint8Array(event.data));
@@ -218,11 +243,8 @@ export const useGISAXS = ({}) => {
             return;
         } else {
             //if websocket closed due to external reason, send in warning and attempt reconnection
-            const maxAttempt = 2;
             const time = 5; //time in seconds
-            //alert(`Websocket ${event.currentTarget.url} closed at ${dayjs().format('h:mm:ss A')} `)
             console.log({event})
-
             // Attempt to reconnect
             setWarningMessage("WebSocket closed unexpectedly. Attempting to reconnect...");
             console.log(`WebSocket ${event.currentTarget.url} closed unexpectedly at ${dayjs().format('h:mm:ss A')}`);
