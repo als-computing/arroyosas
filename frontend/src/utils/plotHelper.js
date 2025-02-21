@@ -8,6 +8,32 @@ const sampleScatterData = [
     },
 ];
 
+export const process1DArray = (array=[], frameNumber='N/A') => {
+    if (Array.isArray(array)) {
+        var xValues = [];
+        var yValues = [];
+        for (let i=0; i<array.length; i++) {
+            xValues.push(i);
+            yValues.push(array[i]);
+        }
+        const newPlot = [
+            {
+                x: xValues,
+                y: yValues,
+                type: 'scatter',
+                mode: 'lines+markers',
+                marker: {color: 'red'},
+                name: `frame ${frameNumber}`
+            }
+        ]
+        return newPlot;
+    } else {
+        console.log('Received invalid data type in 1D array processor:');
+        console.log({array});
+        return false;
+    }
+}
+
 export const processJSONPlot = (rawJSONData, frameNumber='N/A') => {
     //receives a json from
     //"1D": message.one_d_reduction.df.to_json(),
