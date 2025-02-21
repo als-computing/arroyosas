@@ -47,6 +47,9 @@ export const useGISAXS = ({}) => {
 
     const ws = useRef(null);
     const isUserClosed = useRef(false);
+    const reconnectionAttempts = useRef(0);
+    const websocketMessageCount = useRef(0);
+
 
 
 
@@ -70,7 +73,30 @@ export const useGISAXS = ({}) => {
                 // Convert Blob to ArrayBuffer for binary processing
                 const arrayBuffer = await event.data.arrayBuffer();
                 newMessage = msgpack.decode(new Uint8Array(arrayBuffer));
-                console.log({newMessage});
+                if (websocketMessageCount.current < 10) {
+                    console.log({newMessage});
+                    websocketMessageCount.current = websocketMessageCount.current + 1;
+                } else {
+                    if (websocketMessageCount.current === 10) {
+                        console.log('Exceeded allowable message prints, suppressing future websocket messages');
+                        websocketMessageCount.current = websocketMessageCount.current + 1;
+                    }
+                }/* 
+                var websocketMessage = {}
+                for (var key in newMessage) {
+                    if (key === 'raw_frame') {
+                        websocketMessage['raw_frame'] = 'data (too long to print)';
+                    } else {
+                        if (key === 'curve') {
+                            websocketMessage['curve'] = 'data (too long to print)'
+                        } else {
+                            websocketMessage[key] = newMessage[key];
+                        }
+
+                    }
+                }
+                console.log({websocketMessage})
+                 */
             } else if (event.data instanceof ArrayBuffer) {
                 // Process ArrayBuffer directly
                 newMessage = msgpack.decode(new Uint8Array(event.data));
@@ -210,27 +236,24 @@ export const useGISAXS = ({}) => {
 
     const handleWebsocketClose = (event) => {
         ws.current = false;
+        setSocketStatus('closed');
         if (isUserClosed.current === true) {
             //do nothing, the user forced the websocket to close
             console.log('user closed websocket');
             return;
         } else {
             //if websocket closed due to external reason, send in warning and attempt reconnection
-            const maxAttempt = 2;
             const time = 5; //time in seconds
-            //alert(`Websocket ${event.currentTarget.url} closed at ${dayjs().format('h:mm:ss A')} `)
             console.log({event})
-
             // Attempt to reconnect
             setWarningMessage("WebSocket closed unexpectedly. Attempting to reconnect...");
             console.log(`WebSocket ${event.currentTarget.url} closed unexpectedly at ${dayjs().format('h:mm:ss A')}`);
 
             // Reconnection logic
-            const maxAttempts = 2; // Number of attempts to reconnect
-            let attempts = 0;
+            const maxAttempts = 5; // Number of attempts to reconnect
 
             const tryReconnect = () => {
-                if (attempts >= maxAttempts) {
+                if (reconnectionAttempts.current >= maxAttempts) {
                     setWarningMessage("Failed to reconnect to WebSocket after multiple attempts.");
                     return;
                 }
@@ -238,8 +261,8 @@ export const useGISAXS = ({}) => {
                     //ws has restarted
                     return;
                 } else {
-                    attempts++;
-                    console.log(`Reconnection attempt ${attempts}`);
+                    reconnectionAttempts.current = reconnectionAttempts.current + 1;
+                    console.log(`Reconnection attempt ${reconnectionAttempts.current}`);
                     startWebSocket();
                 }
             };
@@ -250,6 +273,7 @@ export const useGISAXS = ({}) => {
 
     const startWebSocket = () => {
         setWarningMessage('');
+        setSocketStatus('connecting');
 
         ws.current = new WebSocket(wsUrl);
 
@@ -260,7 +284,8 @@ export const useGISAXS = ({}) => {
 
         ws.current.onerror = (error) => {
             console.error('Error with ws: ' + error);
-            setWarningMessage("Error connecting websocket: Check port/path and verify processor running");
+            let timestamp = dayjs().format('h:m:s a');
+            setWarningMessage("Connection Error at " + timestamp);
         }
 
         ws.current.onmessage = (event) => {
@@ -273,6 +298,7 @@ export const useGISAXS = ({}) => {
     };
 
     const closeWebSocket = () => {
+        isUserClosed.current = true; //this function is only able to be called by the user
         try {
             ws.current.close();
         } catch (error) {
@@ -280,7 +306,6 @@ export const useGISAXS = ({}) => {
             return;
         }
         setSocketStatus('closed');
-        isUserClosed.current = true; //this function is only able to be called by the user
     };
 
 

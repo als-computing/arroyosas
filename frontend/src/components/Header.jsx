@@ -3,6 +3,7 @@ const als_logo = "/images/als_logo_wheel.png";
 const ml_logo = "images/mlexchange_logo.png";
 const mwet_logo = "images/mwet_logo.png";
 const illumine_logo = "images/illumine_logo.png";
+var buildNumber = process.env.REACT_APP_BUILD_NUMBER ? process.env.REACT_APP_BUILD_NUMBER : 'N/A';
 
 
 export default function Header({isExperimentRunning=false, showStatus=false, statusMessage=""}) {
@@ -14,6 +15,9 @@ export default function Header({isExperimentRunning=false, showStatus=false, sta
                     <p className="text-sm font-light pl-2">{statusMessage}</p>
                 </div>
             }
+            <div className="absolute top-0 right-0 mr-2 mt-2">
+                <p className="text-xs text-gray-300">Build:{buildNumber}</p>
+            </div>
             <h1 className="text-4xl text-sky-900 px-8">GISAXS Data Viewer</h1>
             <img src={illumine_logo} alt="illumine logo" className="h-8 w-auto"/>
             <img src={ml_logo} alt="ml exchange logo" className="h-8 w-auto"/>
