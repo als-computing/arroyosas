@@ -21,15 +21,14 @@ setup_logger(logger)
 
 @app.command()
 def start() -> None:
-    app_settings = settings.lse_worker
     logger.info("Getting settings")
     logger.info(f"{settings}")
 
     context = zmq.Context()
     client_socket = context.socket(zmq.REP)  # worker to the broker
-    client_socket.connect(app_settings.broker.dealer_address)
+    client_socket.connect(settings.lse_operator.zmq_broker.dealer_address)
     logger.info(
-        f"Connected to broker dealer at {app_settings.broker.dealer_address}"
+        f"Connected to broker dealer at {settings.lse_operator.zmq_broker.dealer_address}"
     )
     reducer = LatentSpaceReducer.from_settings(settings.lse_reducer)
     logger.info("Listening for messages")

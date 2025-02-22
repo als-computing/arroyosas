@@ -89,61 +89,31 @@ class OneDWSPublisher(Publisher):
 
 
 def convert_to_uint8(image: np.ndarray) -> bytes:
-    # Define the desired output range
-    output_min = 0.0
-    output_max = 1.0
+    """
+    Convert an image to uint8, scaling image
+    """
+    # scaled = (image - image.min()) / (image.max() - image.min()) * 255
+    # return scaled.astype(np.uint8).tobytes()
 
-    # Find the minimum and maximum values in the input array
-    input_min = np.min(image)
-    input_max = np.max(image)
+    image_normalized = (image - image.min()) / (image.max() - image.min())
 
-    # Apply contrast stretching
-    stretched_array = (image - input_min) / (input_max - input_min)
-    stretched_array = stretched_array * (output_max - output_min) + output_min
-    image_uint8 = (stretched_array * 255).astype(np.uint8)
+    # Apply logarithmic stretch
+    log_stretched = np.log1p(image_normalized)  # log(1 + x) to handle near-zero values
+
+    # Normalize the log-stretched image to [0, 1] again
+    log_stretched_normalized = (log_stretched - log_stretched.min()) / (
+        log_stretched.max() - log_stretched.min()
+    )
+
+    # Convert to uint8 (range [0, 255])
+    image_uint8 = (log_stretched_normalized * 255).astype(np.uint8)
     return image_uint8.tobytes()
-    # Define the lower and upper percentiles
-    # lower_percentile = 2
-    # upper_percentile = 98
-  
-    # # Compute the values at the specified percentiles
-    # v_min = np.percentile(image, lower_percentile)
-    # v_max = np.percentile(image, upper_percentile)
-
-    # # Apply contrast stretching
-    # stretched_array = np.clip(intensity_array, v_min, v_max)
-    # stretched_array = (stretched_array - v_min) / (v_max - v_min)
-    # image_uint8 = (stretched_array * 255).astype(np.uint8)
-    # return image_uint8.tobytes()
-#     
-# def convert_to_uint8(image: np.ndarray) -> bytes:
-#     """
-#     Convert an image to uint8, scaling image
-#     """
-#     # scaled = (image - image.min()) / (image.max() - image.min()) * 255
-#     # return scaled.astype(np.uint8).tobytes()
-
-#     image_normalized = (image - image.min()) / (image.max() - image.min())
-
-#     # Apply logarithmic stretch
-#     log_stretched = np.log1p log1p(image_normalized)  # log(1 + x) to handle near-zero values
-
-#     # Normalize the log-stretched image to [0, 1] again
-#     log_stretched_normalized = (log_stretched - log_stretched.min()) / (
-#         log_stretched.max() - log_stretched.min()
-#     )
-
-#     # Convert to uint8 (range [0, 255])
-#     image_uint8 = (log_stretched_normalized * 255).astype(np.uint8)
-#     return image_uint8.tobytes()
 
 
 def pack_images(message: GISAXS1DReduction) -> bytes:
     """
     Pack all the images into a single msgpack message
     """
-    logger.debug(f"Image max {message.raw_frame.array.max()}")
-    logger.debug(f"Image avg {message.raw_frame.array.mean()}")
     try:
         return msgpack.packb(
             {
@@ -151,8 +121,8 @@ def pack_images(message: GISAXS1DReduction) -> bytes:
                 "curve": convert_to_uint8(message.curve.array),
                 "raw_frame_tiled_url": message.raw_frame_tiled_url,
                 "curve_tiled_url": message.curve_tiled_url,
-                "width": message.raw_frame.array.shape[1],
-                "height": message.raw_frame.array.shape[0],
+                "width": message.raw_frame.array.shape[0],
+                "height": message.raw_frame.array.shape[1],
                 "data_type": message.raw_frame.array.dtype.name,
             }
         )

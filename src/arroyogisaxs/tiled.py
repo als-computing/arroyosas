@@ -98,14 +98,12 @@ class TiledPollingFrameListener(Listener):
         beamline_runs_tiled: Container,
         tiled_frame_segments: list,
         poll_pause_sec: int,
-        single_run: int = None,
     ):
         self.beamline_runs_tiled = beamline_runs_tiled
         self.poll_pause_sec = poll_pause_sec
         self.tiled_frame_segments = tiled_frame_segments
         self.operator = operator
         self.starting_up = True
-        self.single_run = single_run
     
     async def start(self):
         await asyncio.to_thread(self._start) 
@@ -114,28 +112,26 @@ class TiledPollingFrameListener(Listener):
         current_run = None
         sent_frames = []
         # loop = asyncio.get_event_loop()
-        last_run = None
         while True:
             try:
                 # Get the most recent run
 
                 # if current_tiled_run is None, get the most recent run, set it to
-                # current and send GISAXSStart message      
-                if self.single_run:
-                    time.sleep(self.poll_pause_sec)
-                    current_run = self.beamline_runs_tiled[self.single_run]
-                else:
-                    current_run = get_most_recent_run(self.beamline_runs_tiled)
+                # current and send GISAXSStart message
+               
+                if current_run is None:
+                    most_recent_run = get_most_recent_run(self.beamline_runs_tiled)
+                    current_run = most_recent_run
                     logger.info(
-                        f"Most Recent Scan: {current_run.metadata['start']['scan_id']} {current_run.metadata['start']['uid']}"
+                        f"New run: {current_run.metadata['start']['scan_id']} {current_run.metadata['start']['uid']}"
                     )
-                    if last_run and last_run.start["scan_id"] == current_run.start["scan_id"]:
-                        logger.debug("No new runs")
-                        time.sleep(self.poll_pause_sec)
-                        continue
-                        # We have a new
-                    self.starting_up = False
-    
+                if not self.starting_up and current_run.start["scan_id"] == most_recent_run.start["scan_id"]:
+                    logger.debug("No new runs")
+                    time.sleep(self.poll_pause_sec)
+                    continue
+                    # We have a new
+                self.starting_up = False
+                current_run = most_recent_run
                 logger.info(
                     f"New run: {current_run.metadata['start']['scan_id']} {current_run.metadata['start']['uid']}"
                 )
@@ -189,7 +185,6 @@ class TiledPollingFrameListener(Listener):
                     stop_message = GISAXSStop(num_frames=len(sent_frames))
                     asyncio.run(self.operator.process(stop_message))
                     sent_frames = []
-                    last_run = current_run
                     continue
             except Exception as e:
                 logger.exception(f"Error in polling loop: {e}")
@@ -212,14 +207,12 @@ class TiledPollingFrameListener(Listener):
         logger.info(f"#### Listening for runs at {run_container.uri}")
         logger.info(f"#### Polling interval: {poll_pause_sec}")
         logger.info(f"#### Frames segments: {settings.frames_segments}")
-        single_run = settings.get("single_run")
 
         return cls(
             operator,
             run_container,
             tiled_frame_segments=settings.frames_segments,
             poll_pause_sec=poll_pause_sec,
-            single_run=single_run,
         )
 
 
