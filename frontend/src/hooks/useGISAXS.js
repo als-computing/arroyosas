@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import msgpack from 'msgpack-lite';
 import dayjs from 'dayjs';
 import { getWsUrl } from '../utils/connectionHelper';
-import { processAndDownsampleArrayData, processJSONPlot, flip2DArray, updateCumulativePlot, process1DArray } from '../utils/plotHelper';
+import { processAndDownsampleArrayData, processJSONPlot, flip2DArray, updateCumulativePlot, process1DArray, normalizeArray } from '../utils/plotHelper';
 
 const defaultWsUrl = getWsUrl();
 const defaultHeatmapSettings = {
@@ -35,6 +35,12 @@ const defaultHeatmapSettings = {
         type: 'integer',
         value: '255',
         description: 'Max Value for scaling'
+    },
+    normalizeArray: {
+        label: 'Normalize Data',
+        type: 'boolean',
+        value: false,
+        description: 'Adjusts the data to increase contrast'
     }
 };
 

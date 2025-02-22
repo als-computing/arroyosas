@@ -197,6 +197,28 @@ export  function generateEggData(size, maxVal=255, offset=2) {
       }
       data.push(row);
     }
-  
     return data;
-  }
+};
+
+export const normalizeArray = (arr, maxLimit) => {
+    if (arr.length === 0) return arr;
+    var min=1000000;
+    var max=-1;
+    var sum=0;
+    for (let i=0; i<arr.length; i++) {
+        if (arr[i] < min) {
+            min = arr[i];
+        }
+        if (arr[i] > max) {
+            max = arr[i];
+        }
+        sum = sum+ arr[i];
+    }
+    var mean = sum / arr.length;
+
+    if (max === min) return arr; // Avoid divide by zero
+
+    return arr.map(row => row.map(value => 
+        ((value - min) / (max - min)) * maxLimit
+    ));
+};

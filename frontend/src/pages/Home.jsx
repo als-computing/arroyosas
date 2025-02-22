@@ -120,6 +120,7 @@ export default function Home() {
                       linecutData={linecutData} 
                       maxHeatmapValue={heatmapSettings.maxHeatmapValue.value}
                       scalePlot={heatmapSettings.scalePlot.value}
+                      normalize={heatmapSettings.normalizeArray.value}
                       flipArray={heatmapSettings.flipImg.value} 
                       title='' 
                       xAxisTitle='' 

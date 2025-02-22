@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { flip2DArray } from '../utils/plotHelper';
+import { flip2DArray, normalizeArray } from '../utils/plotHelper';
 import Plot from 'react-plotly.js';
 
 const plotlyColorScales = ['Viridis', 'Plasma', 'Inferno', 'Magma', 'Cividis'];
@@ -27,6 +27,7 @@ export default function PlotlyHeatMap({
     tickStep = 10,
     maxHeatmapValue=255,
     scalePlot=true,
+    normalize=false,
     fixPlotHeightToParent = false,
     flipArray = false
 }) {
@@ -72,10 +73,18 @@ export default function PlotlyHeatMap({
         }
     }, [array]);
 
+    var processedData = array;
+    if (normalize) {
+        processedData = normalizeArray(array, maxHeatmapValue);
+    }
+    if (flipArray) {
+        processedData = flip2DArray(array);
+    }
+
     // Create the heatmap data
     var data = [
         {
-            z: flipArray ? flip2DArray(array) : array,
+            z: processedData,
             type: 'heatmap',
             colorscale: colorScale,
             zmin: 0,
@@ -85,14 +94,14 @@ export default function PlotlyHeatMap({
     ];
 
     // Calculate the y position for the horizontal line
-    let lineY = null;
+/*     let lineY = null;
     if (linecutData && array.length > 0) {
         // TODO - verify if this has any issues when flip image is set to true
         lineY = array.length - linecutData.yStart; // Convert from bottom index to y-axis coordinate
-    }
+    } */
 
     // Calculate the height dynamically based on the number of rows in the array
-    const dynamicHeight = Math.max(array.length * verticalScaleFactor, 200); // Minimum height is 200px
+    //const dynamicHeight = Math.max(array.length * verticalScaleFactor, 200); // Minimum height is 200px
 
     return (
         <div className={`${height} ${width} rounded-b-md pb-6 flex items-center justify-center relative`} ref={plotContainer}>
