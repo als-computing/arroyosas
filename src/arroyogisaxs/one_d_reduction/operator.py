@@ -1,9 +1,13 @@
 import asyncio
 import logging
+import os
 
 from arroyopy.operator import Operator
 from tiled.client import from_uri
 from tiled.client.base import BaseClient
+import numpy as np
+
+
 
 from ..redis import RedisConn
 from ..schemas import (
@@ -29,7 +33,9 @@ class OneDReductionOperator(Operator):
         self.tiled_client = tiled_client
         self.redis_conn = redis_conn
         self.current_scan_metadata = None
-        self.mask = None
+        #self.mask = None
+        self.mask = self.load_static_mask_file()
+
 
         asyncio.create_task(
             self.redis_conn.redis_subscribe(REDUCTION_CHANNEL, self.compute_callback)
@@ -42,8 +48,8 @@ class OneDReductionOperator(Operator):
                 self.current_scan_metadata = message
                 logger.info("Calculating mask")
                 reduction_settings = await self.redis_conn.get_json(REDUCTION_CONFIG_KEY)
+                # Currently a static file for the mask is loaded. Future iterations it can be generated dynamically
                 # self.mask = await asyncio.to_thread(self.calculate_mask, reduction_settings)
-                self.mask = None
                 await self.publish(message)
 
             if isinstance(message, GISAXSStop):
@@ -64,8 +70,7 @@ class OneDReductionOperator(Operator):
                     return
                 reduction_settings.pop("input_uri_data")
                 reduction_settings.pop("input_uri_mask")
-                # masked_image = message.image.array + self.mask
-                masked_image = message.image.array
+                masked_image = self.generate_masked_image(message.image.array, self.mask)
                 reduction_settings["masked_image"] = masked_image
                 reduction, _, _ = await asyncio.to_thread(
                     pixel_roi_horizontal_cut, **reduction_settings
@@ -120,13 +125,35 @@ class OneDReductionOperator(Operator):
             image = image_container
             # mask = self.calculate_mask(reduction_settings)
             # masked_image = image[0][0] + mask.T
-            # reduction_settings["masked_image"] = masked_image
-            reduction_settings["masked_image"] = image
+            #reduction_settings["masked_image"] = masked_image
+            #reduction_settings["masked_image"] = image
             reduction = pixel_roi_horizontal_cut(**reduction_settings)
             return reduction
         except Exception as e:
             logger.error(f"Error in reduction: {e}")
+    
+    def load_static_mask_file(self):
+        try:
+            # assumed path from project root is masks/mask.npy 
+            project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../"))
+            mask_path = os.path.join(project_root, "masks", "mask.npy")
+            mask = np.load(mask_path)
+            logger.info(f"Mask loaded successfully from {mask_path}, shape: {mask.shape}")
+            return mask
 
+        except FileNotFoundError:
+            logger.error(f"Mask file not found at: {mask_path}")
+        except Exception as e:
+            logger.error(f"Error loading mask file: {e}")
+        return None
+    
+    def generate_masked_image(image, mask):
+        masked_float = mask.astype(float)  
+        masked_float[masked_float == True] = np.nan  #At true values set to NaN
+        masked_float[masked_float == 0] = 1 #At false values set to 1
+        masked_image = image * masked_float #Multiply to set masked values to NaN
+        return masked_image
+    
     @classmethod
     def from_settings(cls, settings) -> "OneDReductionOperator":
         redis_conn = RedisConn.from_settings(settings.redis)

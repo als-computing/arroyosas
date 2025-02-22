@@ -6,7 +6,6 @@ import json
 import logging
 from typing import Union
 from glob import glob
-import os
 
 from PIL import Image
 import msgpack
@@ -17,7 +16,6 @@ from arroyopy.publisher import Publisher
 from .schemas import GISAXSRawEvent, GISAXSStart, GISAXSStop, SerializableNumpyArrayModel
 
 logger = logging.getLogger(__name__)
-
 
 class OneDWSPublisher(Publisher):
     """
@@ -168,7 +166,12 @@ async def test_client(publisher: OneDWSPublisher, num_frames: int = 10):
         #     frame_number = int(time.time()) % 100  # Change pattern every second
 
 
-        files = glob("/Users/seij/SMI_Experiments/exp01/*.tif")
+        #files = glob("/Users/seij/SMI_Experiments/exp01/*.tif")
+        files = glob("/Users/seij/SMI_Experiments/feb/*.tiff")
+        #path = "/Users/seij/SMI_Experiments/feb/"
+        #for f in os.listdir(path):
+         #   print(f"{repr(f)}")
+
         print(f"Total files found: {len(files)}")
         frame_num = 0
         for file in files:
@@ -179,7 +182,9 @@ async def test_client(publisher: OneDWSPublisher, num_frames: int = 10):
                 #arr_normalized = (arr - arr.min()) / (arr.max() - arr.min()) * 255
                 #arr_normalized = arr_normalized.astype(np.uint8)  # Convert to uint8
                 #print(f"Loaded image {file}, shape: {arr.shape}, dtype: {arr.dtype}")
-                link ="http://127.0.0.1:8000/api/v1/array/full/exp01/ML_exp01-144J-22_id836920_?slice=" + str(frame_num) + ",::1,::1"
+                #link ="http://127.0.0.1:8000/api/v1/array/full/exp01/ML_exp01-144J-22_id836920_?slice=" + str(frame_num) + ",::1,::1"
+                link ="http://127.0.0.1:8000/api/v1/array/full/feb/pil1M_image?slice=" + str(frame_num)
+
 
                 event = GISAXSRawEvent(
                     image=SerializableNumpyArrayModel(array=arr),
