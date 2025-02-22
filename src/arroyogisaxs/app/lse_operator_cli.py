@@ -23,7 +23,7 @@ async def start() -> None:
 
     logger.info("Starting ZMQ PubSub Listener")
     logger.info(f"ZMQPubSubListener settings: {app_settings}")
-    operator = LatentSpaceOperator.from_settings(app_settings)
+    operator = LatentSpaceOperator.from_settings(app_settings, settings.lse_reducer)
 
     # ws_publisher = OneDWSResultPublisher.from_settings(app_settings.ws_publisher)
     ws_publisher = LSEWSResultPublisher.from_settings(app_settings.ws_publisher)
