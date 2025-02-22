@@ -35,6 +35,7 @@ export default function Home() {
     setWsUrl,
     frameNumber,
     socketStatus,
+    socketHistory,
     startWebSocket,
     closeWebSocket,
     heatmapSettings,
@@ -97,6 +98,7 @@ export default function Home() {
                       :
                         <Button text="stop" cb={closeWebSocket}/>
                   }
+                  <p className="w-full text-center text-xs text-slate-500">{socketHistory}</p>
               </li>
             </SidebarItem>
             <SidebarItem title='Live Image Settings' icon={phosphorIcons.sliders}>
@@ -110,7 +112,7 @@ export default function Home() {
             <div className="flex flex-wrap justify-around w-full h-full">
 
               {/* Current Scan */}
-              <Widget title='Most Recent' width='w-full' defaultHeight='h-1/2'>
+              <Widget title={`Most Recent - Frame #${frameNumber}`} width='w-full' defaultHeight='h-1/2'>
                 <div className="flex w-full h-full pt-4">
                   <div className="w-1/2 h-full">
                     <PlotlyHeatMap 

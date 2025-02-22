@@ -40,7 +40,8 @@ export const useGISAXS = ({}) => {
 
     const [ wsUrl, setWsUrl ] = useState(defaultWsUrl);
     const [ socketStatus, setSocketStatus ] = useState('closed');
-    const [ frameNumber, setFrameNumber ] = useState();
+    const [ socketHistory, setSocketHistory ] = useState('No ws status');
+    const [ frameNumber, setFrameNumber ] = useState(0);
     const [ warningMessage, setWarningMessage ] = useState('');
     const [ heatmapSettings, setHeatmapSettings ] = useState(defaultHeatmapSettings);
     const [ metadata, setMetadata ] = useState('');
@@ -68,7 +69,7 @@ export const useGISAXS = ({}) => {
         try {
             let newMessage;
             let timestamp = dayjs().format('h:m:s a');
-
+            setSocketHistory('Last ws message at: ' + timestamp);
             if (event.data instanceof Blob) {
                 // Convert Blob to ArrayBuffer for binary processing
                 const arrayBuffer = await event.data.arrayBuffer();
@@ -115,6 +116,8 @@ export const useGISAXS = ({}) => {
 
             if ('frame_number' in newMessage) {
                 setFrameNumber(newMessage.frame_number);
+            } else {
+                setFrameNumber((prev)=> prev+1);
             }
 
             if ('curve' in newMessage) {
@@ -138,6 +141,21 @@ export const useGISAXS = ({}) => {
                     const height = newPlot.length;
                     const elements = width * height;
                     console.log("Downsampled frame, new dimensions: " + width + " x " + height + " = " + elements);
+                }
+                try{
+                    //log the max, min, and mean of raw frame
+                    if (websocketMessageCount.current < 10) {
+                        var maxValue = Math.max(...newMessage.raw_frame);
+                        var minValue = Math.min(...newMessage.raw_frame);
+                        var meanValue = newMessage.raw_frame.reduce((sum, value) => sum + value, 0) / arr.length;
+                        console.log(`Values straight from ws: Max: ${maxValue}, Min: ${minValue}, Average: ${meanValue}`);
+                        var maxValue = Math.max(...newMessage.raw_frame);
+                        var minValue = Math.min(...newMessage.raw_frame);
+                        var meanValue = newMessage.raw_frame.reduce((sum, value) => sum + value, 0) / arr.length;
+                        console.log(`Values from plotly data: Max: ${maxValue}, Min: ${minValue}, Average: ${meanValue}`);
+                    }
+                } catch(e) {
+                    console.error('issue processing arrays: ', e);
                 }
                 setCurrentArayData(newPlot);
                 setCumulativeArrayData((prevState) => {
@@ -236,6 +254,8 @@ export const useGISAXS = ({}) => {
     }
 
     const handleWebsocketClose = (event) => {
+        let timestamp = dayjs().format('h:m:s a');
+        setSocketHistory('ws closed at: ' + timestamp);
         ws.current = false;
         setSocketStatus('closed');
         if (isUserClosed.current === true) {
@@ -273,12 +293,16 @@ export const useGISAXS = ({}) => {
     };
 
     const startWebSocket = () => {
+        let timestamp = dayjs().format('h:m:s a');
+        setSocketHistory('attempting ws open at: ' + timestamp);
         setWarningMessage('');
         setSocketStatus('connecting');
 
         ws.current = new WebSocket(wsUrl);
 
         ws.current.onopen = (event) => {
+            let timestamp = dayjs().format('h:m:s a');
+            setSocketHistory('Opened ws at: ' + timestamp);
             setSocketStatus('Open');
             isUserClosed.current = false;
         }
@@ -323,6 +347,7 @@ export const useGISAXS = ({}) => {
         setWsUrl,
         frameNumber,
         socketStatus,
+        socketHistory,
         startWebSocket,
         closeWebSocket,
         heatmapSettings,
