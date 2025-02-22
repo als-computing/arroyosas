@@ -2,6 +2,7 @@
 logging_level: DEBUG
 
 tiled_poller:
+  single_run:  3e253a6d-ba56-483a-b663-5cb2176c33c2 # If set, will repeatedly poll this run
   zmq_frame_publisher:
     address: tcp://0.0.0.0:5000  #only safe in containers
   poll_interval: 5 # seconds
@@ -39,35 +40,36 @@ tiled_processed:
     - viz
     - tmp
 
-
+lse_reducer:
   models:
     - name: CNNAutoencoder
-      checkpoint_dir: /torch/cnnautoencoder
+      state_dict: ./models/cnn_autoencoder/model_state_dict.npz
       python_class: CNNAutoencoder
+      python_file: ./models/cnn_autoencoder/model.py
       type: torch
-      proceosors: gpu
+    
+    - name: AE
+      state_dict: ./models/ae_v1/ae_model_finetuned.npz
+      python_class: CNNAutoencoder
+      python_file: ./models/ae_v1/ae.py
+      type: torch
 
-    - name: PCA
-      dir: /dim_reduction/pca
-      current: PCA
+    - name: UMAP
+      file: ./models/umap/quick_test.joblib
       type: joblib
-      processor: cpu
 
+  current_latent_space: AE
+  current_dim_reduction: UMAP
 
-  current_latent_space: CNNAutoencoder
-  current_dim_reduction: CNNAutoencoder
-    # - name: UMAP
-    #   directory: /dim_reduction/umap
-  current_reduction: PCA
+lse_broker:
+  dealer_address: tcp://0.0.0.0:5555
+  router_address: tcp://0.0.0.0:5556
+  router_hwm: 100000
 
-lse:
-  zmq_router_address: tcp://*:5555
-  zmq_router_hwm: 100000
-  zmq_dealer_address: tcp://*:5556
-  websocket_publish_host: 0.0.0.0
-  websocket_publish_port: 8021
-  zmq_publish_address: tcp://*:5557
-
+lse_worker:
+  broker:
+    dealer_address: tcp://lse_broker:5556
+    
 
 frame_publisher:
   zmq_publish_address: tcp://*:5558
@@ -79,9 +81,9 @@ lse_operator:
   zmq_publisher: # ???
     zmq_address: tcp://0.0.0.0:5557
   listener:
-    zmq_address: tcp://0.0.0.0:5000
+    zmq_address: tcp://tiled_poller:5000
   zmq_broker:
-    router_address: tcp://0.0.0.0:5555
+    router_address: tcp://lse_broker:5555
     router_hwm: 100000
 
 dynaconf_merge: true

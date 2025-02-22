@@ -185,3 +185,7 @@ persist/
 data/models/
 
 .settings.yaml
+
+.dotnet/
+.vscode-server/
+.gnupg/

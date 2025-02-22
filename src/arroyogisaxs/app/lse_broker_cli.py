@@ -14,12 +14,12 @@ setup_logger(logger)
 
 @app.command()
 async def start() -> None:
-    app_settings = settings.lse_operator
+    app_settings = settings.lse_broker
     logger.info("Getting settings")
     logger.info(f"{settings.lse_operator}")
     logger.info("Starting Broker")
     # we may consider starting this in its own process
-    broker = ZMQBroker.from_settings(app_settings.zmq_broker)
+    broker = ZMQBroker.from_settings(app_settings)
     await asyncio.gather(broker.start())
 
 
