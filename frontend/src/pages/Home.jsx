@@ -118,6 +118,8 @@ export default function Home() {
                     <PlotlyHeatMap 
                       array={currentArrayData}
                       linecutData={linecutData} 
+                      maxHeatmapValue={heatmapSettings.maxHeatmapValue.value}
+                      scalePlot={heatmapSettings.scalePlot.value}
                       flipArray={heatmapSettings.flipImg.value} 
                       title='' 
                       xAxisTitle='' 

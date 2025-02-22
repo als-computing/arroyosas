@@ -25,6 +25,8 @@ export default function PlotlyHeatMap({
     height = 'h-full',
     showTicks = false,
     tickStep = 10,
+    maxHeatmapValue=255,
+    scalePlot=true,
     fixPlotHeightToParent = false,
     flipArray = false
 }) {
@@ -77,7 +79,7 @@ export default function PlotlyHeatMap({
             type: 'heatmap',
             colorscale: colorScale,
             zmin: 0,
-            zmax: 255,
+            zmax: scalePlot ? maxHeatmapValue : 255,
             showscale: false,
         },
     ];

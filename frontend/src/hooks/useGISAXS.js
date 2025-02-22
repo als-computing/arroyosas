@@ -23,6 +23,18 @@ const defaultHeatmapSettings = {
         type: 'boolean',
         value: true,
         description: 'Adjusts the Plotly heatmap display to flip the image over the horizontal axis'
+    },
+    scalePlot: {
+        label: 'Scale Heatmap',
+        type: 'boolean',
+        value: false,
+        description: 'Changes plotly scale to match the max'
+    },
+    maxHeatmapValue: {
+        label: 'Max Heatmap Int',
+        type: 'integer',
+        value: '255',
+        description: 'Max Value for scaling'
     }
 };
 
@@ -145,14 +157,21 @@ export const useGISAXS = ({}) => {
                 try{
                     //log the max, min, and mean of raw frame
                     if (websocketMessageCount.current < 10) {
-                        var maxValue = Math.max(...newMessage.raw_frame);
-                        var minValue = Math.min(...newMessage.raw_frame);
-                        var meanValue = newMessage.raw_frame.reduce((sum, value) => sum + value, 0) / arr.length;
-                        console.log(`Values straight from ws: Max: ${maxValue}, Min: ${minValue}, Average: ${meanValue}`);
-                        var maxValue = Math.max(...newMessage.raw_frame);
-                        var minValue = Math.min(...newMessage.raw_frame);
-                        var meanValue = newMessage.raw_frame.reduce((sum, value) => sum + value, 0) / arr.length;
-                        console.log(`Values from plotly data: Max: ${maxValue}, Min: ${minValue}, Average: ${meanValue}`);
+                        let arr = newMessage.raw_frame;
+                        var min=1000;
+                        var max=-1;
+                        var sum=0;
+                        for (let i=0; i<arr.length; i++) {
+                            if (arr[i] < min) {
+                                min = arr[i];
+                            }
+                            if (arr[i] > max) {
+                                max = arr[i];
+                            }
+                            sum = sum+ arr[i];
+                        }
+                        var mean = sum / arr.length;
+                        console.log(`Values from plotly data: Max: ${max}, Min: ${min}, Average: ${mean}`);
                     }
                 } catch(e) {
                     console.error('issue processing arrays: ', e);
