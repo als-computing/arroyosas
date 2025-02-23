@@ -23,6 +23,7 @@ dependencies = [
     "websockets",
     "zarr",
     "tiled >=0.1.0b14, <0.2",
+    "transformers",
     "redis"]
 
 [project.optional-dependencies]

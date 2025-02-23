@@ -52,24 +52,25 @@ class LSEWSResultPublisher(Publisher):
         message: Union[GISAXSLatentSpaceEvent | GISAXSStart | GISAXSStop],
     ) -> None:
         if isinstance(message, GISAXSStop):
-            logger.info(f"WS Sending Stop {message}")
-            self.current_start_message = None
-            await client.send(json.dumps(message.model_dump()))
+            # logger.info(f"WS Sending Stop {message}")
+            # self.current_start_message = None
+            # await client.send(json.dumps(message.model_dump()))
             return
 
         if isinstance(message, GISAXSStart):
-            self.current_start_message = message
-            logger.info(f"WS Sending Start {message}")
-            await client.send(json.dumps(message.model_dump()))
+            # self.current_start_message = message
+            # logger.info(f"WS Sending Start {message}")
+            # await client.send(json.dumps(message.model_dump()))
             return
 
         if isinstance(message, GISAXSLatentSpaceEvent):
             # send image data separately to client memory issues
             message = {
-                "tiled_uri": "foo",
-                "index": 0,
+                "tiled_uri": message.tiled_url,
+                "index": message.index,
                 "feature_vector": message.feature_vector,
             }
+            logger.debug(f"WS Sending LatentSpaceEvent {message['feature_vector']}")
             await client.send(json.dumps(message))
 
     async def websocket_handler(self, websocket):

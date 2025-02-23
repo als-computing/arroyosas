@@ -57,8 +57,9 @@ class LatentSpaceReducer:
 
     def reduce(self, message: GISAXSRawEvent) -> np.ndarray:
         # 1. Encode the image into a latent space. For now we assume
-        pil = Image.fromarray(message.image.array)
+        pil = Image.fromarray(message.image.array.astype(np.float32))
         tensor = self.current_transform(pil)
+        logger.debug("Encoding image into latent space")
         ls_is_on_gpu = False
         if (
             self.device == torch.device("cuda")
@@ -67,18 +68,21 @@ class LatentSpaceReducer:
             ls_is_on_gpu = True
 
         tensor = tensor.unsqueeze(0).to(self.device)
-        latent_space = self.current_torch_model["model"].encoder(tensor)
+        latent_space, _ = self.current_torch_model["model"].encoder(tensor)
 
         # 2. Reduce the latent space to a 2D space
+        logger.debug("Reducing latent space")
         if self.curent_dim_reduction_model["config"].type == "joblib":
             if ls_is_on_gpu:
-                latent_space = latent_space.cpu().detach().numpy()
+                latent_space = latent_space.cpu().detach()
             else:
-                latent_space = latent_space.detach().numpy()
-            f_vec = self.curent_dim_reduction_model["model"].transform(latent_space)
+                latent_space = latent_space.detach()
+
+            latent_space = latent_space.view(latent_space.size(0), -1)
+            f_vec = self.curent_dim_reduction_model["model"].transform(latent_space.numpy())
         else:  # it's torch
             f_vec = self.current_torch_model.encoder(latent_space)
-
+        logger.debug(f"Reduced latent space to {f_vec.shape}")
         return f_vec
 
     def get_ls_model(self):
@@ -117,11 +121,26 @@ class LatentSpaceReducer:
     def load_model(self, model_config):
         if model_config.type == "torch":
             model = self.load_torch_model(model_config)
-            model = model().to(self.device)
+            # model = model().to(self.device)
+            model = model(latent_dim=512).to(self.device)
             return model
         return joblib.load(model_config.file)
 
     def get_transform(self):
+        return transforms.Compose(
+            [
+                transforms.Resize(
+                    (256, 256)
+                ),  # Resize to smaller dimensions to save memory
+                transforms.ToTensor(),  # Convert image to PyTorch tensor (0-1 range)
+                transforms.Normalize(
+                    (0.0,), (1.0,)
+                ),  # Normalize tensor to have mean 0 and std 1
+            ]
+        )
+    
+    
+    def get_transform_old(self):
         return transforms.Compose(
             [
                 transforms.Resize(
@@ -158,7 +177,7 @@ class LatentSpaceReducer:
         state_dict = {key: torch.tensor(value) for key, value in npz_data.items()}
 
         # Load the state dictionary into the model
-        model().load_state_dict(state_dict)
+        model(latent_dim=512).load_state_dict(state_dict)
         return model
 
     def import_torch_models(self):

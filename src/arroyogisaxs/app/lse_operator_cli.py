@@ -25,7 +25,6 @@ async def start() -> None:
     logger.info(f"ZMQPubSubListener settings: {app_settings}")
     operator = LatentSpaceOperator.from_settings(app_settings, settings.lse_reducer)
 
-    # ws_publisher = OneDWSResultPublisher.from_settings(app_settings.ws_publisher)
     ws_publisher = LSEWSResultPublisher.from_settings(app_settings.ws_publisher)
     # tiled_event_publisher = TiledProcessedPublisher.from_settings(
     #     settings.tiled_processed

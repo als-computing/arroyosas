@@ -171,11 +171,12 @@ class TiledPollingFrameListener(Listener):
                     raw_event = GISAXSRawEvent(
                         image=image,
                         frame_number=unsent_frame,
-                        tiled_url=current_run.uri,
+                        tiled_url=current_run.uri + "/primary/data/pil1M_image",
                     )
                     logger.debug(f"Sending frame {unsent_frame}")
                     asyncio.run(self.operator.process(raw_event))
                     sent_frames.append(unsent_frame)
+                    time.sleep(1)
                     # If run has stop document, send GISAXSStop message and
                 # set_current_run to None, sent_frames to [] and continue
                 if current_run.metadata["stop"]:
@@ -205,13 +206,15 @@ class TiledPollingFrameListener(Listener):
         logger.info(f"#### Listening for runs at {run_container.uri}")
         logger.info(f"#### Polling interval: {poll_pause_sec}")
         logger.info(f"#### Frames segments: {settings.frames_segments}")
-
+        single_run = None
+        if settings.get("single_run"):
+            single_run = settings.single_run
         return cls(
             operator,
             run_container,
             tiled_frame_segments=settings.frames_segments,
             poll_pause_sec=poll_pause_sec,
-            # single_run=settings.single_run,
+            single_run=single_run,
         )
 
 

@@ -1,9 +1,11 @@
+import asyncio
 import logging
 
 import msgpack
 import zmq
 from arroyopy.operator import Operator
 
+from .lse_reducer import LatentSpaceReducer
 from ..schemas import (
     GISAXSLatentSpaceEvent,
     GISAXSMessage,
@@ -16,9 +18,10 @@ logger = logging.getLogger(__name__)
 
 
 class LatentSpaceOperator(Operator):
-    def __init__(self, proxy_socket: zmq.Socket):
+    def __init__(self, proxy_socket: zmq.Socket, reducer: LatentSpaceReducer):
         super().__init__()
         self.proxy_socket = proxy_socket
+        self.reducer = reducer
 
     async def process(self, message: GISAXSMessage) -> None:
         logger.debug("message recvd")
@@ -37,6 +40,19 @@ class LatentSpaceOperator(Operator):
 
     async def dispatch(self, message: GISAXSRawEvent) -> GISAXSLatentSpaceEvent:
         try:
+
+            feature_vector = await asyncio.to_thread(self.reducer.reduce, message)
+            response = GISAXSLatentSpaceEvent(
+                tiled_url=message.tiled_url,
+                feature_vector=feature_vector[0].tolist(),
+                index=message.frame_number,
+            )
+            return response
+        except Exception as e:
+            logger.error(f"Error sending message to broker {e}")
+
+    async def dispatch2(self, message: GISAXSRawEvent) -> GISAXSLatentSpaceEvent:
+        try:
             message = message.model_dump()
             message = msgpack.packb(message, use_bin_type=True)
             await self.proxy_socket.send(message)
@@ -51,7 +67,7 @@ class LatentSpaceOperator(Operator):
             logger.error(f"Error sending message to broker {e}")
 
     @classmethod
-    def from_settings(cls, settings):
+    def from_settings(cls, settings, reducer_settings=None):
         # Connect to the ZMQ Router/Dealer as a client
         context = zmq.asyncio.Context()
         socket = context.socket(zmq.REQ)
@@ -59,4 +75,7 @@ class LatentSpaceOperator(Operator):
         socket.setsockopt(zmq.RCVHWM, 10000)
         socket.connect(settings.zmq_broker.router_address)
         logger.info(f"Connected to broker at {settings.zmq_broker.router_address}")
-        return cls(socket)
+        reducer = None
+        if reducer_settings:
+            reducer = LatentSpaceReducer.from_settings(reducer_settings)
+        return cls(socket, reducer)
