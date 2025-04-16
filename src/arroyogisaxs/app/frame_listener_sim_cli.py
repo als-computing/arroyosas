@@ -72,9 +72,11 @@ async def process_images(
 @app.command()
 def main(cycles: int = 10000, frames: int = 50, pause: float = 5):
     async def run():
+        print("Starting frame listener simulation")
+        print(f"Cycles: {cycles}, Frames: {frames}, Pause: {pause}")
         context = zmq.asyncio.Context()
         socket = context.socket(zmq.PUB)
-        address = settings.tiled_poller.publish_address
+        address = settings.tiled_poller.zmq_frame_publisher.address
         print(f"Connecting to {address}")
         socket.bind(address)
         await process_images(socket, cycles, frames, pause)
