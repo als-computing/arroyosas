@@ -4,7 +4,7 @@ import logging
 import typer
 
 from arroyogisaxs.config import settings
-from arroyogisaxs.tiled.tiled import TiledPollingFrameListener, TiledRawFrameOperator
+from arroyogisaxs.tiled.tiled import TiledPollingRedisListener, TiledRawFrameOperator
 from arroyogisaxs.zmq import ZMQFramePublisher
 
 from ..log_utils import setup_logger
@@ -25,7 +25,7 @@ async def start(tiled_url: str, zmq_url: str, poll_interval: int = 5):
     publisher = ZMQFramePublisher.from_settings(app_settings.zmq_frame_publisher)
 
     operator.add_publisher(publisher)
-    listener = TiledPollingFrameListener.from_settings(app_settings, operator)
+    listener = TiledPollingRedisListener.from_settings(app_settings, operator)
     await asyncio.gather(listener.start())
 
 
