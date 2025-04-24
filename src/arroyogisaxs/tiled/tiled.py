@@ -1,4 +1,5 @@
 import asyncio
+import json
 import logging
 import operator
 from functools import reduce
@@ -9,6 +10,8 @@ import numpy as np
 from arroyopy.listener import Listener
 from arroyopy.operator import Operator
 from arroyopy.publisher import Publisher
+from pydantic import ValidationError
+import redis.asyncio as redis
 from tiled.client import from_uri
 from tiled.client.array import ArrayClient
 from tiled.client.base import BaseClient
@@ -25,6 +28,7 @@ from ..schemas import (
     GISAXSStop,
     SerializableNumpyArrayModel,
 )
+from arroyopy.files import FileWatcherMessage
 
 RUNS_CONTAINER_NAME = "runs"
 
@@ -91,6 +95,81 @@ class TiledTestframeListener(Listener):
         return cls(node)
 
 
+class TiledPollingRedisListener(Listener):
+    def __init__(
+        self,
+        operator: Operator,
+        beamline_runs_tiled: Container,
+        tiled_frame_segments: list,
+        redis_client: redis.Redis,
+        channel_name: str = "sas_file_watcher",
+    ):
+        self.beamline_runs_tiled = beamline_runs_tiled
+        self.tiled_frame_segments = tiled_frame_segments
+        self.operator = operator
+        self.redis_client = redis_client
+        self.channel_name = channel_name
+    
+    
+    async def start(self):
+        
+            pubsub = self.redis_client.pubsub()
+            await pubsub.subscribe(self.channel_name)
+            logger.info(f"Subscribed to channel: {self.channel_name}")
+            async for message in pubsub.listen():
+                try:
+                    logger.debug(f"Received message: {message}")
+                    if message["type"] != "message":
+                        continue
+                    try:
+                        data = json.loads(message["data"])
+                        msg = FileWatcherMessage(**data)
+                        print(f"[Parsed] {msg}")
+                    except (json.JSONDecodeError, ValidationError) as e:
+                        print(f"[Error parsing message]: {e}")
+                    
+                    relative_tiled_path = msg.file_path.split(self.beamline_runs_tiled.uri)[1]
+                    array = self.beamline_runs_tiled[relative_tiled_path]
+                    image = SerializableNumpyArrayModel(array=array.read())
+                    raw_event = GISAXSRawEvent(
+                        image=image,
+                        frame_number=0,
+                        tiled_url=msg.file_path,
+                    )
+                    await self.operator.process(raw_event)
+                    
+                except Exception as e:
+                    logger.exception(f"Error in polling loop: {e}")
+
+            logger.info("Polling redis finished")
+    async def stop(self):
+        pass
+
+    async def listen(self):
+        pass
+
+    
+    @classmethod
+    def from_settings(cls, settings: dict, operator: Operator):
+        tiled_runs_segments = settings.runs_segments
+        poll_pause_sec = settings.poll_interval
+        client = from_uri(
+            settings.uri,
+            api_key=settings.api_key,
+        )
+        run_container = client[tuple(tiled_runs_segments.to_list())]
+        logger.info(f"#### Listening for runs at {run_container.uri}")
+        logger.info(f"#### Frames segments: {settings.frames_segments}")
+
+        redis_client = redis.Redis(host="kvrocks", port=6666, decode_responses=True)
+        return cls(
+            operator,
+            run_container,
+            tiled_frame_segments=settings.frames_segments,
+            redis_client=redis_client,
+            channel_name="sas_file_watcher"
+        )
+
 class TiledPollingFrameListener(Listener):
     def __init__(
         self,
@@ -107,8 +186,9 @@ class TiledPollingFrameListener(Listener):
         self.single_run = single_run
     
     async def start(self):
+        # await asyncio.to_thread(self._start) 
         await asyncio.to_thread(self._start) 
-
+    
     def _start(self):
         last_processed_run = None
         sent_frames = []
@@ -206,6 +286,7 @@ class TiledPollingFrameListener(Listener):
         logger.info(f"#### Listening for runs at {run_container.uri}")
         logger.info(f"#### Polling interval: {poll_pause_sec}")
         logger.info(f"#### Frames segments: {settings.frames_segments}")
+
         single_run = None
         if settings.get("single_run"):
             single_run = settings.single_run

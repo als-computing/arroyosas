@@ -9,6 +9,7 @@ from arroyopy import Listener, Operator, Publisher
 from arroyopy.files import FileWatcherMessage
 from tiled.client import from_uri
 from tiled.client.base import BaseClient
+import redis.asyncio as redis
 import typer
 from watchfiles import awatch, Change
 
@@ -43,14 +44,40 @@ def setup_logging(log_level: str = "INFO"):
 app = typer.Typer(help="Watch a directory and publish new .gb files to Redis.")
 
 
+class RedisPublisher(Publisher):
+    def __init__(self, redis_client: redis.Redis, channel_name: str):
+        self.channel_name = channel_name
+        self.redis_client = redis_client
+
+    async def publish(self, message: FileWatcherMessage):
+        logger.debug(f"Publishing message to Redis: {message}")
+        if message.is_directory:
+            logger.debug(f"Skipping directory: {message.file_path}")
+            return
+        await self.redis_client.publish(self.channel_name,message.model_dump_json())
+
+
 class TiledPublisher(Publisher):
-    def __init__(self, tiled_ingestor: TiledIngestor):
+    def __init__(self, tiled_url: str, tiled_ingestor: TiledIngestor, redis_publisher: RedisPublisher = None):
+        self.tiled_url = tiled_url
         self.tiled_ingestor = tiled_ingestor
+        self.redis_publisher = redis_publisher
         super().__init__()
 
     async def publish(self, message: FileWatcherMessage):
-        logger.debug(f"Publishing message to Tiled: {message}")
-        self.tiled_ingestor.add_scan_tiled(message.file_path)
+        try:
+            logger.debug(f"Publishing message to Tiled: {message}")
+            if message.is_directory:  #  collections for directories get for new files by ingestor
+                logger.debug(f"Skipping directory: {message.file_path}")
+                return
+            tiled_uri = await asyncio.to_thread(self.tiled_ingestor.add_scan_tiled, message.file_path)
+            if self.redis_publisher:
+                message.file_path = tiled_uri
+                await self.redis_publisher.publish(message)
+        except Exception as e:
+            logger.error(f"Error publishing message: {e}")
+
+
 
 class FileWatcherOperator(Operator):
     def __init__(self, publisher: Publisher):
@@ -75,21 +102,23 @@ class FileWatcherListener(Listener):
         logger.info(f"🔍 Watching directory recursively: {self.directory} (force_polling={self.force_polling})")
         async for changes in awatch(self.directory, force_polling=self.force_polling):
             for change_type, path_str in changes:
+                if change_type is not Change.added:
+                     continue
                 path = Path(path_str)
                 if not path.exists():
                     logger.debug(f"⚠️ Skipping non-existent path: {path}")
                     continue
-                if path.suffix not in [".gb", ".edf"]:
+    
+                if not path.is_dir() and path.suffix not in [".gb", ".edf"]:
                     logger.debug(f"⚠️ Skipping non-supported file type: {path.suffix}")
                     continue
-                if path.is_dir():
-                    logger.debug(f"⚠️ Skipping directory: {path}")
-                    continue
+                
                 logger.info(f"📦 Detected: {change_type} on {path}")
                 message = FileWatcherMessage(
                     file_path=str(path), is_directory=path.is_dir()
                 )
                 await self.operator.process(message)
+                
 
     async def stop(self):
         pass
@@ -121,12 +150,14 @@ def main(
         logger.info(f"Connecting to Tiled server at {tiled_uri} with root {tiled_raw_root}")
         tiled_client = from_uri(tiled_uri, api_key=tiled_api_key)
         tiled_ingestor = TiledIngestor(tiled_client, tiled_raw_root, directory)
-        publisher = TiledPublisher(tiled_ingestor)
+        redis_client = redis.Redis(host="kvrocks", port=6666, decode_responses=True)
+        redis_publisher = RedisPublisher(redis_client, "sas_file_watcher")
+        publisher = TiledPublisher(f"{tiled_uri}{tiled_raw_root}", tiled_ingestor, redis_publisher)
         logger.info("Using Tiled publisher")
     else:
         publisher = NullPublisher()
         logger.info("Using default null publisher")
-    
+
     operator = FileWatcherOperator(publisher)
     listener = FileWatcherListener(str(directory), operator)
     loop.run_until_complete(listener.start())
