@@ -8,7 +8,7 @@ from arroyogisaxs.schemas import (  # GISAXSRawStart,; GISAXSRawStop,
     GISAXSRawEvent,
     SerializableNumpyArrayModel,
 )
-from arroyogisaxs.tiled import unsent_frame_numbers
+from arroyogisaxs.tiled.tiled import unsent_frame_numbers
 
 # import pytest_asyncio
 # from arroyopy.operator import Operator

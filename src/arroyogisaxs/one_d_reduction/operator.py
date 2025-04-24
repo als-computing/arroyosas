@@ -17,7 +17,7 @@ from ..schemas import (
     GISAXSStop,
     SerializableNumpyArrayModel,
 )
-from ..tiled import get_nested_client
+from ..tiled.tiled import get_nested_client
 from .detector import VerticalPilatus900kw
 from .reduce import pixel_roi_horizontal_cut
 

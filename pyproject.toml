@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 
 [project]
-name = "arroyoGISAXS"
+name = "arroyoSAS"
 version = "0.0.1"
 description = "A package to perform computations and suggestions during a time-resolved GISAXS experiment."
 authors = [{ name = "Dylan McReynolds", email = "dmcreynolds@lbl.gov" }]
@@ -22,7 +22,6 @@ dependencies = [
     "typer",
     "websockets",
     "zarr",
-    "tiled >=0.1.0b14, <0.2",
     "transformers",
     "redis"]
 
