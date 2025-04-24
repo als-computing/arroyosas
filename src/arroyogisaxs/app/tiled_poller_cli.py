@@ -4,7 +4,7 @@ import logging
 import typer
 
 from arroyogisaxs.config import settings
-from arroyogisaxs.tiled import TiledPollingFrameListener, TiledRawFrameOperator
+from arroyogisaxs.tiled.tiled import TiledPollingFrameListener, TiledRawFrameOperator
 from arroyogisaxs.zmq import ZMQFramePublisher
 
 from ..log_utils import setup_logger

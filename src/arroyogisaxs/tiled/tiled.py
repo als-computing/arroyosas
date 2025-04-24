@@ -16,7 +16,7 @@ from tiled.client.base import BaseClient
 # from tiled.client.dataframe import DataFrameClient
 from tiled.client.container import Container
 
-from .schemas import (
+from ..schemas import (
     GISAXS1DReduction,
     GISAXSLatentSpaceEvent,
     GISAXSMessage,
