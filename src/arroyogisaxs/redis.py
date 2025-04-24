@@ -53,3 +53,11 @@ class RedisConn:
         )
         redis_conn = redis.Redis(connection_pool=pool)
         return cls(redis_conn)
+
+    @classmethod
+    def create(cls, host: str, port: int) -> "RedisConn":
+        pool = redis.ConnectionPool(
+            host=host, port=port, decode_responses=True
+        )
+        redis_conn = redis.Redis(connection_pool=pool)
+        return cls(redis_conn)
