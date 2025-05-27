@@ -64,14 +64,14 @@ class SASStart(Start, SASMessage):
     tiled_url: str
 
 
-class SASRawEvent(Event, SASMessage):
+class RawFrameEvent(Event):
     msg_type: str = "event"
     image: SerializableNumpyArrayModel
     frame_number: int
     tiled_url: str
 
 
-class SASLatentSpaceEvent(Event, SASMessage):
+class LatentSpaceEvent(Event, SASMessage):
     tiled_url: str
     feature_vector: list[float]
     index: int

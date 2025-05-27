@@ -12,7 +12,7 @@ import numpy as np
 from ..redis import RedisConn
 from ..schemas import (
     SAS1DReduction,
-    SASRawEvent,
+    RawFrameEvent,
     SASStart,
     SASStop,
     SerializableNumpyArrayModel,
@@ -58,7 +58,7 @@ class OneDReductionOperator(Operator):
                 self.current_reduction_settings = None
                 await self.publish(message)
 
-            if isinstance(message, SASRawEvent):
+            if isinstance(message, RawFrameEvent):
                 if self.current_scan_metadata is None:
                     logger.error(
                         "No current scan metadata. Perhaps the Viz Operator was started mid-scan?"

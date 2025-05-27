@@ -11,7 +11,7 @@ import zmq.asyncio
 
 from ..config import settings
 from ..schemas import (
-    SASRawEvent,
+    RawFrameEvent,
     SASStart,
     SASStop,
     SerializableNumpyArrayModel,
@@ -52,7 +52,7 @@ async def process_images(
             image = np.random.rand(FRAME_WIDTH, FRAME_HEIGHT).astype(DATA_TYPE)
             np.fill_diagonal(image, frame_number % 255)
 
-            event = SASRawEvent(
+            event = RawFrameEvent(
                 image=SerializableNumpyArrayModel(array=image),
                 frame_number=frame_num,
                 tiled_url="tb://frame_url",

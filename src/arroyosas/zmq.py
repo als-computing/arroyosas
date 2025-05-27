@@ -10,10 +10,9 @@ from zmq.asyncio import Context, Socket
 
 from .schemas import (
     SASMessage,
-    SASRawEvent,
+    RawFrameEvent,
     SASStart,
     SASStop,
-    SerializableNumpyArrayModel,
 )
 
 logger = logging.getLogger(__name__)
@@ -44,7 +43,7 @@ class ZMQFrameListener(Listener):
                     #     message["image"]
                     # )
                    
-                    message = SASRawEvent(**message)
+                    message = RawFrameEvent(**message)
                 elif message_type == "stop":
                     logger.info(f"Received Stop {message}")
                     message = SASStop(**message)
@@ -80,7 +79,7 @@ class ZMQFramePublisher(Publisher):
             message = msgpack.packb(message.model_dump(), use_bin_type=True)
             await self.zmq_socket.send(message)
             return
-        if isinstance(message, SASRawEvent):
+        if isinstance(message, RawFrameEvent):
             message = message.model_dump()
             # message["image"] = SerializableNumpyArrayModel.serialize_array(
             #     message["image"]["array"]

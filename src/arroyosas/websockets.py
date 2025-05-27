@@ -139,7 +139,7 @@ async def test_client(publisher: OneDWSPublisher, num_frames: int = 10):
 
     from arroyosas.schemas import (
         GISAXSImageInfo,
-        SASRawEvent,
+        RawFrameEvent,
         SASStart,
         SASStop,
     )
@@ -167,7 +167,7 @@ async def test_client(publisher: OneDWSPublisher, num_frames: int = 10):
             }
 
             # Create GISAXSResult message
-            message = SASRawEvent(
+            message = RawFrameEvent(
                 image_info=GISAXSImageInfo(**image_info),
                 image=NumpyArrayModel(array=image),
                 one_d_reduction=DataFrameModel(df=one_d_reduction),
