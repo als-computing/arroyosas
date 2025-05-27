@@ -85,17 +85,6 @@ all = [
 profile = "black"
 
 
-[tool.pixi.project]
-name = "arroyoGISAXS"
-version = "0.0.1"
-channels = ["conda-forge"]
-platforms = ["linux-64"]
-
-[tool.pixi.tasks]
-pre-commit-install = "pre-commit install"
-pre-commit = "pre-commit run --all-files"
-start_ws = "python -m arroyogisaxs.websockets"
-
 
 [tool.pixi.pypi-dependencies]
 
