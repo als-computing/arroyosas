@@ -11,7 +11,7 @@ import torch
 import torchvision.transforms as transforms
 from PIL import Image
 
-from ..schemas import GISAXSRawEvent
+from ..schemas import SASRawEvent
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +55,7 @@ class LatentSpaceReducer:
         self.curent_dim_reduction_model = self.get_dim_reduction_model()
         self.current_transform = self.get_transform()
 
-    def reduce(self, message: GISAXSRawEvent) -> np.ndarray:
+    def reduce(self, message: SASRawEvent) -> np.ndarray:
         # 1. Encode the image into a latent space. For now we assume
         pil = Image.fromarray(message.image.array.astype(np.float32))
         tensor = self.current_transform(pil)

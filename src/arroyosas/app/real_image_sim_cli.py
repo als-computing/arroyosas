@@ -12,9 +12,9 @@ from PIL import Image
 
 from ..config import settings
 from ..schemas import (
-    GISAXSRawEvent,
-    GISAXSStart,
-    GISAXSStop,
+    SASRawEvent,
+    SASStart,
+    SASStop,
     SerializableNumpyArrayModel,
 )
 
@@ -36,7 +36,7 @@ async def process_images(
     for cycle_num in range(cycles):
         # Get current time formatted as YYYY-MM-DD HH:MM:SS
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        start = GISAXSStart(
+        start = SASStart(
             width=FRAME_WIDTH,
             height=FRAME_HEIGHT,
             data_type=DATA_TYPE,
@@ -51,14 +51,14 @@ async def process_images(
         for file in files:
             with os.read(file) as filebytes:
                 image = Image.frombytes(filebytes)
-            event = GISAXSRawEvent(
+            event = SASRawEvent(
                 image=SerializableNumpyArrayModel(array=image),
                 frame_number=frame_num,
                 tiled_url="tb://frame_url",
             )
             print("event")
             await socket.send(msgpack.packb(event.model_dump()))
-        stop = GISAXSStop(num_frames=frames)
+        stop = SASStop(num_frames=frames)
         print("stop")
         await socket.send(msgpack.packb(stop.model_dump()))
         await asyncio.sleep(pause)

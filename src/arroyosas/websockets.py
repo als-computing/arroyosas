@@ -8,7 +8,7 @@ import numpy as np
 import websockets
 from arroyopy.publisher import Publisher
 
-from .schemas import GISAXS1DReduction, GISAXSStart, GISAXSStop, SerializableNumpyArrayModel
+from .schemas import SAS1DReduction, SASStart, SASStop, SerializableNumpyArrayModel
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ class OneDWSPublisher(Publisher):
         logger.info(f"Websocket server started at ws://{self.host}:{self.port}")
         await server.wait_closed()
 
-    async def publish(self, message: GISAXS1DReduction) -> None:
+    async def publish(self, message: SAS1DReduction) -> None:
         if self.connected_clients:  # Only send if there are clients connected
             asyncio.gather(
                 *(self.publish_ws(client, message) for client in self.connected_clients)
@@ -50,15 +50,15 @@ class OneDWSPublisher(Publisher):
         self,
         #  client: websockets.client.ClientConnection,
         client,
-        message: Union[GISAXS1DReduction | GISAXSStart | GISAXSStop],
+        message: Union[SAS1DReduction | SASStart | SASStop],
     ) -> None:
-        if isinstance(message, GISAXSStop):
+        if isinstance(message, SASStop):
             logger.info(f"WS Sending Stop {message}")
             self.current_start_message = None
             await client.send(json.dumps(message.model_dump()))
             return
 
-        if isinstance(message, GISAXSStart):
+        if isinstance(message, SASStart):
             self.current_start_message = message
             logger.info(f"WS Sending Start {message}")
             await client.send(json.dumps(message.model_dump()))
@@ -110,7 +110,7 @@ def convert_to_uint8(image: np.ndarray) -> bytes:
     return image_uint8.tobytes()
 
 
-def pack_images(message: GISAXS1DReduction) -> bytes:
+def pack_images(message: SAS1DReduction) -> bytes:
     """
     Pack all the images into a single msgpack message
     """
@@ -139,14 +139,14 @@ async def test_client(publisher: OneDWSPublisher, num_frames: int = 10):
 
     from arroyosas.schemas import (
         GISAXSImageInfo,
-        GISAXSRawEvent,
-        GISAXSStart,
-        GISAXSStop,
+        SASRawEvent,
+        SASStart,
+        SASStop,
     )
 
     await asyncio.sleep(2)
     for y in range(100):
-        await publisher.publish(GISAXSStart())
+        await publisher.publish(SASStart())
         for x in range(num_frames):
             await asyncio.sleep(1)
             # Create a test pattern image that changes slightly each time
@@ -167,14 +167,14 @@ async def test_client(publisher: OneDWSPublisher, num_frames: int = 10):
             }
 
             # Create GISAXSResult message
-            message = GISAXSRawEvent(
+            message = SASRawEvent(
                 image_info=GISAXSImageInfo(**image_info),
                 image=NumpyArrayModel(array=image),
                 one_d_reduction=DataFrameModel(df=one_d_reduction),
             )
 
             await publisher.publish(message)
-        await publisher.publish(GISAXSStop(num_frames=num_frames))
+        await publisher.publish(SASStop(num_frames=num_frames))
 
 
 async def main(publisher: OneDWSPublisher):

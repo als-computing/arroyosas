@@ -7,11 +7,11 @@ from arroyopy.operator import Operator
 
 from .lse_reducer import LatentSpaceReducer
 from ..schemas import (
-    GISAXSLatentSpaceEvent,
-    GISAXSMessage,
-    GISAXSRawEvent,
-    GISAXSStart,
-    GISAXSStop,
+    SASLatentSpaceEvent,
+    SASMessage,
+    SASRawEvent,
+    SASStart,
+    SASStop,
 )
 
 logger = logging.getLogger(__name__)
@@ -23,26 +23,26 @@ class LatentSpaceOperator(Operator):
         self.proxy_socket = proxy_socket
         self.reducer = reducer
 
-    async def process(self, message: GISAXSMessage) -> None:
+    async def process(self, message: SASMessage) -> None:
         logger.debug("message recvd")
-        if isinstance(message, GISAXSStart):
+        if isinstance(message, SASStart):
             logger.info("Received Start Message")
             await self.publish(message)
-        elif isinstance(message, GISAXSRawEvent):
+        elif isinstance(message, SASRawEvent):
             result = await self.dispatch(message)
             await self.publish(result)
-        elif isinstance(message, GISAXSStop):
+        elif isinstance(message, SASStop):
             logger.info("Received Stop Message")
             await self.publish(message)
         else:
             logger.warning(f"Unknown message type: {type(message)}")
         return None
 
-    async def dispatch(self, message: GISAXSRawEvent) -> GISAXSLatentSpaceEvent:
+    async def dispatch(self, message: SASRawEvent) -> SASLatentSpaceEvent:
         try:
 
             feature_vector = await asyncio.to_thread(self.reducer.reduce, message)
-            response = GISAXSLatentSpaceEvent(
+            response = SASLatentSpaceEvent(
                 tiled_url=message.tiled_url,
                 feature_vector=feature_vector[0].tolist(),
                 index=message.frame_number,
@@ -51,7 +51,7 @@ class LatentSpaceOperator(Operator):
         except Exception as e:
             logger.error(f"Error sending message to broker {e}")
 
-    async def dispatch2(self, message: GISAXSRawEvent) -> GISAXSLatentSpaceEvent:
+    async def dispatch2(self, message: SASRawEvent) -> SASLatentSpaceEvent:
         try:
             message = message.model_dump()
             message = msgpack.packb(message, use_bin_type=True)
@@ -62,7 +62,7 @@ class LatentSpaceOperator(Operator):
                 logger.debug("Worker reported an error")
                 return None
             # logger.debug("response from broker")
-            return GISAXSLatentSpaceEvent(**msgpack.unpackb(response))
+            return SASLatentSpaceEvent(**msgpack.unpackb(response))
         except Exception as e:
             logger.error(f"Error sending message to broker {e}")
 

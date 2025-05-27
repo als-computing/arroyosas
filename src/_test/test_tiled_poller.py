@@ -5,7 +5,7 @@ import numpy
 import pytest
 
 from arroyosas.schemas import (  # GISAXSRawStart,; GISAXSRawStop,
-    GISAXSRawEvent,
+    SASRawEvent,
     SerializableNumpyArrayModel,
 )
 from arroyosas.tiled.tiled import unsent_frame_numbers
@@ -22,7 +22,7 @@ def events():
     for frame_num in range(num_events):
         image = numpy.random.rand(10, 20).astype(numpy.uint8)
         image = SerializableNumpyArrayModel(array=image)
-        event = GISAXSRawEvent(image=image, frame_number=frame_num)
+        event = SASRawEvent(image=image, frame_number=frame_num)
         event_list.append(event)
     return event_list
 

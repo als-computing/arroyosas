@@ -9,10 +9,10 @@ from arroyopy.publisher import Publisher
 from zmq.asyncio import Context, Socket
 
 from .schemas import (
-    GISAXSMessage,
-    GISAXSRawEvent,
-    GISAXSStart,
-    GISAXSStop,
+    SASMessage,
+    SASRawEvent,
+    SASStart,
+    SASStop,
     SerializableNumpyArrayModel,
 )
 
@@ -37,17 +37,17 @@ class ZMQFrameListener(Listener):
                 message_type = message.get("msg_type")
                 if message_type == "start":
                     logger.debug(f"Received Start {message}")
-                    message = GISAXSStart(**message)
+                    message = SASStart(**message)
                 elif message_type == "event":
                     logger.debug("Received event")
                     # image = SerializableNumpyArrayModel.deserialize_array(
                     #     message["image"]
                     # )
                    
-                    message = GISAXSRawEvent(**message)
+                    message = SASRawEvent(**message)
                 elif message_type == "stop":
                     logger.info(f"Received Stop {message}")
-                    message = GISAXSStop(**message)
+                    message = SASStop(**message)
                 else:
                     logger.error(f"Unknown message type {message_type}")
                     continue
@@ -74,13 +74,13 @@ class ZMQFramePublisher(Publisher):
     def __init__(self, zmq_socket: Socket):
         self.zmq_socket = zmq_socket
 
-    async def publish(self, message: GISAXSMessage) -> None:
+    async def publish(self, message: SASMessage) -> None:
         logger.debug(f"Publishing message: {message.msg_type}")
-        if isinstance(message, GISAXSStart) or isinstance(message, GISAXSStop):
+        if isinstance(message, SASStart) or isinstance(message, SASStop):
             message = msgpack.packb(message.model_dump(), use_bin_type=True)
             await self.zmq_socket.send(message)
             return
-        if isinstance(message, GISAXSRawEvent):
+        if isinstance(message, SASRawEvent):
             message = message.model_dump()
             # message["image"] = SerializableNumpyArrayModel.serialize_array(
             #     message["image"]["array"]

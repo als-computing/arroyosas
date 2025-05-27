@@ -8,7 +8,7 @@ from typing import Union
 import websockets
 from arroyopy.publisher import Publisher
 
-from ..schemas import GISAXSLatentSpaceEvent, GISAXSStart, GISAXSStop
+from ..schemas import SASLatentSpaceEvent, SASStart, SASStop
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ class LSEWSResultPublisher(Publisher):
         logger.info(f"Websocket server started at ws://{self.host}:{self.port}")
         await server.wait_closed()
 
-    async def publish(self, message: GISAXSLatentSpaceEvent) -> None:
+    async def publish(self, message: SASLatentSpaceEvent) -> None:
         if self.connected_clients:  # Only send if there are clients connected
             asyncio.gather(
                 *(self.publish_ws(client, message) for client in self.connected_clients)
@@ -49,21 +49,21 @@ class LSEWSResultPublisher(Publisher):
     async def publish_ws(
         self,
         client: websockets.ServerConnection,
-        message: Union[GISAXSLatentSpaceEvent | GISAXSStart | GISAXSStop],
+        message: Union[SASLatentSpaceEvent | SASStart | SASStop],
     ) -> None:
-        if isinstance(message, GISAXSStop):
+        if isinstance(message, SASStop):
             # logger.info(f"WS Sending Stop {message}")
             # self.current_start_message = None
             # await client.send(json.dumps(message.model_dump()))
             return
 
-        if isinstance(message, GISAXSStart):
+        if isinstance(message, SASStart):
             # self.current_start_message = message
             # logger.info(f"WS Sending Start {message}")
             # await client.send(json.dumps(message.model_dump()))
             return
 
-        if isinstance(message, GISAXSLatentSpaceEvent):
+        if isinstance(message, SASLatentSpaceEvent):
             # send image data separately to client memory issues
             message = {
                 "tiled_uri": message.tiled_url,

@@ -9,8 +9,8 @@ from ..config import settings
 from ..log_utils import setup_logger
 from ..lse.lse_reducer import LatentSpaceReducer
 from ..schemas import (
-    GISAXSLatentSpaceEvent,
-    GISAXSRawEvent,
+    SASLatentSpaceEvent,
+    SASRawEvent,
     SerializableNumpyArrayModel,
 )
 
@@ -42,12 +42,12 @@ def start() -> None:
                 continue
             image = SerializableNumpyArrayModel.deserialize_array(message["image"])
             message["image"] = image
-            event = GISAXSRawEvent(**message)
+            event = SASRawEvent(**message)
             # logger.debug("calculating latent space")
 
             latent_space = reducer.reduce(event)
             # logger.debug("latent space returned")
-            return_message = GISAXSLatentSpaceEvent(
+            return_message = SASLatentSpaceEvent(
                 tiled_url="foo",
                 feature_vector=latent_space[0].tolist(),
                 index=message.get("frame_number"),
