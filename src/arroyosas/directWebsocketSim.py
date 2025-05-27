@@ -1,6 +1,5 @@
 #pip install -e .
 #cd src/
-# python -m arroyogisaxs.directWebsocketSim
 import asyncio
 import json
 import logging
@@ -13,7 +12,7 @@ import numpy as np
 import websockets
 from arroyopy.publisher import Publisher
 
-from .schemas import GISAXSRawEvent, GISAXSStart, GISAXSStop, SerializableNumpyArrayModel
+from .schemas import SASRawEvent, SASStart, SASStop, SerializableNumpyArrayModel
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +43,7 @@ class OneDWSPublisher(Publisher):
         logger.info(f"Websocket server started at ws://{self.host}:{self.port}")
         await server.wait_closed()
 
-    async def publish(self, message: GISAXSRawEvent) -> None:
+    async def publish(self, message: SASRawEvent) -> None:
         if self.connected_clients:  # Only send if there are clients connected
             asyncio.gather(
                 *(self.publish_ws(client, message) for client in self.connected_clients)
@@ -54,15 +53,15 @@ class OneDWSPublisher(Publisher):
         self,
         #  client: websockets.client.ClientConnection,
         client,
-        message: Union[GISAXSRawEvent | GISAXSStart | GISAXSStop],
+        message: Union[SASRawEvent | SASStart | SASStop],
     ) -> None:
-        if isinstance(message, GISAXSStop):
+        if isinstance(message, SASStop):
             logger.info(f"WS Sending Stop {message}")
             self.current_start_message = None
             await client.send(json.dumps(message.model_dump()))
             return
 
-        if isinstance(message, GISAXSStart):
+        if isinstance(message, SASStart):
             self.current_start_message = message
             logger.info(f"WS Sending Start {message}")
             await client.send(json.dumps(message.model_dump()))
@@ -115,7 +114,7 @@ def convert_to_uint8(image: np.ndarray) -> bytes:
     return image_uint8.tobytes()
 
 
-def pack_images(message: GISAXSRawEvent) -> bytes:
+def pack_images(message: SASRawEvent) -> bytes:
     """
     Pack all the images into a single msgpack message
     """
@@ -142,17 +141,17 @@ async def test_client(publisher: OneDWSPublisher, num_frames: int = 10):
     import pandas as pd
     from arroyopy.schemas import DataFrameModel, NumpyArrayModel
 
-    from arroyogisaxs.schemas import (
+    from arroyosas.schemas import (
        # GISAXSImageInfo,
-        GISAXSRawEvent,
-        GISAXSStart,
-        GISAXSStop,
+        SASRawEvent,
+        SASStart,
+        SASStop,
         SerializableNumpyArrayModel
     )
 
     await asyncio.sleep(2)
     for y in range(100):
-        await publisher.publish(GISAXSStart(
+        await publisher.publish(SASStart(
             run_name="test_run",
             run_id="12345",
             width=1043,
@@ -186,7 +185,7 @@ async def test_client(publisher: OneDWSPublisher, num_frames: int = 10):
                 link ="http://127.0.0.1:8000/api/v1/array/full/feb/pil1M_image?slice=" + str(frame_num)
 
 
-                event = GISAXSRawEvent(
+                event = SASRawEvent(
                     image=SerializableNumpyArrayModel(array=arr),
                     frame_number=frame_num,
                     tiled_url=link,
@@ -222,7 +221,7 @@ async def test_client(publisher: OneDWSPublisher, num_frames: int = 10):
 
             #await publisher.publish(message)
             frame_num = frame_num + 1
-        await publisher.publish(GISAXSStop(num_frames=num_frames))
+        await publisher.publish(SASStop(num_frames=num_frames))
 
 
 async def main(publisher: OneDWSPublisher):

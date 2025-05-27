@@ -1,6 +1,6 @@
 import numpy
 
-from arroyogisaxs.schemas import SerializableNumpyArrayModel
+from arroyosas.schemas import SerializableNumpyArrayModel
 
 
 def test_serializable_np():

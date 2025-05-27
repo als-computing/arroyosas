@@ -11,10 +11,10 @@ import numpy as np
 
 from ..redis import RedisConn
 from ..schemas import (
-    GISAXS1DReduction,
-    GISAXSRawEvent,
-    GISAXSStart,
-    GISAXSStop,
+    SAS1DReduction,
+    SASRawEvent,
+    SASStart,
+    SASStop,
     SerializableNumpyArrayModel,
 )
 from ..tiled.tiled import get_nested_client
@@ -43,7 +43,7 @@ class OneDReductionOperator(Operator):
 
     async def process(self, message):
         try:
-            if isinstance(message, GISAXSStart):
+            if isinstance(message, SASStart):
                 logger.info(f"Processing Start {message}")
                 self.current_scan_metadata = message
                 logger.info("Calculating mask")
@@ -52,13 +52,13 @@ class OneDReductionOperator(Operator):
                 # self.mask = await asyncio.to_thread(self.calculate_mask, reduction_settings)
                 await self.publish(message)
 
-            if isinstance(message, GISAXSStop):
+            if isinstance(message, SASStop):
                 logger.info(f"Processing Stop {message}")
                 self.current_scan_metadata = None
                 self.current_reduction_settings = None
                 await self.publish(message)
 
-            if isinstance(message, GISAXSRawEvent):
+            if isinstance(message, SASRawEvent):
                 if self.current_scan_metadata is None:
                     logger.error(
                         "No current scan metadata. Perhaps the Viz Operator was started mid-scan?"
@@ -77,7 +77,7 @@ class OneDReductionOperator(Operator):
                 )
                 #
                 serializable_reduction = SerializableNumpyArrayModel(array=reduction)
-                reduction_msg = GISAXS1DReduction(
+                reduction_msg = SAS1DReduction(
                     curve=serializable_reduction,  # just the qparrallel, not the cut_average or errors
                     curve_tiled_url="curve",
                     raw_frame=message.image,
@@ -103,7 +103,7 @@ class OneDReductionOperator(Operator):
             (reduction, line_average, errror) = await asyncio.to_thread(
                 self.do_reduction, reduction_settings
             )
-            reduction_msg = GISAXS1DReduction(
+            reduction_msg = SAS1DReduction(
                 curve=reduction[0],
                 curve_tiled_url="curve", 
                 raw_frame=None,

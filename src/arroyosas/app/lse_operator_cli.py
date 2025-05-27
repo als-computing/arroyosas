@@ -11,7 +11,7 @@ from ..tiled.tiled import TiledProcessedPublisher
 from ..zmq import ZMQFrameListener
 
 app = typer.Typer()
-logger = logging.getLogger("arroyogisaxs")
+logger = logging.getLogger("arroyosas")
 setup_logger(logger, settings.logging_level)
 
 

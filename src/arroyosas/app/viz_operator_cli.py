@@ -3,7 +3,7 @@ import logging
 
 import typer
 
-from arroyogisaxs.zmq import ZMQFrameListener
+from arroyosas.zmq import ZMQFrameListener
 
 from ..config import settings
 from ..log_utils import setup_logger
@@ -13,7 +13,7 @@ from ..tiled.tiled import TiledProcessedPublisher
 from ..websockets import OneDWSPublisher
 
 app = typer.Typer()
-logger = logging.getLogger("arroyogisaxs")
+logger = logging.getLogger("arroyosas")
 app_settings = settings.viz_operator
 setup_logger(logger, log_level=settings.logging_level)
 

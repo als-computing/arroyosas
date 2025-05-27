@@ -8,7 +8,7 @@ from ..log_utils import setup_logger
 from ..zmq import ZMQBroker
 
 app = typer.Typer()
-logger = logging.getLogger("arroyogisaxs")
+logger = logging.getLogger("arroyosas")
 setup_logger(logger)
 
 

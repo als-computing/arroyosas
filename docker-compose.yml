@@ -22,8 +22,8 @@ services:
     networks:
       gisax_net1:
   beamline_sim:
-    command: python -m arroyogisaxs.app.tiled_poller_sim_cli
-    image: ghcr.io/als-computing/arroyogisaxs:main
+    command: python -m arroyosas.app.tiled_poller_sim_cli
+    image: ghcr.io/als-computing/arroyogisas:main
     restart: unless-stopped
     volumes:
       - .:/app:Z
@@ -32,7 +32,7 @@ services:
       gisax_net1:
 
   viz_operator:
-    command: python -m arroyogisaxs.app.viz_operator_cli
+    command: python -m arroyogisas.app.viz_operator_cli
     build:
       context: .
     restart: unless-stopped
@@ -57,7 +57,7 @@ services:
       gisax_net1:
 
   tiled_poller:
-    command: python -m debugpy --listen 0.0.0.0:5678 --wait-for-client -m arroyogisaxs.app.tiled_poller_cli
+    command: python -m debugpy --listen 0.0.0.0:5678 --wait-for-client -m arroyosas.app.tiled_poller_cli
     build:
       context: .
       dockerfile: Dockerfile

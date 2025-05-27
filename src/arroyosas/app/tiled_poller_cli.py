@@ -3,14 +3,14 @@ import logging
 
 import typer
 
-from arroyogisaxs.config import settings
-from arroyogisaxs.tiled.tiled import TiledPollingRedisListener, TiledRawFrameOperator
-from arroyogisaxs.zmq import ZMQFramePublisher
+from arroyosas.config import settings
+from arroyosas.tiled.tiled import TiledPollingRedisListener, TiledRawFrameOperator
+from arroyosas.zmq import ZMQFramePublisher
 
 from ..log_utils import setup_logger
 
 app = typer.Typer()
-logger = logging.getLogger("arroyogisaxs")
+logger = logging.getLogger("arroyosas")
 
 app_settings = settings.tiled_poller
 setup_logger(logger, log_level=settings.logging_level)

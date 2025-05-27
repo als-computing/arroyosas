@@ -50,11 +50,11 @@ class SerializableNumpyArrayModel(BaseModel):
         arbitrary_types_allowed = True
 
 
-class GISAXSMessage(Message):
+class SASMessage(Message):
     pass
 
 
-class GISAXSStart(Start, GISAXSMessage):
+class SASStart(Start, SASMessage):
     msg_type: str = "start"
     run_name: str
     run_id: str
@@ -64,30 +64,30 @@ class GISAXSStart(Start, GISAXSMessage):
     tiled_url: str
 
 
-class GISAXSRawEvent(Event, GISAXSMessage):
+class SASRawEvent(Event, SASMessage):
     msg_type: str = "event"
     image: SerializableNumpyArrayModel
     frame_number: int
     tiled_url: str
 
 
-class GISAXSLatentSpaceEvent(Event, GISAXSMessage):
+class SASLatentSpaceEvent(Event, SASMessage):
     tiled_url: str
     feature_vector: list[float]
     index: int
 
 
-class GISAXSStop(Stop, GISAXSMessage):
+class SASStop(Stop, SASMessage):
     msg_type: str = "stop"
     num_frames: int
 
 
-class GISAXSResultStop(Stop, GISAXSMessage):
+class SASResultStop(Stop, SASMessage):
     msg_type: str = "result_stop"
     function_timings: DataFrameModel
 
 
-class GISAXS1DReduction(Event, GISAXSMessage):
+class SAS1DReduction(Event, SASMessage):
     curve: SerializableNumpyArrayModel
     curve_tiled_url: str
     raw_frame: SerializableNumpyArrayModel

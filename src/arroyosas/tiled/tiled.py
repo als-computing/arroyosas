@@ -20,12 +20,12 @@ from tiled.client.base import BaseClient
 from tiled.client.container import Container
 
 from ..schemas import (
-    GISAXS1DReduction,
-    GISAXSLatentSpaceEvent,
-    GISAXSMessage,
-    GISAXSRawEvent,
-    GISAXSStart,
-    GISAXSStop,
+    SAS1DReduction,
+    SASLatentSpaceEvent,
+    SASMessage,
+    SASRawEvent,
+    SASStart,
+    SASStop,
     SerializableNumpyArrayModel,
 )
 from arroyopy.files import FileWatcherMessage
@@ -131,7 +131,7 @@ class TiledPollingRedisListener(Listener):
                     relative_tiled_path = msg.file_path.split(self.beamline_runs_tiled.uri)[1]
                     array = self.beamline_runs_tiled[relative_tiled_path]
                     image = SerializableNumpyArrayModel(array=array.read())
-                    raw_event = GISAXSRawEvent(
+                    raw_event = SASRawEvent(
                         image=image,
                         frame_number=0,
                         tiled_url=msg.file_path,
@@ -213,7 +213,7 @@ class TiledPollingFrameListener(Listener):
                     f"Processing: {current_run.metadata['start']['scan_id']} {current_run.metadata['start']['uid']}"
                 )
                 data = current_run[tuple(self.tiled_frame_segments.to_list())]
-                start_message = GISAXSStart(
+                start_message = SASStart(
                     width=data.shape[0],
                     height=data.shape[1],
                     data_type=data.dtype.name,
@@ -248,7 +248,7 @@ class TiledPollingFrameListener(Listener):
                     else:
                         array = frames_array[unsent_frame, 0]
                     image = SerializableNumpyArrayModel(array=array)
-                    raw_event = GISAXSRawEvent(
+                    raw_event = SASRawEvent(
                         image=image,
                         frame_number=unsent_frame,
                         tiled_url=current_run.uri + "/primary/data/pil1M_image",
@@ -260,7 +260,7 @@ class TiledPollingFrameListener(Listener):
                     # If run has stop document, send GISAXSStop message and
                 # set_current_run to None, sent_frames to [] and continue
                 if current_run.metadata["stop"]:
-                    stop_message = GISAXSStop(num_frames=len(sent_frames))
+                    stop_message = SASStop(num_frames=len(sent_frames))
                     asyncio.run(self.operator.process(stop_message))
                     sent_frames = []
                     continue
@@ -303,7 +303,7 @@ class TiledRawFrameOperator(Operator):
     def __init__(self):
         super().__init__()
   
-    async def process(self, message: GISAXSMessage) -> GISAXSMessage:
+    async def process(self, message: SASMessage) -> SASMessage:
         await self.publish(message)
 
 
@@ -341,10 +341,10 @@ class TiledProcessedPublisher(Publisher):
         super().__init__()
         self.root_container = root_container
 
-    async def publish(self, message: Union[GISAXSStart | GISAXS1DReduction]) -> None:
+    async def publish(self, message: Union[SASStart | SAS1DReduction]) -> None:
         # run_client = get_nested_client(self.client, self.run_path)
         try:
-            if isinstance(message, GISAXSStart):
+            if isinstance(message, SASStart):
                 self.run_node = await asyncio.to_thread(
                     get_run_container, self.root_container, message
                 )
@@ -352,10 +352,10 @@ class TiledProcessedPublisher(Publisher):
             if self.run_node is None:
                 logger.error("No run node found. Probably started after start message.")
                 return
-            elif isinstance(message, GISAXSStop):
+            elif isinstance(message, SASStop):
                 return
 
-            if isinstance(message, GISAXS1DReduction):
+            if isinstance(message, SAS1DReduction):
                 if self.one_d_array_node is None:
                     one_d_array_node = await asyncio.to_thread(
                         create_one_d_node, self.run_node, message
@@ -364,7 +364,7 @@ class TiledProcessedPublisher(Publisher):
                 else:
                     await asyncio.to_thread(self.update_1d_nodes, message)
 
-            if isinstance(message, GISAXSLatentSpaceEvent):
+            if isinstance(message, SASLatentSpaceEvent):
                 if self.dim_reduced_array_node is None:
                     dim_reduced_array_node = await asyncio.to_thread(
                         create_dim_reduction_node, self.run_node, message
@@ -377,10 +377,10 @@ class TiledProcessedPublisher(Publisher):
         except Exception as e:
             logger.error(f"Error in publisher: {e}")  
 
-    def update_1d_nodes(self, message: GISAXS1DReduction) -> None:
+    def update_1d_nodes(self, message: SAS1DReduction) -> None:
         patch_tiled_frame(self.one_d_array_node, message.curve.array)
 
-    def update_ls_nodes(self, message: GISAXSLatentSpaceEvent) -> None:
+    def update_ls_nodes(self, message: SASLatentSpaceEvent) -> None:
         patch_tiled_frame(self.dim_reduced_array_node, np.array(message.feature_vector))
 
     def get_run_path(self, message):
@@ -394,14 +394,14 @@ class TiledProcessedPublisher(Publisher):
         return cls(root_container)
 
 
-def create_one_d_node(run_node: Container, message: GISAXS1DReduction) -> None:
+def create_one_d_node(run_node: Container, message: SAS1DReduction) -> None:
     one_d_array_node = run_node.write_array(
         message.curve.array[np.newaxis, :], key="one_d_reduction"
     )
     return one_d_array_node
 
 
-def create_dim_reduction_node(run_node: Container, message: GISAXS1DReduction) -> None:
+def create_dim_reduction_node(run_node: Container, message: SAS1DReduction) -> None:
     arr = np.array(message.feature_vector)
     dim_reduction_node = run_node.write_array(arr[np.newaxis, :], key="dim_reduction")
     return dim_reduction_node
@@ -416,7 +416,7 @@ def get_runs_container(client: Container, root_segments: list) -> Container:
 
 
 def get_run_container(
-    runs_container: Container, start_message: GISAXSStart
+    runs_container: Container, start_message: SASStart
 ) -> Container:
     run_name = start_message.run_name + "_" + start_message.run_id
     if run_name not in runs_container:
