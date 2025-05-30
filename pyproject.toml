@@ -66,13 +66,11 @@ all = [
     "websockets",
     "tiled[client] >=0.1.0b14, <0.2",
     "redis",
-    "joblib",
     "numpy<2.0.0",
     "pandas",
     "python-dotenv",
     "pyarrow>=14.0.1",
-    "diskcache==5.6.3",
-    "umap-learn",
+    
 ]
 
 [tool.isort]
