@@ -21,9 +21,9 @@ from tiled.client.container import Container
 
 from ..schemas import (
     SAS1DReduction,
-    SASLatentSpaceEvent,
+    LatentSpaceEvent,
     SASMessage,
-    SASRawEvent,
+    RawFrameEvent,
     SASStart,
     SASStop,
     SerializableNumpyArrayModel,
@@ -131,7 +131,7 @@ class TiledPollingRedisListener(Listener):
                     relative_tiled_path = msg.file_path.split(self.beamline_runs_tiled.uri)[1]
                     array = self.beamline_runs_tiled[relative_tiled_path]
                     image = SerializableNumpyArrayModel(array=array.read())
-                    raw_event = SASRawEvent(
+                    raw_event = RawFrameEvent(
                         image=image,
                         frame_number=0,
                         tiled_url=msg.file_path,
@@ -248,7 +248,7 @@ class TiledPollingFrameListener(Listener):
                     else:
                         array = frames_array[unsent_frame, 0]
                     image = SerializableNumpyArrayModel(array=array)
-                    raw_event = SASRawEvent(
+                    raw_event = RawFrameEvent(
                         image=image,
                         frame_number=unsent_frame,
                         tiled_url=current_run.uri + "/primary/data/pil1M_image",
@@ -364,7 +364,7 @@ class TiledProcessedPublisher(Publisher):
                 else:
                     await asyncio.to_thread(self.update_1d_nodes, message)
 
-            if isinstance(message, SASLatentSpaceEvent):
+            if isinstance(message, LatentSpaceEvent):
                 if self.dim_reduced_array_node is None:
                     dim_reduced_array_node = await asyncio.to_thread(
                         create_dim_reduction_node, self.run_node, message
@@ -380,7 +380,7 @@ class TiledProcessedPublisher(Publisher):
     def update_1d_nodes(self, message: SAS1DReduction) -> None:
         patch_tiled_frame(self.one_d_array_node, message.curve.array)
 
-    def update_ls_nodes(self, message: SASLatentSpaceEvent) -> None:
+    def update_ls_nodes(self, message: LatentSpaceEvent) -> None:
         patch_tiled_frame(self.dim_reduced_array_node, np.array(message.feature_vector))
 
     def get_run_path(self, message):

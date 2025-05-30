@@ -23,7 +23,7 @@ services:
       gisax_net1:
   beamline_sim:
     command: python -m arroyosas.app.tiled_poller_sim_cli
-    image: ghcr.io/als-computing/arroyogisas:main
+    image: ghcr.io/als-computing/arroyosas:main
     restart: unless-stopped
     volumes:
       - .:/app:Z
@@ -32,7 +32,7 @@ services:
       gisax_net1:
 
   viz_operator:
-    command: python -m arroyogisas.app.viz_operator_cli
+    command: python -m arroyosas.app.viz_operator_cli
     build:
       context: .
     restart: unless-stopped

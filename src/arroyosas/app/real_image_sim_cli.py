@@ -12,7 +12,7 @@ from PIL import Image
 
 from ..config import settings
 from ..schemas import (
-    SASRawEvent,
+    RawFrameEvent,
     SASStart,
     SASStop,
     SerializableNumpyArrayModel,
@@ -51,7 +51,7 @@ async def process_images(
         for file in files:
             with os.read(file) as filebytes:
                 image = Image.frombytes(filebytes)
-            event = SASRawEvent(
+            event = RawFrameEvent(
                 image=SerializableNumpyArrayModel(array=image),
                 frame_number=frame_num,
                 tiled_url="tb://frame_url",
