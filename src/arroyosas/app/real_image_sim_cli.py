@@ -5,6 +5,7 @@ from glob import glob
 
 # from arroyopy.schemas import NumpyArrayModel
 import msgpack
+import numpy as np
 import typer
 import zmq
 import zmq.asyncio
@@ -49,20 +50,28 @@ async def process_images(
         files = glob("/data/test_data/blade/*.tif")
         frame_num = 0
         for file in files:
-            with os.read(file) as filebytes:
-                image = Image.frombytes(filebytes)
+            with Image.open(file) as image:
+                image_array = np.array(image)
             event = RawFrameEvent(
-                image=SerializableNumpyArrayModel(array=image),
+                image=SerializableNumpyArrayModel(array=image_array),
                 frame_number=frame_num,
                 tiled_url="tb://frame_url",
             )
-            print("event")
+            print(
+                f"Sending event with image shape={image_array.shape}, dtype={image_array.dtype}"
+            )
             await socket.send(msgpack.packb(event.model_dump()))
+            frame_num += 1
+            # Limit frames per cycle if needed
+            if frame_num >= frames:
+                break
+            # Add a small delay between frames to avoid overwhelming the receiver
+            await asyncio.sleep(0.5)
         stop = SASStop(num_frames=frames)
         print("stop")
         await socket.send(msgpack.packb(stop.model_dump()))
         await asyncio.sleep(pause)
-        print(f"Cycle {cycle_num} complete sent {frames} frames")
+        print(f"Cycle {cycle_num} complete sent {frame_num} frames")
 
     print("All cycles complete")
     return
