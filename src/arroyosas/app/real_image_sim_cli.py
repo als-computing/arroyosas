@@ -102,7 +102,7 @@ async def process_images_from_tiled(
                     event = RawFrameEvent(
                         image=SerializableNumpyArrayModel(array=image_array),
                         frame_number=frame_num,
-                        tiled_url=tiled_uri,  # Use the full Tiled URI as is
+                        tiled_url=f"{tiled_uri}?slice={frame_num}",
                     )
                     logger.info(f"Sending frame {frame_num} for cycle {cycle_num}")
                     await socket.send(msgpack.packb(event.model_dump()))
