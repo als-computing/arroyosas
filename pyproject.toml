@@ -22,6 +22,7 @@ dependencies = [
     "typer",
     "websockets",
     "zarr",
+    "pyFAI",
     "transformers",
     "redis"]
 
