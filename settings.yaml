@@ -8,6 +8,7 @@ tiled_poller:
   poll_interval: 5 # seconds
   uri: https://tiled.nsls2.bnl.gov
   api_key: "@format {env[TILED_LIVE_API_KEY]}"
+  websocket_url: "ws://tiled:8000/stream"  # change it
   runs_segments:
     - smi
     - raw
