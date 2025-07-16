@@ -1,6 +1,7 @@
 import json
 import logging
 import numpy as np
+from typing import Dict, Any, Union, Optional, List
 
 from ..schemas import RawFrameEvent, SerializableNumpyArrayModel
 from .tiled_websocket import TiledWebSocketListener
@@ -16,7 +17,7 @@ class TiledDirectDataWebSocketListener(TiledWebSocketListener):
     # No need to override __init__ since we're just inheriting it
     # The constructor already accepts websocket_url from the updated base class
     
-    async def _handle_message(self, message):
+    async def _handle_message(self, message: Dict[str, Any]) -> None:
         """
         Process a message received from the WebSocket.
         
@@ -31,7 +32,7 @@ class TiledDirectDataWebSocketListener(TiledWebSocketListener):
             # Fall back to Phase 1 handling for other message types
             await super()._handle_message(message)
     
-    async def _handle_frame_data(self, message):
+    async def _handle_frame_data(self, message: Dict[str, Any]) -> None:
         """
         Handle a frame_data message (Phase 2).
         
@@ -75,7 +76,7 @@ class TiledDirectDataWebSocketListener(TiledWebSocketListener):
         except Exception as e:
             logger.exception(f"Error handling frame data: {e}")
     
-    def _convert_data_to_array(self, data, message):
+    def _convert_data_to_array(self, data: Any, message: Dict[str, Any]) -> np.ndarray:
         """
         Convert the data received in a frame_data message to a numpy array.
         

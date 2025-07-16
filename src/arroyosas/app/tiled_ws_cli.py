@@ -20,7 +20,6 @@ async def start(
     tiled_url: str = typer.Option(None, help="Tiled base URL"),
     websocket_url: str = typer.Option(None, help="WebSocket URL"),
     zmq_url: str = typer.Option(None, help="ZMQ publisher URL"),
-    single_run: str = typer.Option(None, help="Process only a single run with the given ID"),
 ):
     """Start the Tiled WebSocket listener."""
     # Override settings if provided
@@ -30,8 +29,6 @@ async def start(
         app_settings.websocket_url = websocket_url
     if zmq_url:
         app_settings.zmq_frame_publisher.address = zmq_url
-    if single_run:
-        app_settings.single_run = single_run
     
     # Derive WebSocket URL if not provided
     if not app_settings.get("websocket_url"):
