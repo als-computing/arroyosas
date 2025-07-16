@@ -91,6 +91,8 @@ services:
       - ./persist/kvrocks/data:/data
     networks:
       gisax_net1:
+    ports:
+      - "127.0.0.1:6666:6666"
 
 networks:
   gisax_net1:
