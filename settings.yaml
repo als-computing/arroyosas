@@ -13,11 +13,11 @@ tiled_poller:
     - smi
     - raw
   frames_segments:
-    - primary 
+    - primary
     - data
-    # - 
+    # -
     - pil1M_image
-    
+
 viz_operator:
   listener:
     zmq_address: tcp://tiled_poller:5000  #only safe in containers
@@ -48,7 +48,7 @@ lse_reducer:
       python_class: CNNAutoencoder
       python_file: ./models/cnn_autoencoder/model.py
       type: torch
-    
+
     - name: AE
       state_dict: ./models/ae_v1/ae_model_finetuned.npz
       python_class: CNNAutoencoder
@@ -70,7 +70,7 @@ lse_broker:
 lse_worker:
   broker:
     dealer_address: tcp://lse_broker:5556
-    
+
 
 frame_publisher:
   zmq_publish_address: tcp://*:5558
@@ -86,5 +86,15 @@ lse_operator:
   zmq_broker:
     router_address: tcp://lse_broker:5555
     router_hwm: 100000
+
+tiled_websocket_listener:
+  runs_segments:
+    - smi
+    - raw
+  frames_segments:
+    - primary
+    - data
+  stream_name:
+    - pi21M_image
 
 dynaconf_merge: true

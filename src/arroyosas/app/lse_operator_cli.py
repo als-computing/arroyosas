@@ -7,7 +7,6 @@ from ..config import settings
 from ..log_utils import setup_logger
 from ..lse.lse_operator import LatentSpaceOperator
 from ..lse.lse_ws_publisher import LSEWSResultPublisher
-from ..tiled.tiled import TiledProcessedPublisher
 from ..zmq import ZMQFrameListener
 
 app = typer.Typer()
