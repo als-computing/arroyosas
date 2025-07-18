@@ -346,8 +346,7 @@ class TiledProcessedPublisher(Publisher):
         super().__init__()
         self.root_container = root_container
 
-    async def publish(self, message: Union[SASStart | SAS1DReduction]) -> None:
-        # run_client = get_nested_client(self.client, self.run_path)
+    async def publish(self, message: Union[SASStart | SAS1DReduction | LatentSpaceEvent | SASStop]) -> None:
         try:
             if isinstance(message, SASStart):
                 self.run_node = await asyncio.to_thread(
@@ -369,15 +368,13 @@ class TiledProcessedPublisher(Publisher):
                 else:
                     await asyncio.to_thread(self.update_1d_nodes, message)
 
-            if isinstance(message, LatentSpaceEvent):
+            elif isinstance(message, LatentSpaceEvent):  # Changed from 'if' to 'elif'
                 if self.dim_reduced_array_node is None:
                     dim_reduced_array_node = await asyncio.to_thread(
                         create_dim_reduction_node, self.run_node, message
                     )
                     self.dim_reduced_array_node = dim_reduced_array_node
                 else:
-                    print("there")
-                    # print(self.dim_reduced_array_node)
                     await asyncio.to_thread(self.update_ls_nodes, message)
         except Exception as e:
             logger.error(f"Error in publisher: {e}")
@@ -406,7 +403,7 @@ def create_one_d_node(run_node: Container, message: SAS1DReduction) -> None:
     return one_d_array_node
 
 
-def create_dim_reduction_node(run_node: Container, message: SAS1DReduction) -> None:
+def create_dim_reduction_node(run_node: Container, message: LatentSpaceEvent) -> None:  # Changed parameter type
     arr = np.array(message.feature_vector)
     dim_reduction_node = run_node.write_array(arr[np.newaxis, :], key="dim_reduction")
     return dim_reduction_node
