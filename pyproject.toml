@@ -55,11 +55,13 @@ lse = [
 
 all = [
     "arroyopy",
+    "bluesky",
     "dynaconf",
     "python-dotenv",
     "pandas",
     "msgpack",
     "numpy",
+    "ophyd",
     "Pillow",
     "pyzmq",
     "tqdm",
@@ -71,7 +73,7 @@ all = [
     "pandas",
     "python-dotenv",
     "pyarrow>=14.0.1",
-    
+
 ]
 
 [tool.isort]

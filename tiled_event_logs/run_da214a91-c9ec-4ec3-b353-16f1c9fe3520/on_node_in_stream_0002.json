@@ -1,0 +1,38 @@
+{
+  "event_name": "on_node_in_stream",
+  "sequence": 2,
+  "timestamp": 1752778970.019125,
+  "subscription_segments": [
+    "da214a91-c9ec-4ec3-b353-16f1c9fe3520",
+    "streams",
+    "primary"
+  ],
+  "callback_data": {
+    "sequence": 1,
+    "timestamp": "2025-07-17T19:02:49.839868",
+    "key": "internal",
+    "data_sources": [
+      {
+        "id": null,
+        "structure_family": "table",
+        "structure": {
+          "arrow_schema": "data:application/vnd.apache.arrow.file;base64,/////7gBAAAQAAAAAAAKAAwABgAFAAgACgAAAAABBAAMAAAACAAIAAAABAAIAAAABAAAAAYAAABMAQAACAEAAMQAAACIAAAARAAAAAQAAADc/v//AAABAxAAAAAoAAAABAAAAAAAAAAVAAAAdHNfcGlsMk1fc3RhdHMxX3RvdGFsAAAAHv///wAAAgAY////AAABAxAAAAAsAAAABAAAAAAAAAAYAAAAdHNfcGlsMk1fY2FtX2ZpbGVfbnVtYmVyAAAAAF7///8AAAIAWP///wAAAQMQAAAAJAAAAAQAAAAAAAAAEgAAAHBpbDJNX3N0YXRzMV90b3RhbAAAlv///wAAAgCQ////AAABAhAAAAAoAAAABAAAAAAAAAAVAAAAcGlsMk1fY2FtX2ZpbGVfbnVtYmVyAAAAkP///wAAAAFAAAAA0P///wAAAQMQAAAAHAAAAAQAAAAAAAAABAAAAHRpbWUAAAYACAAGAAYAAAAAAAIAEAAUAAgABgAHAAwAAAAQABAAAAAAAAECEAAAACAAAAAEAAAAAAAAAAcAAABzZXFfbnVtAAgADAAIAAcACAAAAAAAAAFAAAAAAAAAAA==",
+          "npartitions": 1,
+          "columns": [
+            "seq_num",
+            "time",
+            "pil2M_cam_file_number",
+            "pil2M_stats1_total",
+            "ts_pil2M_cam_file_number",
+            "ts_pil2M_stats1_total"
+          ],
+          "resizable": false
+        },
+        "mimetype": "application/x-tiled-sql-table",
+        "parameters": {},
+        "assets": [],
+        "management": "writable"
+      }
+    ]
+  }
+}

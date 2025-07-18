@@ -1,0 +1,81 @@
+{
+  "event_name": "on_event",
+  "sequence": 4,
+  "timestamp": 1752779552.230806,
+  "subscription_segments": [
+    "8931346d-cfb5-4fad-b120-e1ee58bf0f69",
+    "streams",
+    "primary",
+    "pil2M_image"
+  ],
+  "callback_data": {
+    "sequence": 4,
+    "timestamp": "2025-07-17T19:12:32.203265",
+    "data_source": {
+      "id": 155,
+      "structure_family": "array",
+      "structure": {
+        "data_type": {
+          "endianness": "little",
+          "kind": "i",
+          "itemsize": 4,
+          "dt_units": null
+        },
+        "chunks": [
+          [
+            1,
+            1,
+            1,
+            1
+          ],
+          [
+            1679
+          ],
+          [
+            1475
+          ]
+        ],
+        "shape": [
+          4,
+          1679,
+          1475
+        ],
+        "dims": null,
+        "resizable": false
+      },
+      "mimetype": "multipart/related;type=image/tiff",
+      "parameters": {},
+      "assets": [
+        {
+          "data_uri": "file://localhost/nsls2/data/smi/proposals/2025-2/pass-317903/assets/pilatus2m-1/2025/07/17/5c7d9861-672c-4bbb-80c2_000000.tiff",
+          "is_directory": false,
+          "parameter": "data_uris",
+          "num": 1,
+          "id": null
+        },
+        {
+          "data_uri": "file://localhost/nsls2/data/smi/proposals/2025-2/pass-317903/assets/pilatus2m-1/2025/07/17/5c7d9861-672c-4bbb-80c2_000001.tiff",
+          "is_directory": false,
+          "parameter": "data_uris",
+          "num": 2,
+          "id": null
+        },
+        {
+          "data_uri": "file://localhost/nsls2/data/smi/proposals/2025-2/pass-317903/assets/pilatus2m-1/2025/07/17/5c7d9861-672c-4bbb-80c2_000002.tiff",
+          "is_directory": false,
+          "parameter": "data_uris",
+          "num": 3,
+          "id": null
+        },
+        {
+          "data_uri": "file://localhost/nsls2/data/smi/proposals/2025-2/pass-317903/assets/pilatus2m-1/2025/07/17/5c7d9861-672c-4bbb-80c2_000003.tiff",
+          "is_directory": false,
+          "parameter": "data_uris",
+          "num": 4,
+          "id": null
+        }
+      ],
+      "management": "external"
+    }
+  }
+}

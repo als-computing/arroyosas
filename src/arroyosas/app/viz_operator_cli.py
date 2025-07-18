@@ -8,8 +8,7 @@ from arroyosas.zmq import ZMQFrameListener
 from ..config import settings
 from ..log_utils import setup_logger
 from ..one_d_reduction.operator import OneDReductionOperator
-
-from ..tiled.tiled import TiledProcessedPublisher
+from ..tiled.tiled_poller import TiledProcessedPublisher
 from ..websockets import OneDWSPublisher
 
 app = typer.Typer()
@@ -20,7 +19,6 @@ setup_logger(logger, log_level=settings.logging_level)
 
 @app.command()
 async def start():
-    
     logger.info("Starting Tiled Poller")
     logger.info("Getting settings")
     logger.info(f"{settings.viz_operator}")

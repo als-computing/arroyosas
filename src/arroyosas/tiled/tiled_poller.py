@@ -2,16 +2,17 @@ import asyncio
 import json
 import logging
 import operator
-from functools import reduce
 import time
+from functools import reduce
 from typing import Union
 
 import numpy as np
+import redis.asyncio as redis
+from arroyopy.files import FileWatcherMessage
 from arroyopy.listener import Listener
 from arroyopy.operator import Operator
 from arroyopy.publisher import Publisher
 from pydantic import ValidationError
-import redis.asyncio as redis
 from tiled.client import from_uri
 from tiled.client.array import ArrayClient
 from tiled.client.base import BaseClient
@@ -20,15 +21,14 @@ from tiled.client.base import BaseClient
 from tiled.client.container import Container
 
 from ..schemas import (
-    SAS1DReduction,
     LatentSpaceEvent,
-    SASMessage,
     RawFrameEvent,
+    SAS1DReduction,
+    SASMessage,
     SASStart,
     SASStop,
     SerializableNumpyArrayModel,
 )
-from arroyopy.files import FileWatcherMessage
 
 RUNS_CONTAINER_NAME = "runs"
 
@@ -109,50 +109,50 @@ class TiledPollingRedisListener(Listener):
         self.operator = operator
         self.redis_client = redis_client
         self.channel_name = channel_name
-    
-    
-    async def start(self):
-        
-            pubsub = self.redis_client.pubsub()
-            await pubsub.subscribe(self.channel_name)
-            logger.info(f"Subscribed to channel: {self.channel_name}")
-            async for message in pubsub.listen():
-                try:
-                    logger.debug(f"Received message: {message}")
-                    if message["type"] != "message":
-                        continue
-                    try:
-                        data = json.loads(message["data"])
-                        msg = FileWatcherMessage(**data)
-                        print(f"[Parsed] {msg}")
-                    except (json.JSONDecodeError, ValidationError) as e:
-                        print(f"[Error parsing message]: {e}")
-                    
-                    relative_tiled_path = msg.file_path.split(self.beamline_runs_tiled.uri)[1]
-                    array = self.beamline_runs_tiled[relative_tiled_path]
-                    image = SerializableNumpyArrayModel(array=array.read())
-                    raw_event = RawFrameEvent(
-                        image=image,
-                        frame_number=0,
-                        tiled_url=msg.file_path,
-                    )
-                    await self.operator.process(raw_event)
-                    
-                except Exception as e:
-                    logger.exception(f"Error in polling loop: {e}")
 
-            logger.info("Polling redis finished")
+    async def start(self):
+        pubsub = self.redis_client.pubsub()
+        await pubsub.subscribe(self.channel_name)
+        logger.info(f"Subscribed to channel: {self.channel_name}")
+        async for message in pubsub.listen():
+            try:
+                logger.debug(f"Received message: {message}")
+                if message["type"] != "message":
+                    continue
+                try:
+                    data = json.loads(message["data"])
+                    msg = FileWatcherMessage(**data)
+                    print(f"[Parsed] {msg}")
+                except (json.JSONDecodeError, ValidationError) as e:
+                    print(f"[Error parsing message]: {e}")
+
+                relative_tiled_path = msg.file_path.split(self.beamline_runs_tiled.uri)[
+                    1
+                ]
+                array = self.beamline_runs_tiled[relative_tiled_path]
+                image = SerializableNumpyArrayModel(array=array.read())
+                raw_event = RawFrameEvent(
+                    image=image,
+                    frame_number=0,
+                    tiled_url=msg.file_path,
+                )
+                await self.operator.process(raw_event)
+
+            except Exception as e:
+                logger.exception(f"Error in polling loop: {e}")
+
+        logger.info("Polling redis finished")
+
     async def stop(self):
         pass
 
     async def listen(self):
         pass
 
-    
     @classmethod
     def from_settings(cls, settings: dict, operator: Operator):
         tiled_runs_segments = settings.runs_segments
-        poll_pause_sec = settings.poll_interval
+        # poll_pause_sec = settings.poll_interval
         client = from_uri(
             settings.uri,
             api_key=settings.api_key,
@@ -167,8 +167,9 @@ class TiledPollingRedisListener(Listener):
             run_container,
             tiled_frame_segments=settings.frames_segments,
             redis_client=redis_client,
-            channel_name="sas_file_watcher"
+            channel_name="sas_file_watcher",
         )
+
 
 class TiledPollingFrameListener(Listener):
     def __init__(
@@ -177,18 +178,18 @@ class TiledPollingFrameListener(Listener):
         beamline_runs_tiled: Container,
         tiled_frame_segments: list,
         poll_pause_sec: int,
-        single_run: str = None
+        single_run: str = None,
     ):
         self.beamline_runs_tiled = beamline_runs_tiled
         self.poll_pause_sec = poll_pause_sec
         self.tiled_frame_segments = tiled_frame_segments
         self.operator = operator
         self.single_run = single_run
-    
+
     async def start(self):
-        # await asyncio.to_thread(self._start) 
-        await asyncio.to_thread(self._start) 
-    
+        # await asyncio.to_thread(self._start)
+        await asyncio.to_thread(self._start)
+
     def _start(self):
         last_processed_run = None
         sent_frames = []
@@ -205,7 +206,11 @@ class TiledPollingFrameListener(Listener):
                     logger.info(
                         f"Most Recent run: {current_run.metadata['start']['scan_id']} {current_run.metadata['start']['uid']}"
                     )
-                    if last_processed_run and current_run.start["scan_id"] == last_processed_run.start["scan_id"]:
+                    if (
+                        last_processed_run
+                        and current_run.start["scan_id"]
+                        == last_processed_run.start["scan_id"]
+                    ):
                         logger.debug("No new runs")
                         time.sleep(self.poll_pause_sec)
                         continue
@@ -302,7 +307,7 @@ class TiledPollingFrameListener(Listener):
 class TiledRawFrameOperator(Operator):
     def __init__(self):
         super().__init__()
-  
+
     async def process(self, message: SASMessage) -> SASMessage:
         await self.publish(message)
 
@@ -341,8 +346,7 @@ class TiledProcessedPublisher(Publisher):
         super().__init__()
         self.root_container = root_container
 
-    async def publish(self, message: Union[SASStart | SAS1DReduction]) -> None:
-        # run_client = get_nested_client(self.client, self.run_path)
+    async def publish(self, message: Union[SASStart | SAS1DReduction | LatentSpaceEvent | SASStop]) -> None:
         try:
             if isinstance(message, SASStart):
                 self.run_node = await asyncio.to_thread(
@@ -364,18 +368,16 @@ class TiledProcessedPublisher(Publisher):
                 else:
                     await asyncio.to_thread(self.update_1d_nodes, message)
 
-            if isinstance(message, LatentSpaceEvent):
+            elif isinstance(message, LatentSpaceEvent):  # Changed from 'if' to 'elif'
                 if self.dim_reduced_array_node is None:
                     dim_reduced_array_node = await asyncio.to_thread(
                         create_dim_reduction_node, self.run_node, message
                     )
                     self.dim_reduced_array_node = dim_reduced_array_node
                 else:
-                    print("there")
-                    # print(self.dim_reduced_array_node)
                     await asyncio.to_thread(self.update_ls_nodes, message)
         except Exception as e:
-            logger.error(f"Error in publisher: {e}")  
+            logger.error(f"Error in publisher: {e}")
 
     def update_1d_nodes(self, message: SAS1DReduction) -> None:
         patch_tiled_frame(self.one_d_array_node, message.curve.array)
@@ -401,7 +403,7 @@ def create_one_d_node(run_node: Container, message: SAS1DReduction) -> None:
     return one_d_array_node
 
 
-def create_dim_reduction_node(run_node: Container, message: SAS1DReduction) -> None:
+def create_dim_reduction_node(run_node: Container, message: LatentSpaceEvent) -> None:  # Changed parameter type
     arr = np.array(message.feature_vector)
     dim_reduction_node = run_node.write_array(arr[np.newaxis, :], key="dim_reduction")
     return dim_reduction_node
@@ -415,9 +417,7 @@ def get_runs_container(client: Container, root_segments: list) -> Container:
     return viz_processed_container[RUNS_CONTAINER_NAME]
 
 
-def get_run_container(
-    runs_container: Container, start_message: SASStart
-) -> Container:
+def get_run_container(runs_container: Container, start_message: SASStart) -> Container:
     run_name = start_message.run_name + "_" + start_message.run_id
     if run_name not in runs_container:
         return runs_container.create_container(run_name)

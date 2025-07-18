@@ -4,7 +4,10 @@ import logging
 import typer
 
 from arroyosas.config import settings
-from arroyosas.tiled.tiled import TiledPollingRedisListener, TiledRawFrameOperator
+from arroyosas.tiled.tiled_poller import (
+    TiledPollingRedisListener,
+    TiledRawFrameOperator,
+)
 from arroyosas.zmq import ZMQFramePublisher
 
 from ..log_utils import setup_logger
@@ -14,7 +17,7 @@ logger = logging.getLogger("arroyosas")
 
 app_settings = settings.tiled_poller
 setup_logger(logger, log_level=settings.logging_level)
-             
+
 
 @app.command()
 async def start(tiled_url: str, zmq_url: str, poll_interval: int = 5):

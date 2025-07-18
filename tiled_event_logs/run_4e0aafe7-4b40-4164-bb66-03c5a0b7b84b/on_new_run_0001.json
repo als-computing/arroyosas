@@ -1,0 +1,12 @@
+{
+  "event_name": "on_new_run",
+  "sequence": 1,
+  "timestamp": 1752778112.9974122,
+  "subscription_segments": null,
+  "callback_data": {
+    "sequence": 50,
+    "timestamp": "2025-07-17T18:48:32.971434",
+    "key": "4e0aafe7-4b40-4164-bb66-03c5a0b7b84b",
+    "data_sources": []
+  }
+}

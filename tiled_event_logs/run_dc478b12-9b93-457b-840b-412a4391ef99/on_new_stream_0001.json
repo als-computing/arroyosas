@@ -1,0 +1,15 @@
+{
+  "event_name": "on_new_stream",
+  "sequence": 1,
+  "timestamp": 1752778341.085709,
+  "subscription_segments": [
+    "dc478b12-9b93-457b-840b-412a4391ef99",
+    "streams"
+  ],
+  "callback_data": {
+    "sequence": 1,
+    "timestamp": "2025-07-17T18:52:13.810839",
+    "key": "baseline",
+    "data_sources": []
+  }
+}

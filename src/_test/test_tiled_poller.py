@@ -8,7 +8,7 @@ from arroyosas.schemas import (  # GISAXSRawStart,; GISAXSRawStop,
     RawFrameEvent,
     SerializableNumpyArrayModel,
 )
-from arroyosas.tiled.tiled import unsent_frame_numbers
+from arroyosas.tiled.tiled_poller import unsent_frame_numbers
 
 # import pytest_asyncio
 # from arroyopy.operator import Operator

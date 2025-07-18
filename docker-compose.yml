@@ -31,6 +31,18 @@ services:
     networks:
       gisax_net1:
 
+  lse_operator:
+    command: python -m arroyogisaxs.app.kse_operator_cli
+    build:
+      context: .
+    restart: unless-stopped
+    ports:
+      - "8021:8021"
+    volumes:
+      - .:/app:Z
+      - ./settings.yaml:/app/settings.yaml:Z
+    networks:
+      gisax_net1:
   viz_operator:
     command: python -m arroyosas.app.viz_operator_cli
     build:
@@ -79,6 +91,8 @@ services:
       - ./persist/kvrocks/data:/data
     networks:
       gisax_net1:
+    ports:
+      - "127.0.0.1:6666:6666"
 
 networks:
   gisax_net1:
