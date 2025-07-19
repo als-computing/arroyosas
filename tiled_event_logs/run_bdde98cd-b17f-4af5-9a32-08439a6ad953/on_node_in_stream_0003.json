@@ -1,0 +1,51 @@
+{
+  "event_name": "on_node_in_stream",
+  "sequence": 3,
+  "timestamp": 1752779177.757519,
+  "subscription_segments": [
+    "bdde98cd-b17f-4af5-9a32-08439a6ad953",
+    "streams",
+    "primary"
+  ],
+  "callback_data": {
+    "sequence": 2,
+    "timestamp": "2025-07-17T19:06:15.650524",
+    "key": "pil2M_image",
+    "data_sources": [
+      {
+        "id": null,
+        "structure_family": "array",
+        "structure": {
+          "data_type": {
+            "endianness": "little",
+            "kind": "i",
+            "itemsize": 4,
+            "dt_units": null
+          },
+          "chunks": [
+            [
+              0
+            ],
+            [
+              1679
+            ],
+            [
+              1475
+            ]
+          ],
+          "shape": [
+            0,
+            1679,
+            1475
+          ],
+          "dims": null,
+          "resizable": false
+        },
+        "mimetype": "multipart/related;type=image/tiff",
+        "parameters": {},
+        "assets": [],
+        "management": "external"
+      }
+    ]
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "event_name": "on_event",
+  "sequence": 5,
+  "timestamp": 1752778974.315755,
+  "subscription_segments": [
+    "da214a91-c9ec-4ec3-b353-16f1c9fe3520",
+    "streams",
+    "primary",
+    "pil2M_image"
+  ],
+  "callback_data": {
+    "sequence": 5,
+    "timestamp": "2025-07-17T19:02:54.293789",
+    "data_source": {
+      "id": 140,
+      "structure_family": "array",
+      "structure": {
+        "data_type": {
+          "endianness": "little",
+          "kind": "i",
+          "itemsize": 4,
+          "dt_units": null
+        },
+        "chunks": [
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          [
+            1679
+          ],
+          [
+            1475
+          ]
+        ],
+        "shape": [
+          5,
+          1679,
+          1475
+        ],
+        "dims": null,
+        "resizable": false
+      },
+      "mimetype": "multipart/related;type=image/tiff",
+      "parameters": {},
+      "assets": [
+        {
+          "data_uri": "file://localhost/nsls2/data/smi/proposals/2025-2/pass-317903/assets/pilatus2m-1/2025/07/17/f8c0b9c5-2a45-4ff2-8fc6_000000.tiff",
+          "is_directory": false,
+          "parameter": "data_uris",
+          "num": 1,
+          "id": null
+        },
+        {
+          "data_uri": "file://localhost/nsls2/data/smi/proposals/2025-2/pass-317903/assets/pilatus2m-1/2025/07/17/f8c0b9c5-2a45-4ff2-8fc6_000001.tiff",
+          "is_directory": false,
+          "parameter": "data_uris",
+          "num": 2,
+          "id": null
+        },
+        {
+          "data_uri": "file://localhost/nsls2/data/smi/proposals/2025-2/pass-317903/assets/pilatus2m-1/2025/07/17/f8c0b9c5-2a45-4ff2-8fc6_000002.tiff",
+          "is_directory": false,
+          "parameter": "data_uris",
+          "num": 3,
+          "id": null
+        },
+        {
+          "data_uri": "file://localhost/nsls2/data/smi/proposals/2025-2/pass-317903/assets/pilatus2m-1/2025/07/17/f8c0b9c5-2a45-4ff2-8fc6_000003.tiff",
+          "is_directory": false,
+          "parameter": "data_uris",
+          "num": 4,
+          "id": null
+        },
+        {
+          "data_uri": "file://localhost/nsls2/data/smi/proposals/2025-2/pass-317903/assets/pilatus2m-1/2025/07/17/f8c0b9c5-2a45-4ff2-8fc6_000004.tiff",
+          "is_directory": false,
+          "parameter": "data_uris",
+          "num": 5,
+          "id": null
+        }
+      ],
+      "management": "external"
+    }
+  }
+}

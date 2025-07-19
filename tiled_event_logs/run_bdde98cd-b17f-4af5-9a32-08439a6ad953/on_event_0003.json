@@ -1,0 +1,73 @@
+{
+  "event_name": "on_event",
+  "sequence": 3,
+  "timestamp": 1752779178.1417658,
+  "subscription_segments": [
+    "bdde98cd-b17f-4af5-9a32-08439a6ad953",
+    "streams",
+    "primary",
+    "pil2M_image"
+  ],
+  "callback_data": {
+    "sequence": 3,
+    "timestamp": "2025-07-17T19:06:17.976885",
+    "data_source": {
+      "id": 146,
+      "structure_family": "array",
+      "structure": {
+        "data_type": {
+          "endianness": "little",
+          "kind": "i",
+          "itemsize": 4,
+          "dt_units": null
+        },
+        "chunks": [
+          [
+            1,
+            1,
+            1
+          ],
+          [
+            1679
+          ],
+          [
+            1475
+          ]
+        ],
+        "shape": [
+          3,
+          1679,
+          1475
+        ],
+        "dims": null,
+        "resizable": false
+      },
+      "mimetype": "multipart/related;type=image/tiff",
+      "parameters": {},
+      "assets": [
+        {
+          "data_uri": "file://localhost/nsls2/data/smi/proposals/2025-2/pass-317903/assets/pilatus2m-1/2025/07/17/84c764a2-076f-482d-b3ba_000000.tiff",
+          "is_directory": false,
+          "parameter": "data_uris",
+          "num": 1,
+          "id": null
+        },
+        {
+          "data_uri": "file://localhost/nsls2/data/smi/proposals/2025-2/pass-317903/assets/pilatus2m-1/2025/07/17/84c764a2-076f-482d-b3ba_000001.tiff",
+          "is_directory": false,
+          "parameter": "data_uris",
+          "num": 2,
+          "id": null
+        },
+        {
+          "data_uri": "file://localhost/nsls2/data/smi/proposals/2025-2/pass-317903/assets/pilatus2m-1/2025/07/17/84c764a2-076f-482d-b3ba_000002.tiff",
+          "is_directory": false,
+          "parameter": "data_uris",
+          "num": 3,
+          "id": null
+        }
+      ],
+      "management": "external"
+    }
+  }
+}
