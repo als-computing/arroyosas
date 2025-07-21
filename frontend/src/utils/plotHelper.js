@@ -39,6 +39,43 @@ export const process1DArray = (array=[], frameNumber='N/A') => {
     }
 }
 
+//the new curve for 2025 July SMI Beamtime will send a 2D array of [ [x1, y1], [x2, y2], ... ]:
+let sample2DArray = [
+    [1, 3],
+    [2, 4],
+    [3, 5],
+]
+export const process2DArray = (array=[], frameNumber='N/A') => {
+    try {
+        if (array.length > 0 && Array.isArray(array[0]) && array[0].length === 2) {
+            var xValues = [];
+            var yValues = [];
+            for (let i=0; i<array.length; i++) {
+                xValues.push(array[i][0]);
+                yValues.push(array[i][1]);
+            }
+            const newPlot = [
+                {
+                    x: xValues,
+                    y: yValues,
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    marker: {color: 'blue'},
+                    name: `frame ${frameNumber}`
+                }
+            ]
+            return newPlot;
+        } else {
+            console.log('Received invalid data type in 2D array processor:');
+            console.log({array});
+            return false;
+        }
+    } catch(e) {
+        console.error('Received bad 2D array data:', e);
+        return false;
+    }
+}
+
 export const processJSONPlot = (rawJSONData, frameNumber='N/A') => {
     //receives a json from
     //"1D": message.one_d_reduction.df.to_json(),
