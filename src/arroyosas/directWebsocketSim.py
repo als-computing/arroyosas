@@ -182,7 +182,7 @@ def pack_images(message: RawFrameEvent) -> bytes:
         return msgpack.packb(
             {
                 "raw_frame": convert_to_uint8(message.image.array),
-                "curve": serializable_reduction.array.tobytes(),
+                "curve": serializable_reduction.array.tolist(),  # Send as list, not bytes
                 "raw_frame_tiled_url": message.tiled_url,
                 "curve_tiled_url": message.tiled_url,
                 "width": message.image.array.shape[1],
