@@ -6,11 +6,7 @@ import Sidebar from "../components/Sidebar";
 import SidebarItem from "../components/SidebarItem";
 import Widget from "../components/Widget";
 import PlotlyHeatMap from "../components/PlotlyHeatMap";
-import PlotlyScatterSingle from "../components/PlotlyScatterSingle";
 import PlotlyScatterMultiple from "../components/PlotlyScatterMultiple";
-import ConsoleViewer from "../components/ConsoleViewer";
-import TimelineHeatmap from '../components/TimelineHeatmap';
-import TimelineHeatmapScatter from '../components/TimelineHeatmapScatter';
 import TimelineTiledHeatmapScatter from '../components/TimelineTiledHeatmapScatter';
 import Button from "../component_library/Button";
 import TextField from "../component_library/TextField";
@@ -19,8 +15,6 @@ import Settings from "../components/Settings";
 import FormContainer from "../component_library/FormContainer";
 import Status from '../components/Status';
 import { phosphorIcons } from '../assets/icons';
-
-import { useAPXPS } from "../hooks/useAPXPS";
 import { useGISAXS } from '../hooks/useGISAXS';
 export default function Home() {
   const [ isSidebarClosed, setIsSidebarClosed ] = useState(false)
@@ -132,14 +126,22 @@ export default function Home() {
                     />              
                   </div>
                   <div className="w-1/2 h-full">
-                    <PlotlyScatterMultiple data={currentScatterPlot} title='All Plots' xAxisTitle='x' yAxisTitle='y'/>                  
+                    <PlotlyScatterMultiple 
+                      data={currentScatterPlot} 
+                      title='All Plots' 
+                      xAxisTitle='x' 
+                      yAxisTitle='y'/>                  
                   </div>
                 </div>
               </Widget>
 
               {/* Timeline of All Scans */}
               <Widget title='Timeline' width='w-full' defaultHeight='h-1/2'>
-                <TimelineTiledHeatmapScatter tiledLinks={tiledLinks} flipArray={heatmapSettings.flipImg.value} linecutData={linecutData}/>
+                <TimelineTiledHeatmapScatter 
+                  tiledLinks={tiledLinks} 
+                  flipArray={heatmapSettings.flipImg.value} 
+                  linecutData={linecutData}
+                />
               </Widget>
 
             </div>
