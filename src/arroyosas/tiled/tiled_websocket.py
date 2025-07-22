@@ -35,15 +35,11 @@ class TiledClientListener(Listener):
         self,
         operator: Operator,
         tiled_client: BaseClient,
-        stream_name: str,
-        target: str = "img",
-        create_run_logs: bool = True,
+        create_run_logs: bool = False,
         log_dir: str = "tiled_logs",
     ):
         self.operator = operator
         self.tiled_client = tiled_client
-        self.stream_name = stream_name
-        self.target = target
         self.create_run_logs = create_run_logs
         if not os.path.exists(log_dir):
             os.makedirs(log_dir, exist_ok=True)
@@ -108,14 +104,14 @@ class TiledClientListener(Listener):
         stream_sub.add_callback(self.on_node_in_stream)
         stream_sub.start()
 
-    def on_event(self, sub: Subscription, data: Dict[str, Any]) -> None:
-        """
-        Handle new event
-        """
 
-        logger.info(data) if logger.isEnabledFor(logging.INFO) else None
-        if self.create_run_logs:
-            self.log_message_to_json("on_event", sub, data)
+    def load_data(self, sub, data):
+        patch = data['patch']
+        logger.debug(data['uri']) if logger.isEnabledFor(logging.DEBUG) else None
+        slice_ = tuple(slice(offset, offset + shape) for offset, shape in zip(patch["offset"], patch["shape"]))  # GET /array/full/...
+        node = self.tiled_client['/'.join(sub.segments)]  # GET /metadata/... wasteful to do it on each load_data call
+        images = node.read(slice=slice_)  # could be sub.node.read(...)
+        logger.debug(f"images shape {images.shape}")  if logger.isEnabledFor(logging.DEBUG) else None
 
     def on_node_in_stream(self, sub, data):
         logger.debug(data) if logger.isEnabledFor(logging.DEBUG) else None
@@ -142,8 +138,7 @@ class TiledClientListener(Listener):
         stream_sub = Subscription(
             self.tiled_client.context, sub.segments + [key], start=0
         )
-        # stream_sub.add_callback(print)
-        stream_sub.add_callback(self.on_event)
+        stream_sub.add_callback(self.load_data)
         stream_sub.start()
         self.publish_event(data)
 
@@ -153,7 +148,18 @@ class TiledClientListener(Listener):
         await asyncio.to_thread(self._start)
 
     def _start(self) -> None:
-        """Subscribe to the socket at the provided base segments level"""
+        """
+        Subscribe to the socket at the provided base segments level
+
+        When tiledwriter puts bluesky data into tiled, it's in newish tree:
+        catalog (those in quotes are literal names):
+
+            - run:  (run start and stop as metadata)
+                - "streams": (namespace)
+                    - stream_name: (e.g. 'primary')
+                        - key: (e.g. 'pil2M_image')
+                        - "internal" (table of data from events)
+        """
 
         node = self.tiled_client
         catalog_sub = Subscription(node.context)
@@ -171,8 +177,18 @@ class TiledClientListener(Listener):
         asyncio.run(self.operator.process(message))
 
     def publish_start(self, data: Dict[str, Any]) -> None:
+
+        # We need to make a request to get image information
+        #   from tiled.structures.array import ArrayStructure
+        #   structure = ArrayStructure.from_json(data["data_source"]["structure"])
+        #   structure.dtype.to_numpy_dtype()
         start = SASStart(
-            data=data,  # Include any relevant data for the start event
+            run_name=data['key'],
+            run_id=data['key'],
+            width=0,
+            height=0,
+            data_type="",
+            tiled_url=self.tiled_client.uri,
         )
         self.send_to_operator(start)
 
@@ -242,10 +258,6 @@ class TiledClientListener(Listener):
             settings.uri,
             api_key=settings.api_key,
         )
-        # for key in client.context.whoami()['api_keys']:
-        #     client.context.revoke_api_key(key['first_eight'])
-        logger.info(f"#### Listening for runs at {settings.base_segments}")
-        # logger.info(f"#### Frames segments: {settings.frames_segments}")
 
         # Create log directory if specified in settings
         log_dir = getattr(settings, "log_dir", "tiled_logs")
@@ -253,13 +265,12 @@ class TiledClientListener(Listener):
         return cls(
             op,
             client,
-            settings.stream_name,
-            settings.target,
             log_dir,
         )
 
 
 if __name__ == "__main__":
+
     logging.basicConfig(level=logging.INFO)
     # Example usage
     settings = {

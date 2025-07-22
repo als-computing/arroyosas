@@ -1,0 +1,40 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+
+        {
+            "name": "tiled_ws_cli",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "arroyosas.app.tiled_ws_cli",
+            "env": {
+                "TILED_URI": "ws://localhost:8000",
+                "TILED_API_KEY": "32bf4b533d638f470270e0725d14a7bc153114641a7dfda58f96e7926160e9e126272add"
+            }
+        },
+        {
+            "name": "tiled_websocket",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "arroyosas.tiled.tiled_websocket",
+            "env": {
+                "TILED_API_KEY": "32bf4b533d638f470270e0725d14a7bc153114641a7dfda58f96e7926160e9e126272add"
+            }
+        },
+        {
+            "name": "tiled_event_simulator",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "arroyosas.app.tiled_event_sim_cli",
+            "args": [
+                "tiled_event_logs"
+            ],
+            "env": {
+                "TILED_API_KEY": "32bf4b533d638f470270e0725d14a7bc153114641a7dfda58f96e7926160e9e126272add"
+            }
+        }
+    ]
+}

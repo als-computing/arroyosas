@@ -6,18 +6,18 @@ import typer
 from arroyosas.config import settings
 from arroyosas.log_utils import setup_logger
 from arroyosas.tiled.tiled_poller import TiledRawFrameOperator
-from arroyosas.tiled.tiled_websocket import TiledWebSocketListener
+from arroyosas.tiled.tiled_websocket import TiledClientListener
 from arroyosas.zmq import ZMQFramePublisher
 
 app = typer.Typer()
 logger = logging.getLogger("arroyosas")
 
-app_settings = settings.tiled_poller
+app_settings = settings.tiled_ws_listener
 setup_logger(logger, log_level=settings.logging_level)
 
 
 @app.command()
-async def start(
+def start(
     tiled_url: str = typer.Option(None, help="Tiled base URL"),
     websocket_url: str = typer.Option(None, help="WebSocket URL"),
     zmq_url: str = typer.Option(None, help="ZMQ publisher URL"),
@@ -47,9 +47,9 @@ async def start(
     operator.add_publisher(publisher)
 
     # Create and start listener
-    listener = TiledWebSocketListener.from_settings(app_settings, operator)
-    await listener.start()
+    listener = TiledClientListener.from_settings(app_settings, operator)
+    asyncio.run(listener.start())
 
 
 if __name__ == "__main__":
-    asyncio.run(start())
+    app()
