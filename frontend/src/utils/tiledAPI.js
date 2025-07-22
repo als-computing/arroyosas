@@ -39,6 +39,41 @@ export const getSearchResults = async (searchPath, cb, mock = false) => {
     }
 };
 
+export const getTableData = async(url, cb) => {
+    //valid final request url: http://127.0.0.1:8000/api/v1/table/partition/short_table?partition=0&format=application/json-seq
+    //self link: http://127.0.0.1:8000/api/v1/metadata/short_table
+    //partition link: http://127.0.0.1:8000/api/v1/table/partition/short_table?partition={index}
+    try {
+        let tableUrl ="";
+        if (url.includes("metadata")) {
+            //handle metadata link
+            tableUrl = url.replace("metadata", "table/partition");
+            tableUrl = tableUrl + '?partition=0&format=application/json-seq';
+        } else {
+            //handle valid link
+            if (url.includes("&format=application/json-seq")) {
+                tableUrl = url;
+                //handle the partition link
+            } else {
+                tableUrl = url + '&format=application/json-seq';
+            }
+        }
+        const response = await axios.get(tableUrl);
+        const parsedData = response.data
+            .trim() // Remove any extra newlines at start or end
+            .split("\n") // Split by line
+            .map((line) => JSON.parse(line)); // Parse each line as JSON
+
+        //console.log(parsedData); // Now it's an array of objects
+        // [{ A: 0.5699, B: 1.1398, C: 1.7098 }, ...]
+        cb && cb(parsedData)
+        return parsedData;
+    } catch (error) {
+        console.error('Error searching table data: ', error);
+        return null;
+    }
+}
+
 
 //const sampleTiledUrl = "http://127.0.0.1:8000/api/v1/array/full/exp01/ML_exp01-144J-22_id836920_?slice=158,::1,::1"
 /*    const response = await axios.get(searchPath);

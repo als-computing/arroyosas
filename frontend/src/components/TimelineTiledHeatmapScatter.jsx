@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PlotlyHeatMap from "./PlotlyHeatMap";
 import PlotlyScatterMultiple from "./PlotlyScatterMultiple";
 import JSONPrinter from "./JSONPrinter";
 import InputSlider from "./InputSlider";
-import { getSearchResults } from "../utils/tiledAPI";
+import { getSearchResults, getTableData } from "../utils/tiledAPI";
 import { generateEggData, flip2DArray } from "../utils/plotHelper";
 
 const sampleData = [
@@ -52,28 +52,35 @@ export default function TimelineTiledHeatmapScatter ({tiledLinks=[], demo=false,
     };
 
     const getNewScatterPlot = async (url) => {
-        const rawArray = await fetchData(url);
+        console.log('getting new scatter plot from url:', url);
+        const rawArray = await getTableData(url);
         if (!rawArray) return;
-        // we don't know what the scatter plot array looks like
-        // but we could assume there is 2 dimensions for now...
+        console.log({rawArray}); // Now it's an array of objects
+        // [{ A: 0.5699, B: 1.1398, C: 1.7098 }, ...]
         var xValues = [];
         var yValues = [];
-        if (rawArray.length === 2) {
-            // [x1, x2, x3....], [y1, y2, y3, ....]
-            xValues = rawArray[0]; //assume that the first index is X values. it could be switched though.
-            yValues = rawArray[1];
-        } else {
-            if (rawArray.length > 1 && rawArray[0].length === 2) {
-                //[x0, y0], [x1, y1], [x2, y2]
-                for (let i=0; i < rawArray.length; i++) {
-                    xValues.push(rawArray[i][0]); //assume x is in position 0. it could be switched though.
-                    yValues.push(rawArray[i][1]);
-                }
-            } else {
-                console.log('issue processing the scatter plot from tiled, could not resolve dimensions into X and Y');
-                console.log({rawArray});
+
+        if (rawArray.length > 1) {
+            //[x0: float, y0: float], [x1: float, y1: float], [x2: float, y2: float]
+            //we don't know what the key names are for x and y values, so we assume that x is the first key and y is the second
+            const firstKey = Object.keys(rawArray[0])[0];
+            const secondKey = Object.keys(rawArray[0])[1];
+            //check in case the first key is actually y and they're swapped
+            let xKey = firstKey;
+            let yKey = secondKey;
+            if (firstKey.includes("y") || firstKey.includes("Y") || secondKey.includes("x") || secondKey.includes("X")) {
+                xKey = secondKey;
+                yKey = firstKey;
             }
+            for (let i=0; i < rawArray.length; i++) {
+                xValues.push(rawArray[i][xKey]);
+                yValues.push(rawArray[i][yKey]);
+            }
+        } else {
+            console.log('issue processing the scatter plot from tiled, could not resolve dimensions into X and Y');
+            console.log({rawArray});
         }
+        console.log('processed scatter plot:', {xValues, yValues});
 
         if (xValues.length > 0 && yValues.length > 0) {
             const newScatterPlot = { 
@@ -83,18 +90,25 @@ export default function TimelineTiledHeatmapScatter ({tiledLinks=[], demo=false,
                 mode: 'lines+markers',
                 marker: {color: 'red'}, 
             };
-            setScatterPlot(newScatterPlot);
+            setScatterPlot([newScatterPlot]);
         }
     };
 
     const handleSliderChange = (newIndex) => {
-        getNewHeatmap(tiledLinks[newIndex].image);
+        tiledLinks[newIndex]?.image && getNewHeatmap(tiledLinks[newIndex].image);
         getNewScatterPlot(tiledLinks[newIndex].curve);
         setIndex(newIndex);
     }
 
     //handle updates where new scan causes tiledLinks goes to 1 and existing large index would be out of bounds
     if (tiledLinks.length > 0 && index > tiledLinks.length - 1) setIndex(0);
+
+    //initialize results on first link
+    
+    useEffect(() => {   
+        if (tiledLinks.length === 1) (handleSliderChange(0));
+    }, [tiledLinks]);
+
 
 
     if (!demo && tiledLinks.length > 0 ) {
