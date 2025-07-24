@@ -23,6 +23,18 @@
             "env": {
                 "TILED_API_KEY": "32bf4b533d638f470270e0725d14a7bc153114641a7dfda58f96e7926160e9e126272add"
             }
+        }, 
+        {
+            "name": "lse_operator_cli",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "arroyosas.app.lse_operator_cli"
+        },
+        {
+            "name": "frame_listener_sim",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "arroyosas.app.frame_listener_sim_cli"
         },
         {
             "name": "tiled_event_simulator",
