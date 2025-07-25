@@ -6,18 +6,18 @@ import time
 from collections import defaultdict
 from typing import Any, Dict
 
-# import numpy as np
-from arroyopy.listener import Listener
-from arroyopy.operator import Operator
-from tiled.client import from_uri
-from tiled.client.base import BaseClient
-from tiled.client.stream import Subscription
-
 from arroyosas.schemas import (  # SASStop,; SerializableNumpyArrayModel,
     RawFrameEvent,
     SASMessage,
     SASStart,
 )
+from arroyopy.listener import Listener
+from arroyopy.operator import Operator
+from tiled.client import from_uri
+from tiled.client.base import BaseClient
+from tiled.client.stream import Subscription
+from tiled.structures.array import ArrayStructure
+
 
 logger = logging.getLogger(__name__)
 
@@ -35,11 +35,16 @@ class TiledClientListener(Listener):
         self,
         operator: Operator,
         tiled_client: BaseClient,
+        stream_name: str = "primary",
+        data_source: str = "pil2M_image",
         create_run_logs: bool = False,
         log_dir: str = "tiled_logs",
     ):
+        
         self.operator = operator
         self.tiled_client = tiled_client
+        self.stream_name = stream_name  # The name of the stream to listen to e.g. 'primary'
+        self.data_source = data_source  # The name of the data source to listen to e.g. 'pil2M_image'
         self.create_run_logs = create_run_logs
         if not os.path.exists(log_dir):
             os.makedirs(log_dir, exist_ok=True)
@@ -104,7 +109,6 @@ class TiledClientListener(Listener):
         stream_sub.add_callback(self.on_node_in_stream)
         stream_sub.start()
 
-
     def load_data(self, sub, data):
         patch = data['patch']
         logger.debug(data['uri']) if logger.isEnabledFor(logging.DEBUG) else None
@@ -122,30 +126,30 @@ class TiledClientListener(Listener):
 
         # Log what we're comparing for debugging
         logger.info(
-            f"Checking key '{key}' against target '{self.target}'"
+            f"Checking key '{key}'"
         ) if logger.isEnabledFor(logging.INFO) else None
-
-        if key != self.target:
-            logger.info(
-                f"Key '{key}' does not match target '{self.target}', skipping"
-            ) if logger.isEnabledFor(logging.INFO) else None
-            return
 
         logger.info(
-            f"Key '{key}' matches target '{self.target}', proceeding"
+            f"Key '{key}', proceeding"
         ) if logger.isEnabledFor(logging.INFO) else None
-
-        stream_sub = Subscription(
-            self.tiled_client.context, sub.segments + [key], start=0
-        )
-        stream_sub.add_callback(self.load_data)
-        stream_sub.start()
-        self.publish_event(data)
+        try:
+            stream_sub = Subscription(
+                self.tiled_client.context, sub.segments + [key], start=0
+            )
+            stream_sub.add_callback(self.load_data)
+            stream_sub.start()
+            self.publish_event(data)
+        except Exception as e:
+            logger.error(f"Error processing node {sub.segments + [key]}: {e}")
 
     async def start(self) -> None:
         """Start the listener by calling _start method."""
         self._running = True
         await asyncio.to_thread(self._start)
+        while True:
+            if not self._running:
+                break
+            await asyncio.sleep(1)
 
     def _start(self) -> None:
         """
@@ -165,7 +169,12 @@ class TiledClientListener(Listener):
         catalog_sub = Subscription(node.context)
         catalog_sub.add_callback(self.on_new_run)
         # catalog_sub.add_callback(self.test)
-        catalog_sub.start()
+        try:
+            catalog_sub.start()
+        except Exception as e:
+            # self.context.revoke_api_key(key_info["first_eight"])
+
+            return
         print("I'm running")
 
     async def stop(self) -> None:
@@ -179,17 +188,18 @@ class TiledClientListener(Listener):
     def publish_start(self, data: Dict[str, Any]) -> None:
 
         # We need to make a request to get image information
-        #   from tiled.structures.array import ArrayStructure
-        #   structure = ArrayStructure.from_json(data["data_source"]["structure"])
-        #   structure.dtype.to_numpy_dtype()
+        
+        # structure = ArrayStructure.from_json(data["data_source"]["structure"])
+        structure = self.tiled_client[data['key']]['streams'][self.stream_name][self.data_source]._structure
         start = SASStart(
             run_name=data['key'],
             run_id=data['key'],
-            width=0,
-            height=0,
-            data_type="",
+            width=structure.shape[1],
+            height=structure.shape[2],
+            data_type=structure.data_type.to_numpy_dtype().str,
             tiled_url=self.tiled_client.uri,
         )
+        logging.debug(f"sending start message: {start}") if logging.getLogger().isEnabledFor(logging.DEBUG) else None
         self.send_to_operator(start)
 
     def publish_event(self, data: Dict[str, Any]) -> None:
@@ -265,6 +275,8 @@ class TiledClientListener(Listener):
         return cls(
             op,
             client,
+            settings.stream_name,
+            settings.data_source,
             log_dir,
         )
 
@@ -279,9 +291,8 @@ if __name__ == "__main__":
         "api_key": None,  # Replace with actual API key if needed
         "base_segments": [],
         # "frames_segments": ["primary", "data"],
-        "stream_name": "primary",
-        "target": "pil2M_image",
-        "log_dir": "tiled_event_logs",  # Directory for JSON logs
+        "stream_name": "primary",  
+        "log_dir": "tiled_event_logs",  # Directory for JSON log
     }
 
     class Settings:
@@ -299,6 +310,3 @@ if __name__ == "__main__":
     listener = TiledClientListener.from_settings(settings, n_operator)
 
     asyncio.run(listener.start())
-
-    while True:
-        time.sleep(5)  # Keep the script running
