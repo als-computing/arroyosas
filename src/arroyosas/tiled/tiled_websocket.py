@@ -10,13 +10,13 @@ from arroyosas.schemas import (  # SASStop,; SerializableNumpyArrayModel,
     RawFrameEvent,
     SASMessage,
     SASStart,
+    SerializableNumpyArrayModel
 )
 from arroyopy.listener import Listener
 from arroyopy.operator import Operator
 from tiled.client import from_uri
 from tiled.client.base import BaseClient
 from tiled.client.stream import Subscription
-from tiled.structures.array import ArrayStructure
 
 
 logger = logging.getLogger(__name__)
@@ -36,7 +36,7 @@ class TiledClientListener(Listener):
         operator: Operator,
         tiled_client: BaseClient,
         stream_name: str = "primary",
-        data_source: str = "pil2M_image",
+        target: str = "pil2M_image",
         create_run_logs: bool = False,
         log_dir: str = "tiled_logs",
     ):
@@ -44,7 +44,7 @@ class TiledClientListener(Listener):
         self.operator = operator
         self.tiled_client = tiled_client
         self.stream_name = stream_name  # The name of the stream to listen to e.g. 'primary'
-        self.data_source = data_source  # The name of the data source to listen to e.g. 'pil2M_image'
+        self.target = target  # The name of the data source to listen to e.g. 'pil2M_image'
         self.create_run_logs = create_run_logs
         if not os.path.exists(log_dir):
             os.makedirs(log_dir, exist_ok=True)
@@ -58,87 +58,103 @@ class TiledClientListener(Listener):
         """
         Handle new run events by creating a subscription for the run.
         """
-        uid = data["key"]
-        logger.debug(f"New run {uid}") if logger.isEnabledFor(logging.DEBUG) else None
+        try:
+            uid = data["key"]
+            logger.debug(f"New run {uid}") if logger.isEnabledFor(logging.DEBUG) else None
 
-        # Create new folder for this run
-        if self.create_run_logs:
-            self.create_run_folder(uid)
-            self.log_message_to_json("on_new_run", sub, data)
+            # Create new folder for this run
+            if self.create_run_logs:
+                self.create_run_folder(uid)
+                self.log_message_to_json("on_new_run", sub, data)
 
-        # Subscribe to the run
-        run_sub = Subscription(self.tiled_client.context, [uid], start=0)
-        run_sub.add_callback(self.on_streams_namespace)
-        run_sub.start()
-        # Publish start event
-        self.publish_start(data)
+            # Subscribe to the run
+            run_sub = Subscription(self.tiled_client.context, [uid], start=0)
+            run_sub.add_callback(self.on_streams_namespace)
+            run_sub.start()
+            # Publish start event
+            self.publish_start(data)
+        except Exception as e:
+            logger.error(f"Error processing new run {data}: {e}")
+            return
 
     def on_streams_namespace(self, sub, data):
         """
         Handle new streams namespace events by subscribing to the 'streams' segment.
         For example, this might be the creation of 'baseline' or 'primary' streams.
         """
-        logger.debug(data) if logger.isEnabledFor(logging.DEBUG) else None
+        try:
+            logger.debug(data) if logger.isEnabledFor(logging.DEBUG) else None
 
-        # Log the event
-        if self.create_run_logs:
-            self.log_message_to_json("on_streams_namespace", sub, data)
-
-        streams_sub = Subscription(
-            self.tiled_client.context, sub.segments + ["streams"], start=0
-        )
-        streams_sub.add_callback(self.on_new_stream)
-        streams_sub.start()
+            # Log the event
+            if self.create_run_logs:
+                self.log_message_to_json("on_streams_namespace", sub, data)
+            streams_sub = Subscription(
+                self.tiled_client.context, sub.segments + ["streams"], start=0
+            )
+            streams_sub.add_callback(self.on_new_stream)
+            streams_sub.start()
+        except Exception as e:
+            logger.error(f"Error processing streams namespace {data}: {e}")
+            return
 
     def on_new_stream(self, sub, data):
         """
         Handle new stream
         """
-        logger.debug(data) if logger.isEnabledFor(logging.DEBUG) else None
-        stream_name = data["key"]
-        logger.info(f"new stream {stream_name}") if logger.isEnabledFor(
-            logging.INFO
-        ) else None
+        try:
+            logger.debug(data) if logger.isEnabledFor(logging.DEBUG) else None
+            stream_name = data["key"]
+            if stream_name != self.stream_name:
+                logger.debug(f"Skipping stream {stream_name}, not the target stream") if logger.isEnabledFor(
+                    logging.INFO
+                ) else None
+                return
+            logger.info(f"new stream {stream_name}") if logger.isEnabledFor(
+                logging.INFO
+            ) else None
 
-        if self.create_run_logs:
-            self.log_message_to_json("on_new_stream", sub, data)
+            if self.create_run_logs:
+                self.log_message_to_json("on_new_stream", sub, data)
 
-        stream_sub = Subscription(
-            self.tiled_client.context, sub.segments + [stream_name], start=0
-        )
-        stream_sub.add_callback(self.on_node_in_stream)
-        stream_sub.start()
+            stream_sub = Subscription(
+                self.tiled_client.context, sub.segments + [stream_name], start=0
+            )
+            stream_sub.add_callback(self.on_node_in_stream)
+            stream_sub.start()
+        except Exception as e:
+            logger.error(f"Error processing new stream {data}: {e}")
+            return
 
     def load_data(self, sub, data):
-        patch = data['patch']
-        logger.debug(data['uri']) if logger.isEnabledFor(logging.DEBUG) else None
-        slice_ = tuple(slice(offset, offset + shape) for offset, shape in zip(patch["offset"], patch["shape"]))  # GET /array/full/...
-        node = self.tiled_client['/'.join(sub.segments)]  # GET /metadata/... wasteful to do it on each load_data call
-        images = node.read(slice=slice_)  # could be sub.node.read(...)
-        logger.debug(f"images shape {images.shape}")  if logger.isEnabledFor(logging.DEBUG) else None
-
+        try:
+            patch = data['patch']
+            logger.debug(data['uri']) if logger.isEnabledFor(logging.DEBUG) else None
+            slice_ = tuple(slice(offset, offset + shape) for offset, shape in zip(patch["offset"], patch["shape"]))  # GET /array/full/...
+            node = self.tiled_client['/'.join(sub.segments)]  # GET /metadata/... wasteful to do it on each load_data call
+            data['images'] = node.read(slice=slice_)  # could be sub.node.read(...)
+            logger.debug(f"images shape {data['images'].shape}") if logger.isEnabledFor(logging.DEBUG) else None
+            self.publish_event(data)
+        except Exception as e:
+            logger.error(f"Error loading data for {sub.segments}: {e}")
+            return
+        
     def on_node_in_stream(self, sub, data):
         logger.debug(data) if logger.isEnabledFor(logging.DEBUG) else None
         key = data["key"]
-
         if self.create_run_logs:
             self.log_message_to_json("on_node_in_stream", sub, data)
 
-        # Log what we're comparing for debugging
-        logger.info(
-            f"Checking key '{key}'"
-        ) if logger.isEnabledFor(logging.INFO) else None
-
-        logger.info(
-            f"Key '{key}', proceeding"
-        ) if logger.isEnabledFor(logging.INFO) else None
+        if key != self.target:
+            logger.debug(f"Skipping node {key}, not the target node") if logger.isEnabledFor(
+                logging.INFO
+            ) else None
+            return
         try:
             stream_sub = Subscription(
                 self.tiled_client.context, sub.segments + [key], start=0
             )
             stream_sub.add_callback(self.load_data)
             stream_sub.start()
-            self.publish_event(data)
         except Exception as e:
             logger.error(f"Error processing node {sub.segments + [key]}: {e}")
 
@@ -188,9 +204,12 @@ class TiledClientListener(Listener):
     def publish_start(self, data: Dict[str, Any]) -> None:
 
         # We need to make a request to get image information
-        
         # structure = ArrayStructure.from_json(data["data_source"]["structure"])
-        structure = self.tiled_client[data['key']]['streams'][self.stream_name][self.data_source]._structure
+        if self.tiled_client[data['key']]['streams'].get(self.stream_name) is None:
+            logger.debug(f"Stream {self.stream_name} not found for key {data['key']}")
+            return
+        
+        structure = self.tiled_client[data['key']]['streams'][self.stream_name][self.target]._structure
         start = SASStart(
             run_name=data['key'],
             run_id=data['key'],
@@ -206,10 +225,11 @@ class TiledClientListener(Listener):
         """
         Publish an event to the operator.
         """
+        serializable_array = SerializableNumpyArrayModel(array=data['images'])
         event = RawFrameEvent(
-            image=None,
+            image=serializable_array,
             frame_number=data.get("sequence", 0),
-            tiled_url="",  # Placeholder for actual URL if needed
+            tiled_url=data['uri'],  # Placeholder for actual URL if needed
         )
         self.send_to_operator(event)
 
@@ -266,7 +286,7 @@ class TiledClientListener(Listener):
         """Create a TiledClientListener from settings."""
         client = from_uri(
             settings.uri,
-            api_key=settings.api_key,
+            api_key="01992146236c6ec3e6a6571421690b89986641d3a12ffd3aacad9edda69d5ff3557b47b9",
         )
 
         # Create log directory if specified in settings
