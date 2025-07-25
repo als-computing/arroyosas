@@ -1,0 +1,95 @@
+{
+  "event_name": "on_node_in_stream",
+  "sequence": 2,
+  "timestamp": 1753468404.570869,
+  "subscription_segments": [
+    "d318beea-902a-4a01-877b-77c3393e88b6",
+    "streams",
+    "primary"
+  ],
+  "callback_data": {
+    "sequence": 1,
+    "timestamp": "2025-07-25T18:33:24.245820",
+    "key": "internal",
+    "structure_family": "table",
+    "specs": [
+      {
+        "name": "flattened",
+        "version": null
+      }
+    ],
+    "metadata": {
+      "stage_th": {
+        "source": "PV:XF:12IDC-OP:2{HEX:Stg-Ax:theta}Mtr.RBV",
+        "dtype": "number",
+        "shape": [],
+        "units": "deg",
+        "lower_ctrl_limit": -90.0,
+        "upper_ctrl_limit": 90.0,
+        "precision": 5,
+        "object_name": "stage_th",
+        "dtype_numpy": "<f8"
+      },
+      "stage_th_user_setpoint": {
+        "source": "PV:XF:12IDC-OP:2{HEX:Stg-Ax:theta}Mtr.VAL",
+        "dtype": "number",
+        "shape": [],
+        "units": "deg",
+        "lower_ctrl_limit": -90.0,
+        "upper_ctrl_limit": 90.0,
+        "precision": 5,
+        "object_name": "stage_th",
+        "dtype_numpy": "<f8"
+      },
+      "pil2M_cam_file_number": {
+        "source": "PV:XF:12ID2-ES{Pilatus:Det-2M}cam1:FileNumber_RBV",
+        "dtype": "integer",
+        "shape": [],
+        "units": "",
+        "lower_ctrl_limit": 0,
+        "upper_ctrl_limit": 0,
+        "object_name": "pil2M",
+        "dtype_numpy": "<i8"
+      },
+      "pil2M_stats1_total": {
+        "source": "PV:XF:12ID2-ES{Pilatus:Det-2M}Stats1:Total_RBV",
+        "dtype": "number",
+        "shape": [],
+        "units": "",
+        "lower_ctrl_limit": 0.0,
+        "upper_ctrl_limit": 0.0,
+        "precision": 0,
+        "object_name": "pil2M",
+        "dtype_numpy": "<f8"
+      }
+    },
+    "data_sources": [
+      {
+        "id": null,
+        "structure_family": "table",
+        "structure": {
+          "arrow_schema": "data:application/vnd.apache.arrow.file;base64,/////6ACAAAQAAAAAAAKAAwABgAFAAgACgAAAAABBAAMAAAACAAIAAAABAAIAAAABAAAAAoAAAA4AgAA9AEAALABAAB0AQAAQAEAAAABAAC8AAAAfAAAAEgAAAAEAAAAAP7//wAAAQMQAAAALAAAAAQAAAAAAAAAGQAAAHRzX3N0YWdlX3RoX3VzZXJfc2V0cG9pbnQAAABG/v//AAACAED+//8AAAEDEAAAABwAAAAEAAAAAAAAAAsAAAB0c19zdGFnZV90aAB2/v//AAACAHD+//8AAAEDEAAAACgAAAAEAAAAAAAAABUAAAB0c19waWwyTV9zdGF0czFfdG90YWwAAACy/v//AAACAKz+//8AAAEDEAAAACwAAAAEAAAAAAAAABgAAAB0c19waWwyTV9jYW1fZmlsZV9udW1iZXIAAAAA8v7//wAAAgDs/v//AAABAxAAAAAoAAAABAAAAAAAAAAWAAAAc3RhZ2VfdGhfdXNlcl9zZXRwb2ludAAALv///wAAAgAo////AAABAxAAAAAcAAAABAAAAAAAAAAIAAAAc3RhZ2VfdGgAAAAAXv///wAAAgBY////AAABAxAAAAAkAAAABAAAAAAAAAASAAAAcGlsMk1fc3RhdHMxX3RvdGFsAACW////AAACAJD///8AAAECEAAAACgAAAAEAAAAAAAAABUAAABwaWwyTV9jYW1fZmlsZV9udW1iZXIAAACQ////AAAAAUAAAADQ////AAABAxAAAAAcAAAABAAAAAAAAAAEAAAAdGltZQAABgAIAAYABgAAAAAAAgAQABQACAAGAAcADAAAABAAEAAAAAAAAQIQAAAAIAAAAAQAAAAAAAAABwAAAHNlcV9udW0ACAAMAAgABwAIAAAAAAAAAUAAAAA=",
+          "npartitions": 1,
+          "columns": [
+            "seq_num",
+            "time",
+            "pil2M_cam_file_number",
+            "pil2M_stats1_total",
+            "stage_th",
+            "stage_th_user_setpoint",
+            "ts_pil2M_cam_file_number",
+            "ts_pil2M_stats1_total",
+            "ts_stage_th",
+            "ts_stage_th_user_setpoint"
+          ],
+          "resizable": false
+        },
+        "mimetype": "application/x-tiled-sql-table",
+        "parameters": {},
+        "assets": [],
+        "management": "writable"
+      }
+    ],
+    "uri": "http://tiled-dev.nsls2.bnl.gov/api/v1/array/full/d318beea-902a-4a01-877b-77c3393e88b6/streams/primary"
+  }
+}

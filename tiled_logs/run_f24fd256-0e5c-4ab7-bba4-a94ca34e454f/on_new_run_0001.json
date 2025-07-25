@@ -1,0 +1,130 @@
+{
+  "event_name": "on_new_run",
+  "sequence": 1,
+  "timestamp": 1753471038.9562454,
+  "subscription_segments": [
+    "/"
+  ],
+  "callback_data": {
+    "sequence": 193,
+    "timestamp": "2025-07-25T19:17:18.919208",
+    "key": "f24fd256-0e5c-4ab7-bba4-a94ca34e454f",
+    "structure_family": "container",
+    "specs": [
+      {
+        "name": "BlueskyRun",
+        "version": "3.0"
+      }
+    ],
+    "metadata": {
+      "start": {
+        "uid": "f24fd256-0e5c-4ab7-bba4-a94ca34e454f",
+        "time": 1753471038.768495,
+        "username": "egann",
+        "beamline_name": "SMI",
+        "facility": "NSLS-II",
+        "tstamp": 1752211775.3666577,
+        "beamline_attenuators": {
+          "att1_7_status": {
+            "material": "Sn_60um",
+            "thickness": "4x"
+          }
+        },
+        "sample_name": "test_test",
+        "SAXS_setup": {
+          "sdd": 5000,
+          "beam_centre": [
+            746,
+            1105
+          ],
+          "bs": "rod",
+          "energy": 16100
+        },
+        "x0": 1499.8220000000001,
+        "beamline_beamsize": "3.5um",
+        "start_datetime": "2025-07-16T13:25:25.696186",
+        "proposal": {
+          "proposal_id": "317903",
+          "title": "Advancing Real-Time Characterization of Polymer Membrane Formation Using X-Ray Scattering",
+          "type": "General User",
+          "pi_name": "Gregory Su"
+        },
+        "beamline_sample_environment": "in-air",
+        "versions": {
+          "ophyd": "1.10.5",
+          "bluesky": "1.8.2.dev1119+gfb1e9960",
+          "ophyd_async": "0.10.0a4"
+        },
+        "alignment_LUT": {
+          "-2000": {
+            "x": -2000,
+            "y": 7105.626,
+            "z": 2000,
+            "th": 0.4
+          },
+          "0": {
+            "x": 0,
+            "y": 7092.411,
+            "z": 2000,
+            "th": 0.4
+          },
+          "2000": {
+            "x": 2000,
+            "y": 7075.913,
+            "z": 2000,
+            "th": 0.4
+          }
+        },
+        "project_name": "Blade_HOPI_4wt_70water",
+        "cycle": "2025-2",
+        "scan_id": 971303,
+        "th0": 1.180005,
+        "data_session": "pass-317903",
+        "plan_type": "generator",
+        "plan_name": "rel_scan",
+        "detectors": [
+          "pil2M"
+        ],
+        "motors": [
+          "stage_th"
+        ],
+        "num_points": 31,
+        "num_intervals": 30,
+        "plan_args": {
+          "detectors": [
+            "SAXS_Detector(prefix='XF:12ID2-ES{Pilatus:Det-2M}', name='pil2M', read_attrs=['cam', 'cam.file_number', 'tiff', 'stats1', 'stats1.total'], configuration_attrs=['cam', 'cam.acquire_period', 'cam.acquire_time', 'cam.image_mode', 'cam.manufacturer', 'cam.model', 'cam.num_exposures', 'cam.num_images', 'cam.trigger_mode', 'tiff', 'stats1', 'stats1.bgd_width', 'stats1.centroid_threshold', 'stats1.compute_centroid', 'stats1.compute_histogram', 'stats1.compute_profiles', 'stats1.compute_statistics', 'stats1.hist_max', 'stats1.hist_min', 'stats1.hist_size', 'stats1.profile_cursor', 'stats1.profile_size', 'stats1.ts_num_points'])"
+          ],
+          "num": 31,
+          "args": [
+            "EpicsMotor(prefix='XF:12IDC-OP:2{HEX:Stg-Ax:theta}Mtr', name='stage_th', parent='stage', settle_time=0.0, timeout=None, read_attrs=['user_readback', 'user_setpoint'], configuration_attrs=['user_setpoint'])",
+            -0.3,
+            0.3
+          ],
+          "per_step": "None"
+        },
+        "hints": {
+          "dimensions": [
+            [
+              [
+                "stage_th"
+              ],
+              "primary"
+            ]
+          ]
+        },
+        "plan_pattern": "inner_product",
+        "plan_pattern_module": "bluesky.plan_patterns",
+        "plan_pattern_args": {
+          "num": 31,
+          "args": [
+            "EpicsMotor(prefix='XF:12IDC-OP:2{HEX:Stg-Ax:theta}Mtr', name='stage_th', parent='stage', settle_time=0.0, timeout=None, read_attrs=['user_readback', 'user_setpoint'], configuration_attrs=['user_setpoint'])",
+            -0.3,
+            0.3
+          ]
+        }
+      }
+    },
+    "data_sources": [],
+    "uri": "http://tiled-dev.nsls2.bnl.gov/api/v1/array/full/"
+  }
+}

@@ -1,0 +1,132 @@
+{
+  "event_name": "on_node_in_stream",
+  "sequence": 2,
+  "timestamp": 1753466130.136103,
+  "subscription_segments": [
+    "cd9508f2-d386-419c-9e05-322fb2110e9e",
+    "streams",
+    "primary"
+  ],
+  "callback_data": {
+    "sequence": 1,
+    "timestamp": "2025-07-25T17:55:29.907630",
+    "key": "internal",
+    "structure_family": "table",
+    "specs": [
+      {
+        "name": "flattened",
+        "version": null
+      }
+    ],
+    "metadata": {
+      "thorlabs_su_readback": {
+        "source": "PV:XF:12ID2-ES{DDSM100-Ax:X1}Mtr.RBV",
+        "dtype": "number",
+        "shape": [],
+        "units": "mm",
+        "lower_ctrl_limit": 0.0,
+        "upper_ctrl_limit": 300.0,
+        "precision": 3,
+        "object_name": "thorlabs_su",
+        "dtype_numpy": "<f8"
+      },
+      "thorlabs_su_setpoint": {
+        "source": "PV:XF:12ID2-ES{DDSM100-Ax:X1}Mtr.VAL",
+        "dtype": "integer",
+        "shape": [],
+        "units": "mm",
+        "lower_ctrl_limit": 0.0,
+        "upper_ctrl_limit": 300.0,
+        "precision": 3,
+        "object_name": "thorlabs_su",
+        "dtype_numpy": "<i8"
+      },
+      "thorlabs_su_done": {
+        "source": "PV:XF:12ID2-ES{DDSM100-Ax:X1}Mtr.DMOV",
+        "dtype": "integer",
+        "shape": [],
+        "units": "mm",
+        "lower_ctrl_limit": -32768,
+        "upper_ctrl_limit": 32767,
+        "object_name": "thorlabs_su",
+        "dtype_numpy": "<i8"
+      },
+      "pil2M_cam_file_number": {
+        "source": "PV:XF:12ID2-ES{Pilatus:Det-2M}cam1:FileNumber_RBV",
+        "dtype": "integer",
+        "shape": [],
+        "units": "",
+        "lower_ctrl_limit": 0,
+        "upper_ctrl_limit": 0,
+        "object_name": "pil2M",
+        "dtype_numpy": "<i8"
+      },
+      "pil2M_stats1_total": {
+        "source": "PV:XF:12ID2-ES{Pilatus:Det-2M}Stats1:Total_RBV",
+        "dtype": "number",
+        "shape": [],
+        "units": "",
+        "lower_ctrl_limit": 0.0,
+        "upper_ctrl_limit": 0.0,
+        "precision": 0,
+        "object_name": "pil2M",
+        "dtype_numpy": "<f8"
+      },
+      "pil900KW_cam_file_number": {
+        "source": "PV:XF:12IDC-ES:2{Det:900KW}cam1:FileNumber_RBV",
+        "dtype": "integer",
+        "shape": [],
+        "units": "",
+        "lower_ctrl_limit": 0,
+        "upper_ctrl_limit": 0,
+        "object_name": "pil900KW",
+        "dtype_numpy": "<i8"
+      },
+      "pil900KW_stats1_total": {
+        "source": "PV:XF:12IDC-ES:2{Det:900KW}Stats1:Total_RBV",
+        "dtype": "number",
+        "shape": [],
+        "units": "",
+        "lower_ctrl_limit": 0.0,
+        "upper_ctrl_limit": 0.0,
+        "precision": 0,
+        "object_name": "pil900KW",
+        "dtype_numpy": "<f8"
+      }
+    },
+    "data_sources": [
+      {
+        "id": null,
+        "structure_family": "table",
+        "structure": {
+          "arrow_schema": "data:application/vnd.apache.arrow.file;base64,/////0AEAAAQAAAAAAAKAAwABgAFAAgACgAAAAABBAAMAAAACAAIAAAABAAIAAAABAAAABAAAADYAwAAlAMAAFADAAAUAwAAzAIAAIwCAABMAgAADAIAAMwBAACIAQAASAEAAAQBAADAAAAAgAAAAEAAAAAEAAAAePz//wAAAQMQAAAAJAAAAAQAAAAAAAAAEwAAAHRzX3Rob3JsYWJzX3N1X2RvbmUAtvz//wAAAgCw/P//AAABAxAAAAAoAAAABAAAAAAAAAAXAAAAdHNfdGhvcmxhYnNfc3Vfc2V0cG9pbnQA8vz//wAAAgDs/P//AAABAxAAAAAoAAAABAAAAAAAAAAXAAAAdHNfdGhvcmxhYnNfc3VfcmVhZGJhY2sALv3//wAAAgAo/f//AAABAxAAAAAsAAAABAAAAAAAAAAYAAAAdHNfcGlsOTAwS1dfc3RhdHMxX3RvdGFsAAAAAG79//8AAAIAaP3//wAAAQMQAAAALAAAAAQAAAAAAAAAGwAAAHRzX3BpbDkwMEtXX2NhbV9maWxlX251bWJlcgCu/f//AAACAKj9//8AAAEDEAAAACgAAAAEAAAAAAAAABUAAAB0c19waWwyTV9zdGF0czFfdG90YWwAAADq/f//AAACAOT9//8AAAEDEAAAACwAAAAEAAAAAAAAABgAAAB0c19waWwyTV9jYW1fZmlsZV9udW1iZXIAAAAAKv7//wAAAgAk/v//AAABAhAAAAAkAAAABAAAAAAAAAAQAAAAdGhvcmxhYnNfc3VfZG9uZQAAAAAg/v//AAAAAUAAAABg/v//AAABAxAAAAAoAAAABAAAAAAAAAAUAAAAdGhvcmxhYnNfc3Vfc2V0cG9pbnQAAAAAov7//wAAAgCc/v//AAABAxAAAAAoAAAABAAAAAAAAAAUAAAAdGhvcmxhYnNfc3VfcmVhZGJhY2sAAAAA3v7//wAAAgDY/v//AAABAxAAAAAoAAAABAAAAAAAAAAVAAAAcGlsOTAwS1dfc3RhdHMxX3RvdGFsAAAAGv///wAAAgAU////AAABAhAAAAAsAAAABAAAAAAAAAAYAAAAcGlsOTAwS1dfY2FtX2ZpbGVfbnVtYmVyAAAAABj///8AAAABQAAAAFj///8AAAEDEAAAACQAAAAEAAAAAAAAABIAAABwaWwyTV9zdGF0czFfdG90YWwAAJb///8AAAIAkP///wAAAQIQAAAAKAAAAAQAAAAAAAAAFQAAAHBpbDJNX2NhbV9maWxlX251bWJlcgAAAJD///8AAAABQAAAAND///8AAAEDEAAAABwAAAAEAAAAAAAAAAQAAAB0aW1lAAAGAAgABgAGAAAAAAACABAAFAAIAAYABwAMAAAAEAAQAAAAAAABAhAAAAAgAAAABAAAAAAAAAAHAAAAc2VxX251bQAIAAwACAAHAAgAAAAAAAABQAAAAA==",
+          "npartitions": 1,
+          "columns": [
+            "seq_num",
+            "time",
+            "pil2M_cam_file_number",
+            "pil2M_stats1_total",
+            "pil900KW_cam_file_number",
+            "pil900KW_stats1_total",
+            "thorlabs_su_readback",
+            "thorlabs_su_setpoint",
+            "thorlabs_su_done",
+            "ts_pil2M_cam_file_number",
+            "ts_pil2M_stats1_total",
+            "ts_pil900KW_cam_file_number",
+            "ts_pil900KW_stats1_total",
+            "ts_thorlabs_su_readback",
+            "ts_thorlabs_su_setpoint",
+            "ts_thorlabs_su_done"
+          ],
+          "resizable": false
+        },
+        "mimetype": "application/x-tiled-sql-table",
+        "parameters": {},
+        "assets": [],
+        "management": "writable"
+      }
+    ],
+    "uri": "http://tiled-dev.nsls2.bnl.gov/api/v1/array/full/cd9508f2-d386-419c-9e05-322fb2110e9e/streams/primary"
+  }
+}
