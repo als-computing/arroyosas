@@ -286,18 +286,18 @@ class TiledClientListener(Listener):
         """Create a TiledClientListener from settings."""
         client = from_uri(
             settings.uri,
-            api_key="01992146236c6ec3e6a6571421690b89986641d3a12ffd3aacad9edda69d5ff3557b47b9",
+            api_key=settings.api_key,
         )
 
         # Create log directory if specified in settings
         log_dir = getattr(settings, "log_dir", "tiled_logs")
-
         return cls(
             op,
-            client,
-            settings.stream_name,
-            settings.data_source,
-            log_dir,
+            tiled_client=client,
+            stream_name=settings.stream_name,
+            target=settings.target,
+            create_run_logs=getattr(settings, "create_run_logs", False),
+            log_dir=log_dir,
         )
 
 
