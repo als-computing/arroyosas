@@ -16,7 +16,7 @@ dependencies = [
     "msgpack",
     "numpy",
     "Pillow",
-    "bluesky-tiled-plugins==2.0.0b57",
+    # "bluesky-tiled-plugins",
     "pyzmq",
     "tqdm",
     "typer",
@@ -24,7 +24,9 @@ dependencies = [
     "zarr",
     "pyFAI",
     "transformers",
-    "redis"]
+    "redis",
+    "tiled[client] @ git+https://github.com/vshekar/tiled@websocket-endpoint"
+]
 
 [project.optional-dependencies]
 workflow-viz = [
@@ -45,7 +47,7 @@ dev = [
     "pre-commit",
     "pytest-asyncio",
     "pytest-mock",
-    "tiled[server] >=0.1.0b14, <0.2"
+        # "tiled[server] >=0.1.0b14, <0.2"  # Installed from websocket-endpoint branch in Dockerfile
     ]
 
 lse = [
@@ -61,13 +63,13 @@ all = [
     "pandas",
     "msgpack",
     "numpy",
-    "ophyd",
+        # "tiled[client] >=0.1.0b14, <0.2",  # Installed from websocket-endpoint branch in Dockerfile
     "Pillow",
     "pyzmq",
     "tqdm",
     "typer",
     "websockets",
-    "tiled[client] >=0.1.0b14, <0.2",
+    # "tiled[client] >=0.1.0b14, <0.2",  # Installed from websocket-endpoint branch in Dockerfile
     "redis",
     "numpy<2.0.0",
     "pandas",
