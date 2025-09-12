@@ -73,6 +73,7 @@ all = [
     "pandas",
     "python-dotenv",
     "pyarrow>=14.0.1",
+    "aiosqlite",
 
 ]
 
