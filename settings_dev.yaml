@@ -1,0 +1,23 @@
+---
+logging_level: INFO
+redis_host: redis
+resis_port: 6379
+
+viz_operator:
+  listeners:
+    listener:
+    zmq_address: tcp://tiled_socket:5000  #only safe in containers
+  
+  operator:
+    redis:
+      host: kvrocks
+      port: 6666
+  
+  publishers:
+    websockets:
+      host: 0.0.0.0
+      port: 8021
+    tiled:
+      raw:
+        uri: https://tiled-dev.nsls2.bnl.gov
+        api_key: "@format {env[TILED_API_KEY]}"

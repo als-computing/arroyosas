@@ -8,7 +8,7 @@ from arroyosas.zmq import ZMQFrameListener
 from ..config import settings
 from ..log_utils import setup_logger
 from ..one_d_reduction.operator import OneDReductionOperator
-from ..tiled.tiled_poller import TiledProcessedPublisher
+from ..tiled.publisher import Tiled1DResultsPublisher
 from ..websockets import OneDWSPublisher
 
 app = typer.Typer()
@@ -22,14 +22,14 @@ async def start():
     logger.info("Starting Tiled Poller")
     logger.info("Getting settings")
     logger.info(f"{settings.viz_operator}")
-    operator = OneDReductionOperator.from_settings(app_settings)
-    tiled_event_publisher = TiledProcessedPublisher.from_settings(
-        settings.tiled_processed
+    operator = OneDReductionOperator.from_settings(app_settings.operator)
+    tiled_event_publisher = Tiled1DResultsPublisher.from_settings(
+        app_settings.publishers.tiled
     )
     ws_publisher = OneDWSPublisher.from_settings(app_settings.ws_publisher)
     operator.add_publisher(ws_publisher)
     operator.add_publisher(tiled_event_publisher)
-    listener = ZMQFrameListener.from_settings(app_settings.listener, operator)
+    listener = ZMQFrameListener.from_settings(app_settings.publishers.websockets, operator)
     await asyncio.gather(listener.start(), ws_publisher.start())
 
 

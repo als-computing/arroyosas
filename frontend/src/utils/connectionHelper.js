@@ -4,7 +4,7 @@
  */
 const getWsUrl = () => {
     const currentWebsiteIP = window.location.hostname;
-    const pathname = "/viz"; 
+    const pathname = "/ws"; 
     const port = window.location.port;
     var wsUrl;
 

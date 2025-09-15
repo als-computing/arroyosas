@@ -25,9 +25,8 @@ REDUCTION_CHANNEL = "scattering"
 
 
 class OneDReductionOperator(Operator):
-    def __init__(self, tiled_client: BaseClient, redis_conn: RedisConn):
+    def __init__(self, redis_conn: RedisConn):
         super().__init__()
-        self.tiled_client = tiled_client
         self.redis_conn = redis_conn
         self.current_scan_metadata = None
         # self.mask = None
@@ -163,7 +162,4 @@ class OneDReductionOperator(Operator):
     @classmethod
     def from_settings(cls, settings) -> "OneDReductionOperator":
         redis_conn = RedisConn.from_settings(settings.redis)
-        tiled_client = from_uri(
-            settings.tiled.raw.uri, api_key=settings.tiled.raw.api_key
-        )
-        return cls(tiled_client, redis_conn)
+        return cls(redis_conn)

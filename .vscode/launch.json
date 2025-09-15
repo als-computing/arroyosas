@@ -32,6 +32,12 @@
             "module": "arroyosas.app.lse_operator_cli"
         },
         {
+            "name": "viz_operator_cli",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "arroyosas.app.viz_operator_cli"
+        },
+        {
             "name": "frame_listener_sim",
             "type": "debugpy",
             "request": "launch",
