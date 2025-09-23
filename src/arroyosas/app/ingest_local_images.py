@@ -51,9 +51,11 @@ def read_image_file(file_path: str) -> np.ndarray:
     """Read an image file and convert it to a numpy array"""
     try:
         with Image.open(file_path) as img:
-            if img.mode != 'L':
+            if img.mode != "I" and img.mode != 'L':
                 img = img.convert('L')
-            array = np.array(img, dtype=np.uint32)
+                array = np.array(img, dtype=np.uint32)
+            else:
+                array = np.array(img)
             return array
     except Exception as e:
         logger.error(f"Error reading image file {file_path}: {e}")
