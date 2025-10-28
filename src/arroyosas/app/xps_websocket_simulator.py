@@ -15,6 +15,7 @@ import asyncio
 import json
 import logging
 import os
+import uuid
 from pathlib import Path
 from typing import List, Tuple, Dict
 
@@ -97,6 +98,53 @@ def load_xps_data(data_file: str) -> Tuple[np.ndarray, Dict[int, Tuple[int, int]
     except Exception as e:
         logger.error(f"Error loading data file: {e}")
         raise
+
+
+def prepare_start_message() -> str:
+    """
+    Prepare XPS start message in JSON format.
+    Matches the tr_ap_xps XPSStart schema.
+    """
+    scan_uuid = str(uuid.uuid4())
+    start_message = {
+        "msg_type": "start",
+        "scan_name": f"temp name {scan_uuid}",
+        "F_Trigger": 13,
+        "F_Un-Trigger": 38,
+        "F_Dead": 45,
+        "F_Reset": 46,
+        "CCD_nx": 1392,
+        "CCD_ny": 1040,
+        "Pass Energy": 200,
+        "Center Energy": 3308,
+        "Offset Energy": -0.837,
+        "Lens Mode": "X6-26Mar2022-test",
+        "Rectangle": {
+            "Left": 148,
+            "Top": 385,
+            "Right": 1279,
+            "Bottom": 654,
+            "Rotation": 0
+        },
+        "data_type": "U8",
+        "dt": 0.0820741786426572,
+        "Photon Energy": 3999.99740398402,
+        "Binding Energy": 90,
+        "File Ver": "1.0.0"
+    }
+    return json.dumps(start_message)
+
+
+def prepare_stop_message() -> str:
+    """
+    Prepare XPS stop message in JSON format.
+    Matches the tr_ap_xps XPSStop schema.
+    """
+    stop_message = {
+        "msg_type": "stop",
+        "Num Frames": 0
+    }
+    return json.dumps(stop_message)
 
 
 def convert_to_uint8(image: np.ndarray) -> bytes:
@@ -204,8 +252,8 @@ async def websocket_handler(
     """
     client_info = f"{websocket.remote_address[0]}:{websocket.remote_address[1]}"
     logger.info("=" * 70)
-    logger.info(f"🔌 New WebSocket connection from {client_info}")
-    logger.info(f"📍 Path: {websocket.request.path}")
+    logger.info(f"📌 New WebSocket connection from {client_info}")
+    logger.info(f"📝 Path: {websocket.request.path}")
     logger.info("=" * 70)
     
     # Check path
@@ -226,10 +274,20 @@ async def websocket_handler(
                 if bins_to_send is None or bin_num in bins_to_send:
                     bin_indices[bin_num].append((idx, shot_num))
             
-            # Send data bin by bin
+            # Send data bin by bin - each bin gets its own START/STOP
             for bin_num in sorted(bin_indices.keys()):
                 logger.info(f"")
                 logger.info(f"📦 Starting bin {bin_num}")
+                
+                # Send start message for this bin
+                start_msg = prepare_start_message()
+                # Extract UUID from the start message for logging
+                start_data = json.loads(start_msg)
+                scan_uuid = start_data['scan_name'].replace('temp name ', '').strip()
+                await websocket.send(start_msg)
+                logger.info(f"📤 Sent START message for bin {bin_num} with UUID: {scan_uuid}")
+                await asyncio.sleep(0.1)
+                
                 logger.info(f"   Total shots in bin: {len(bin_indices[bin_num])}")
                 
                 # Sort shots within bin
@@ -239,17 +297,21 @@ async def websocket_handler(
                 import time
                 bin_start = time.time()
                 
-                # Reset shot counter for new bin
+                # Send all shots for this bin
                 for idx, original_shot_num in shots:
-                    # Get the shot number within this bin (should already be correct)
                     shot_num = original_shot_num
                     shot_mean = all_data[idx]
                     
                     await send_xps_data(websocket, shot_num, bin_num, shot_mean)
                     await asyncio.sleep(pause)
                 
+                # Send stop message for this bin
+                stop_msg = prepare_stop_message()
+                await websocket.send(stop_msg)
+                logger.info(f"📤 Sent STOP message for bin {bin_num}")
+                
                 bin_duration = time.time() - bin_start
-                logger.info(f"✓ Completed bin {bin_num} | {len(shots)} shots in {bin_duration:.2f}s")
+                logger.info(f"✅ Completed bin {bin_num} | {len(shots)} shots in {bin_duration:.2f}s")
             
             if cycle < cycles - 1:
                 logger.info("")
@@ -258,7 +320,7 @@ async def websocket_handler(
         
         logger.info("")
         logger.info("=" * 70)
-        logger.info(f"🏁 All {cycles} cycles complete!")
+        logger.info(f"🎉 All {cycles} cycles complete!")
         logger.info("=" * 70)
         await asyncio.sleep(2.0)
         
