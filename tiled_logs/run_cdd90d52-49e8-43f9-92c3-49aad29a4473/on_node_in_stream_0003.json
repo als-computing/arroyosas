@@ -1,0 +1,55 @@
+{
+  "event_name": "on_node_in_stream",
+  "sequence": 3,
+  "timestamp": 1753409264.9034293,
+  "subscription_segments": [
+    "cdd90d52-49e8-43f9-92c3-49aad29a4473",
+    "streams",
+    "primary"
+  ],
+  "callback_data": {
+    "sequence": 2,
+    "timestamp": "2025-07-25T02:07:31.101296",
+    "key": "pil2M_image",
+    "structure_family": "array",
+    "specs": [],
+    "metadata": {},
+    "data_sources": [
+      {
+        "id": null,
+        "structure_family": "array",
+        "structure": {
+          "data_type": {
+            "endianness": "little",
+            "kind": "i",
+            "itemsize": 4,
+            "dt_units": null
+          },
+          "chunks": [
+            [
+              0
+            ],
+            [
+              1679
+            ],
+            [
+              1475
+            ]
+          ],
+          "shape": [
+            0,
+            1679,
+            1475
+          ],
+          "dims": null,
+          "resizable": false
+        },
+        "mimetype": "multipart/related;type=image/tiff",
+        "parameters": {},
+        "assets": [],
+        "management": "external"
+      }
+    ],
+    "uri": "http://tiled-dev.nsls2.bnl.gov/api/v1/array/full/cdd90d52-49e8-43f9-92c3-49aad29a4473/streams/primary"
+  }
+}

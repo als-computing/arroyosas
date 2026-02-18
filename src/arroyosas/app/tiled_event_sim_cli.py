@@ -208,7 +208,7 @@ def main(
     log_dir: str = typer.Argument(..., help="Directory containing Tiled event logs"),
     host: str = typer.Option("0.0.0.0", help="Host to bind the WebSocket server to"),
     port: int = typer.Option(8000, help="Port to bind the WebSocket server to"),
-    stream_path: str = typer.Option("/stream", help="WebSocket path for the stream endpoint"),
+    stream_path: str = typer.Option("/", help="WebSocket path for the stream endpoint"),
     run_id: str = typer.Option(None, help="Specific run ID to replay (defaults to first run found)")
 ):
     """

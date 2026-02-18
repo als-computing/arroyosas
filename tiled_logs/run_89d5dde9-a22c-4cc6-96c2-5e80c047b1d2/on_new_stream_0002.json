@@ -1,0 +1,310 @@
+{
+  "event_name": "on_new_stream",
+  "sequence": 2,
+  "timestamp": 1753406070.8473728,
+  "subscription_segments": [
+    "89d5dde9-a22c-4cc6-96c2-5e80c047b1d2",
+    "streams"
+  ],
+  "callback_data": {
+    "sequence": 2,
+    "timestamp": "2025-07-25T01:13:46.336330",
+    "key": "primary",
+    "structure_family": "composite",
+    "specs": [
+      {
+        "name": "BlueskyEventStream",
+        "version": "3.0"
+      }
+    ],
+    "metadata": {
+      "configuration": {
+        "pil2M": {
+          "data": {
+            "pil2M_cam_acquire_period": 0.501,
+            "pil2M_cam_acquire_time": 0.5,
+            "pil2M_cam_image_mode": 1,
+            "pil2M_cam_manufacturer": "Dectris",
+            "pil2M_cam_model": "Pilatus",
+            "pil2M_cam_num_exposures": 1,
+            "pil2M_cam_num_images": 1,
+            "pil2M_cam_trigger_mode": 0,
+            "pil2M_stats1_bgd_width": 1,
+            "pil2M_stats1_centroid_threshold": 1.0,
+            "pil2M_stats1_compute_centroid": "No",
+            "pil2M_stats1_compute_histogram": "No",
+            "pil2M_stats1_compute_profiles": "No",
+            "pil2M_stats1_compute_statistics": "Yes",
+            "pil2M_stats1_hist_max": 255.0,
+            "pil2M_stats1_hist_min": 0.0,
+            "pil2M_stats1_hist_size": 256,
+            "pil2M_stats1_ts_num_points": 2048
+          },
+          "timestamps": {
+            "pil2M_cam_acquire_period": 1753389986.881245,
+            "pil2M_cam_acquire_time": 1753389986.872906,
+            "pil2M_cam_image_mode": 1746550981.403281,
+            "pil2M_cam_manufacturer": 1746550977.988163,
+            "pil2M_cam_model": 1746550977.988235,
+            "pil2M_cam_num_exposures": 1746550977.98888,
+            "pil2M_cam_num_images": 1753380750.712442,
+            "pil2M_cam_trigger_mode": 1746550977.988523,
+            "pil2M_stats1_bgd_width": 1746550977.988214,
+            "pil2M_stats1_centroid_threshold": 1746550977.987016,
+            "pil2M_stats1_compute_centroid": 1746550977.987631,
+            "pil2M_stats1_compute_histogram": 1746550977.987861,
+            "pil2M_stats1_compute_profiles": 1746550977.987757,
+            "pil2M_stats1_compute_statistics": 1746550977.987549,
+            "pil2M_stats1_hist_max": 1746550977.987272,
+            "pil2M_stats1_hist_min": 1746550977.987138,
+            "pil2M_stats1_hist_size": 1746550977.988419,
+            "pil2M_stats1_ts_num_points": 1746550977.949789
+          },
+          "data_keys": {
+            "pil2M_cam_acquire_period": {
+              "source": "PV:XF:12ID2-ES{Pilatus:Det-2M}cam1:AcquirePeriod_RBV",
+              "dtype": "number",
+              "shape": [],
+              "units": "",
+              "lower_ctrl_limit": 0.0,
+              "upper_ctrl_limit": 0.0,
+              "precision": 3,
+              "dtype_numpy": "<f8"
+            },
+            "pil2M_cam_acquire_time": {
+              "source": "PV:XF:12ID2-ES{Pilatus:Det-2M}cam1:AcquireTime_RBV",
+              "dtype": "number",
+              "shape": [],
+              "units": "",
+              "lower_ctrl_limit": 0.0,
+              "upper_ctrl_limit": 0.0,
+              "precision": 3,
+              "dtype_numpy": "<f8"
+            },
+            "pil2M_cam_image_mode": {
+              "source": "PV:XF:12ID2-ES{Pilatus:Det-2M}cam1:ImageMode_RBV",
+              "dtype": "integer",
+              "shape": [],
+              "units": null,
+              "lower_ctrl_limit": null,
+              "upper_ctrl_limit": null,
+              "enum_strs": [
+                "Single",
+                "Multiple",
+                "Continuous"
+              ],
+              "dtype_numpy": "<i8"
+            },
+            "pil2M_cam_manufacturer": {
+              "source": "PV:XF:12ID2-ES{Pilatus:Det-2M}cam1:Manufacturer_RBV",
+              "dtype": "string",
+              "shape": [],
+              "units": null,
+              "lower_ctrl_limit": null,
+              "upper_ctrl_limit": null,
+              "dtype_numpy": "<U0"
+            },
+            "pil2M_cam_model": {
+              "source": "PV:XF:12ID2-ES{Pilatus:Det-2M}cam1:Model_RBV",
+              "dtype": "string",
+              "shape": [],
+              "units": null,
+              "lower_ctrl_limit": null,
+              "upper_ctrl_limit": null,
+              "dtype_numpy": "<U0"
+            },
+            "pil2M_cam_num_exposures": {
+              "source": "PV:XF:12ID2-ES{Pilatus:Det-2M}cam1:NumExposures_RBV",
+              "dtype": "integer",
+              "shape": [],
+              "units": "",
+              "lower_ctrl_limit": 0,
+              "upper_ctrl_limit": 0,
+              "dtype_numpy": "<i8"
+            },
+            "pil2M_cam_num_images": {
+              "source": "PV:XF:12ID2-ES{Pilatus:Det-2M}cam1:NumImages_RBV",
+              "dtype": "integer",
+              "shape": [],
+              "units": "",
+              "lower_ctrl_limit": 0,
+              "upper_ctrl_limit": 0,
+              "dtype_numpy": "<i8"
+            },
+            "pil2M_cam_trigger_mode": {
+              "source": "PV:XF:12ID2-ES{Pilatus:Det-2M}cam1:TriggerMode_RBV",
+              "dtype": "integer",
+              "shape": [],
+              "units": null,
+              "lower_ctrl_limit": null,
+              "upper_ctrl_limit": null,
+              "enum_strs": [
+                "Internal",
+                "Ext. Enable",
+                "Ext. Trigger",
+                "Mult. Trigger",
+                "Alignment"
+              ],
+              "dtype_numpy": "<i8"
+            },
+            "pil2M_stats1_bgd_width": {
+              "source": "PV:XF:12ID2-ES{Pilatus:Det-2M}Stats1:BgdWidth_RBV",
+              "dtype": "integer",
+              "shape": [],
+              "units": "",
+              "lower_ctrl_limit": 0,
+              "upper_ctrl_limit": 0,
+              "dtype_numpy": "<i8"
+            },
+            "pil2M_stats1_centroid_threshold": {
+              "source": "PV:XF:12ID2-ES{Pilatus:Det-2M}Stats1:CentroidThreshold_RBV",
+              "dtype": "number",
+              "shape": [],
+              "units": "",
+              "lower_ctrl_limit": 0.0,
+              "upper_ctrl_limit": 0.0,
+              "precision": 0,
+              "dtype_numpy": "<f8"
+            },
+            "pil2M_stats1_compute_centroid": {
+              "source": "PV:XF:12ID2-ES{Pilatus:Det-2M}Stats1:ComputeCentroid_RBV",
+              "dtype": "string",
+              "shape": [],
+              "units": null,
+              "lower_ctrl_limit": null,
+              "upper_ctrl_limit": null,
+              "enum_strs": [
+                "No",
+                "Yes"
+              ],
+              "dtype_numpy": "<U0"
+            },
+            "pil2M_stats1_compute_histogram": {
+              "source": "PV:XF:12ID2-ES{Pilatus:Det-2M}Stats1:ComputeHistogram_RBV",
+              "dtype": "string",
+              "shape": [],
+              "units": null,
+              "lower_ctrl_limit": null,
+              "upper_ctrl_limit": null,
+              "enum_strs": [
+                "No",
+                "Yes"
+              ],
+              "dtype_numpy": "<U0"
+            },
+            "pil2M_stats1_compute_profiles": {
+              "source": "PV:XF:12ID2-ES{Pilatus:Det-2M}Stats1:ComputeProfiles_RBV",
+              "dtype": "string",
+              "shape": [],
+              "units": null,
+              "lower_ctrl_limit": null,
+              "upper_ctrl_limit": null,
+              "enum_strs": [
+                "No",
+                "Yes"
+              ],
+              "dtype_numpy": "<U0"
+            },
+            "pil2M_stats1_compute_statistics": {
+              "source": "PV:XF:12ID2-ES{Pilatus:Det-2M}Stats1:ComputeStatistics_RBV",
+              "dtype": "string",
+              "shape": [],
+              "units": null,
+              "lower_ctrl_limit": null,
+              "upper_ctrl_limit": null,
+              "enum_strs": [
+                "No",
+                "Yes"
+              ],
+              "dtype_numpy": "<U0"
+            },
+            "pil2M_stats1_hist_max": {
+              "source": "PV:XF:12ID2-ES{Pilatus:Det-2M}Stats1:HistMax_RBV",
+              "dtype": "number",
+              "shape": [],
+              "units": "",
+              "lower_ctrl_limit": 0.0,
+              "upper_ctrl_limit": 0.0,
+              "precision": 0,
+              "dtype_numpy": "<f8"
+            },
+            "pil2M_stats1_hist_min": {
+              "source": "PV:XF:12ID2-ES{Pilatus:Det-2M}Stats1:HistMin_RBV",
+              "dtype": "number",
+              "shape": [],
+              "units": "",
+              "lower_ctrl_limit": 0.0,
+              "upper_ctrl_limit": 0.0,
+              "precision": 0,
+              "dtype_numpy": "<f8"
+            },
+            "pil2M_stats1_hist_size": {
+              "source": "PV:XF:12ID2-ES{Pilatus:Det-2M}Stats1:HistSize_RBV",
+              "dtype": "integer",
+              "shape": [],
+              "units": "",
+              "lower_ctrl_limit": 0,
+              "upper_ctrl_limit": 0,
+              "dtype_numpy": "<i8"
+            },
+            "pil2M_stats1_ts_num_points": {
+              "source": "PV:XF:12ID2-ES{Pilatus:Det-2M}Stats1:TS:TSNumPoints",
+              "dtype": "integer",
+              "shape": [],
+              "units": "",
+              "lower_ctrl_limit": 1,
+              "upper_ctrl_limit": 100000000,
+              "dtype_numpy": "<i8"
+            }
+          }
+        }
+      },
+      "data_keys": {
+        "pil2M_cam_file_number": {
+          "source": "PV:XF:12ID2-ES{Pilatus:Det-2M}cam1:FileNumber_RBV",
+          "dtype": "integer",
+          "shape": [],
+          "units": "",
+          "lower_ctrl_limit": 0,
+          "upper_ctrl_limit": 0,
+          "object_name": "pil2M",
+          "dtype_numpy": "<i8"
+        },
+        "pil2M_image": {
+          "shape": [
+            1,
+            1679,
+            1475
+          ],
+          "source": "PV:XF:12ID2-ES{Pilatus:Det-2M}",
+          "dtype": "array",
+          "object_name": "pil2M",
+          "dtype_numpy": "<i4",
+          "external": "FILESTORE:"
+        },
+        "pil2M_stats1_total": {
+          "source": "PV:XF:12ID2-ES{Pilatus:Det-2M}Stats1:Total_RBV",
+          "dtype": "number",
+          "shape": [],
+          "units": "",
+          "lower_ctrl_limit": 0.0,
+          "upper_ctrl_limit": 0.0,
+          "precision": 0,
+          "object_name": "pil2M",
+          "dtype_numpy": "<f8"
+        }
+      },
+      "time": 1753406026.203771,
+      "uid": "c4eff3e7-fc5d-4dd7-a080-969cc1b1c498",
+      "hints": {
+        "pil2M": {
+          "fields": [
+            "pil2M_stats1_total"
+          ]
+        }
+      }
+    },
+    "data_sources": [],
+    "uri": "http://tiled-dev.nsls2.bnl.gov/api/v1/array/full/89d5dde9-a22c-4cc6-96c2-5e80c047b1d2/streams"
+  }
+}

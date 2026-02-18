@@ -22,9 +22,9 @@ Simulates however we are going to get images and sends them
 onto ZMQ, taking care of pydantic messages, serialization and msgpack
 """
 
-FRAME_WIDTH = 1475
+FRAME_WIDTH = 475
 FRAME_HEIGHT = 619
-DATA_TYPE = "float32"
+DATA_TYPE = "uint8"
 
 app = typer.Typer()
 
@@ -59,6 +59,7 @@ async def process_images(
             )
             print("event")
             await socket.send(msgpack.packb(event.model_dump()))
+            await asyncio.sleep(0.5)
         stop = SASStop(num_frames=frames)
         print("stop")
         await socket.send(msgpack.packb(stop.model_dump()))
@@ -76,7 +77,7 @@ def main(cycles: int = 10000, frames: int = 50, pause: float = 5):
         print(f"Cycles: {cycles}, Frames: {frames}, Pause: {pause}")
         context = zmq.asyncio.Context()
         socket = context.socket(zmq.PUB)
-        address = settings.tiled_poller.zmq_frame_publisher.address
+        address = settings.frame_listener_sim.zmq_frame_publisher.address
         print(f"Connecting to {address}")
         socket.bind(address)
         await process_images(socket, cycles, frames, pause)

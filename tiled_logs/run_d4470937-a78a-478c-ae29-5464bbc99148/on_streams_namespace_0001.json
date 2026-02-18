@@ -1,0 +1,18 @@
+{
+  "event_name": "on_streams_namespace",
+  "sequence": 1,
+  "timestamp": 1753405563.6272454,
+  "subscription_segments": [
+    "d4470937-a78a-478c-ae29-5464bbc99148"
+  ],
+  "callback_data": {
+    "sequence": 1,
+    "timestamp": "2025-07-25T01:06:03.518660",
+    "key": "streams",
+    "structure_family": "container",
+    "specs": [],
+    "metadata": {},
+    "data_sources": [],
+    "uri": "http://tiled-dev.nsls2.bnl.gov/api/v1/array/full/d4470937-a78a-478c-ae29-5464bbc99148"
+  }
+}

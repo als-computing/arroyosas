@@ -18,7 +18,7 @@ export default function Header({isExperimentRunning=false, showStatus=false, sta
             <div className="absolute top-0 right-0 mr-2 mt-2">
                 <p className="text-xs text-gray-300">Build:{buildNumber}</p>
             </div>
-            <h1 className="text-4xl text-sky-900 px-8">GISAXS Data Viewer</h1>
+            <h1 className="text-4xl text-sky-900 px-8">SAS Data Viewer</h1>
             <img src={illumine_logo} alt="illumine logo" className="h-8 w-auto"/>
             <img src={ml_logo} alt="ml exchange logo" className="h-8 w-auto"/>
             <img src={mwet_logo} alt="mwet logo" className="h-8 w-auto"/>
