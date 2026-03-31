@@ -1,0 +1,25 @@
+blocks:
+  - name: kse_pipeline
+    description: KSE operator pipeline
+
+    operator:
+      class: arroyosas.components.KSEOperator
+      kwargs:
+        zmq_broker_router_address: tcp://lse_broker:5555
+        zmq_broker_router_hwm: 100000
+
+    listeners:
+      - class: arroyosas.components.VizZMQListener
+        kwargs:
+          address: tcp://tiled_poller:5000
+
+    publishers:
+      - class: arroyosas.components.VizTiledProcessedPublisher
+        kwargs:
+          tiled_uri: https://tiled.nsls2.bnl.gov
+          tiled_api_key: !env TILED_LIVE_API_KEY
+          root_segments:
+            - smi
+            - sandbox
+            - viz
+            - tmp
