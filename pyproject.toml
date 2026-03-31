@@ -5,11 +5,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "arroyoSAS"
-version = "0.0.1"
+version = "0.1.0"
 description = "A package to perform computations and suggestions during a time-resolved GISAXS experiment."
 authors = [{ name = "Dylan McReynolds", email = "dmcreynolds@lbl.gov" }]
 dependencies = [
-    "arroyopy",
+    "arroyopy >= 0.3.0a4",
     "dynaconf",
     "python-dotenv",
     "pandas",
@@ -22,7 +22,6 @@ dependencies = [
     "typer",
     "websockets",
     "zarr",
-    "pyFAI",
     "transformers",
     "redis"]
 
@@ -32,7 +31,6 @@ workflow-viz = [
     "numpy<2.0.0",
     "pandas",
     "plotly-express",
-    "pyFAI==2023.9.0",
     "python-dotenv",
     "pyarrow>=14.0.1",
     "requests==2.26.0",
@@ -50,11 +48,12 @@ dev = [
 
 lse = [
     "torchvision==0.17.2",
-    "joblib"
+    "joblib",
+    "latent-space-explorer @ git+https://github.com/mlexchange/mlex_latent_explorer.git@main"
 ]
 
 all = [
-    "arroyopy",
+    "arroyopy >= 0.3.0a4",
     "bluesky",
     "dynaconf",
     "python-dotenv",
@@ -73,6 +72,7 @@ all = [
     "pandas",
     "python-dotenv",
     "pyarrow>=14.0.1",
+    "pyfai",
     "aiosqlite",
 
 ]
@@ -82,11 +82,23 @@ profile = "black"
 
 
 
-[tool.pixi.pypi-dependencies]
+[tool.pixi.workspace]
+name = "arroyosas"
+channels = ["conda-forge"]
+platforms = ["linux-64"]
 
+[tool.pixi.dependencies]
+# pyFAI from conda-forge avoids needing a C compiler
+python = "3.12.*"
+pyfai = ">=2024.1"
+
+[tool.pixi.pypi-dependencies]
+arroyosas = { path = ".", editable = true }
+arroyopy = { path = "../arroyopy", editable = true }
+
+[tool.pixi.tasks]
+lse_operator = "arroyo run block_configs/lse_operator_block.yaml"
 
 [tool.pixi.environments]
-# # default = { solve-group = "default" }
-dev = { features = ["dev"] }
-# # notebook = { features = ["notebook"], solve-group = "default" }
-# lse = { features = ["lse"]}
+default = { solve-group = "default,lse" }
+dev = { features = ["dev"], solve-group = "default" }

@@ -5,7 +5,6 @@ import os
 import numpy as np
 from arroyopy.operator import Operator
 from tiled.client import from_uri
-from tiled.client.base import BaseClient
 
 from ..redis import RedisConn
 from ..schemas import (
@@ -25,12 +24,10 @@ REDUCTION_CHANNEL = "scattering"
 
 
 class OneDReductionOperator(Operator):
-    def __init__(self, tiled_client: BaseClient, redis_conn: RedisConn):
+    def __init__(self, redis_conn: RedisConn):
         super().__init__()
-        self.tiled_client = tiled_client
         self.redis_conn = redis_conn
         self.current_scan_metadata = None
-        # self.mask = None
         self.mask = self.load_static_mask_file()
 
         asyncio.create_task(
@@ -122,13 +119,6 @@ class OneDReductionOperator(Operator):
                 logger.error("No reduction settings found")
                 return
             reduction_settings.pop("input_uri_data")
-            # mask_uri = reduction_settings.pop("input_uri_mask")
-            # image_container = get_nested_client(self.tiled_client, mask_uri)
-            # image = image_container
-            # mask = self.calculate_mask(reduction_settings)
-            # masked_image = image[0][0] + mask.T
-            # reduction_settings["masked_image"] = masked_image
-            # reduction_settings["masked_image"] = image
             reduction = pixel_roi_horizontal_cut(**reduction_settings)
             return reduction
         except Exception as e:
@@ -160,10 +150,21 @@ class OneDReductionOperator(Operator):
         masked_image = image * masked_float  # Multiply to set masked values to NaN
         return masked_image
 
+    async def start(self):
+        publisher_tasks = [
+            asyncio.create_task(p.start()) for p in self.publishers
+            if hasattr(p, "start")
+        ]
+        await asyncio.gather(super().start(), *publisher_tasks)
+
     @classmethod
     def from_settings(cls, settings) -> "OneDReductionOperator":
         redis_conn = RedisConn.from_settings(settings.redis)
-        tiled_client = from_uri(
-            settings.tiled.raw.uri, api_key=settings.tiled.raw.api_key
-        )
-        return cls(tiled_client, redis_conn)
+        return cls(redis_conn)
+
+
+def create_one_d_reduction_operator(
+    redis_host: str, redis_port: int
+) -> OneDReductionOperator:
+    redis_conn = RedisConn.create(redis_host, redis_port)
+    return OneDReductionOperator(redis_conn)

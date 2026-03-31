@@ -36,6 +36,7 @@ logger = logging.getLogger(__name__)
 
 
 class TiledTestframeListener(Listener):
+    """ Depcrecated now that tiled can watch for new files, but keeping as an example of how to write a tiled listener"""
     def __init__(self, tiled_array: ArrayClient):
         super().__init__()
         self.tiled_array = tiled_array
@@ -394,6 +395,17 @@ class TiledProcessedPublisher(Publisher):
         segments = settings.root_segments
         root_container = get_runs_container(client, segments)
         return cls(root_container)
+
+
+def create_tiled_processed_publisher(
+    uri: str, root_segments: list, api_key: str = None
+) -> TiledProcessedPublisher:
+    import os
+    if api_key is None:
+        api_key = os.environ.get("TILED_LIVE_API_KEY")
+    client = from_uri(uri, api_key=api_key)
+    root_container = get_runs_container(client, root_segments)
+    return TiledProcessedPublisher(root_container)
 
 
 def create_one_d_node(run_node: Container, message: SAS1DReduction) -> None:

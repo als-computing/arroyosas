@@ -259,6 +259,21 @@ class TiledClientListener(Listener):
         )
 
 
+def create_tiled_client_listener(
+    operator: Operator,
+    uri: str,
+    stream_name: str,
+    target: str = "img",
+    create_run_logs: bool = True,
+    log_dir: str = "tiled_logs",
+    api_key: str = None,
+) -> TiledClientListener:
+    if api_key is None:
+        api_key = os.environ.get("TILED_LIVE_API_KEY")
+    client = from_uri(uri, api_key=api_key)
+    return TiledClientListener(operator, client, stream_name, target, create_run_logs, log_dir)
+
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     # Example usage

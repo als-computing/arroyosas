@@ -2,11 +2,8 @@ import json
 import logging
 
 import redis.asyncio as redis
-from arroyosas.config import settings
-from arroyosas.log_utils import setup_logger
 
 logger = logging.getLogger(__name__)
-setup_logger(logger, log_level=settings.logging_level)
 
 
 class RedisConn:

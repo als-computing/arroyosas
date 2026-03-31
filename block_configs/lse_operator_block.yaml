@@ -1,0 +1,30 @@
+blocks:
+  - name: LSE Operator
+    description: 1D reduction operator - listens for raw frames from tiled reduces, publishes to websocket and tiled
+
+    operator:
+      class: arroyosas.one_d_reduction.operator.create_one_d_reduction_operator
+      kwargs:
+        redis_host: "kvrocks"
+        redis_port: 6666
+
+    listeners:
+      - class: arroyosas.tiled.tiled_websocket.create_tiled_websocket_listener
+        kwargs:
+          uri: "http://tiled:8000"
+          stream_name: "primary"
+          target: "img"
+      # api_key: falls back to TILED_LIVE_API_KEY env var
+
+    publishers:
+      - class: arroyosas.websockets.OneDWSPublisher
+        kwargs:
+          host: "0.0.0.0"
+          port: 8020
+      - class: arroyosas.tiled.tiled_poller.create_tiled_processed_publisher
+        kwargs:
+          uri: "http://tiled:8000"
+          root_segments:
+            - beamlines
+            - bl733
+          # api_key: falls back to TILED_LIVE_API_KEY env var

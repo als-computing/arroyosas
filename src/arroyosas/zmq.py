@@ -59,14 +59,18 @@ class ZMQFrameListener(Listener):
 
     @classmethod
     def from_settings(cls, settings: dict, operator: Operator) -> "ZMQFrameListener":
-        context = Context()
-        zmq_socket = context.socket(zmq.SUB)
-        zmq_socket.connect(settings.zmq_address)
-        zmq_socket.setsockopt_string(zmq.SUBSCRIBE, "")
-        zmq_socket.setsockopt(zmq.SNDHWM, 10000)  # Allow up to 10,000 messages
-        zmq_socket.setsockopt(zmq.RCVHWM, 10000)
-        logger.info(f"##### Listening for frames on {settings.zmq_address}")
-        return cls(operator, zmq_socket)
+        return cls(operator, settings.zmq_address)
+
+
+def create_zmq_frame_listener(operator: Operator, zmq_address: str) -> ZMQFrameListener:
+    context = Context()
+    zmq_socket = context.socket(zmq.SUB)
+    zmq_socket.connect(zmq_address)
+    zmq_socket.setsockopt_string(zmq.SUBSCRIBE, "")
+    zmq_socket.setsockopt(zmq.SNDHWM, 10000)
+    zmq_socket.setsockopt(zmq.RCVHWM, 10000)
+    logger.info(f"##### Listening for frames on {zmq_address}")
+    return ZMQFrameListener(operator, zmq_socket)
 
 
 class ZMQFramePublisher(Publisher):
