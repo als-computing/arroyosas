@@ -32,7 +32,7 @@ services:
       gisax_net1:
 
   lse_operator:
-    command: python -m arroyogisaxs.app.kse_operator_cli
+    command: arroyo run /app/pipelines/lse_operator.yaml  # CHANGED
     build:
       context: .
     restart: unless-stopped
@@ -44,7 +44,7 @@ services:
     networks:
       gisax_net1:
   viz_operator:
-    command: python -m arroyosas.app.viz_operator_cli
+    command: arroyo run /app/pipelines/viz_pipeline.yaml  # CHANGED
     build:
       context: .
     restart: unless-stopped
@@ -69,7 +69,7 @@ services:
       gisax_net1:
 
   tiled_poller:
-    command: python -m debugpy --listen 0.0.0.0:5678 --wait-for-client -m arroyosas.app.tiled_poller_cli
+    command: arroyo run /app/pipelines/tiled_poller.yaml  # CHANGED
     build:
       context: .
       dockerfile: Dockerfile
