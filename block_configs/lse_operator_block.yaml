@@ -1,7 +1,6 @@
 blocks:
   - name: LSE Operator
-    description: 1D reduction operator - listens for raw frames from tiled reduces, publishes to websocket and tiled
-
+    description: 2D latent space operator for SAS Data
     operator:
       class: arrosas.le.build_lse_operator
 
