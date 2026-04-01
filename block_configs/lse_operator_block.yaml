@@ -8,11 +8,10 @@ blocks:
         redis_port: 6666
 
     listeners:
-      - class: arroyosas.tiled.tiled_websocket.create_tiled_websocket_listener
+      - class: arroyosas.tiled.tiled_websocket_bl733.create_tiled_websocket_listener
         kwargs:
           uri: "https://tiled-staging.computing.als.lbl.gov"
-          stream_name: "beamlines"
-          target: "img"
+          sub_path: "beamlines/bl733/dylan_test"
       # api_key: falls back to TILED_LIVE_API_KEY env var
 
     publishers:
