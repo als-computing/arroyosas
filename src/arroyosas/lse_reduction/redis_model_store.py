@@ -1,0 +1,342 @@
+import json
+import logging
+import os
+import threading
+import time
+
+import redis
+
+logger = logging.getLogger(__name__)
+
+class RedisModelStore:
+    """
+    Redis integration for model selections that supports both:
+    1. Key-Value Store: For storing and retrieving model selections
+    2. Pub/Sub: For real-time notification of model changes
+    
+    Models are stored in "name:version" format (e.g., "model_v1:3")
+    """
+    
+    # Redis Key Constants
+    KEY_AUTOENCODER_MODEL = "selected_mlflow_model"
+    KEY_DIMRED_MODEL = "selected_dim_reduction_model"
+    KEY_EXPERIMENT_NAME = "experiment_name"  # NEW: Add this constant
+    
+    # Redis Channel Constants
+    CHANNEL_MODEL_UPDATES = "model_updates"
+    
+    def __init__(
+        self, 
+        host: str = None, 
+        port: int = None, 
+        password: str = None,
+        decode_responses: bool = True
+    ):
+        """Initialize Redis client for key-value operations"""
+        self.host = host or os.getenv("REDIS_HOST", "kvrocks")
+        self.port = port or int(os.getenv("REDIS_PORT", 6666))
+
+        
+        # Initialize Redis client
+        try:
+            self.redis_client = redis.Redis(
+                host=self.host, 
+                port=self.port,
+                decode_responses=decode_responses
+            )
+            logger.info(f"Connected to Redis at {self.host}:{self.port}")
+        except Exception as e:
+            self.redis_client = None
+            logger.warning(f"Could not connect to Redis: {e}")
+            
+    # NEW: Add these methods after the existing model methods
+    def store_experiment_name(self, experiment_name: str) -> bool:
+        """
+        Store experiment name in Redis
+        
+        Args:
+            experiment_name: Name of the experiment (can be empty string to clear)
+            
+        Returns:
+            bool: Success status
+        """
+        if self.redis_client is None:
+            logger.warning("Redis client not available")
+            return False
+        
+        try:
+            logger.info(f"Storing experiment name: {experiment_name}")
+            self.redis_client.set(self.KEY_EXPERIMENT_NAME, experiment_name)
+            
+            # NEW: Add this line to publish the experiment name update
+            self.publish_experiment_update(experiment_name)
+            
+            return True
+        except Exception as e:
+            logger.error(f"Error storing experiment name in Redis: {e}")
+            return False
+    
+    def get_experiment_name(self) -> str:
+        """
+        Get experiment name from Redis
+        
+        Returns:
+            str: Experiment name or None if not set
+        """
+        if self.redis_client is None:
+            logger.warning("Redis client not available")
+            return None
+        
+        try:
+            experiment_name = self.redis_client.get(self.KEY_EXPERIMENT_NAME)
+            logger.debug(f"Retrieved experiment name: {experiment_name}")
+            return experiment_name
+        except Exception as e:
+            logger.error(f"Error retrieving experiment name from Redis: {e}")
+            return None
+    
+    # NEW: Add this new method
+    def publish_experiment_update(self, experiment_name: str) -> bool:
+        """
+        Publish an experiment name update notification to Redis
+        
+        Args:
+            experiment_name: Name of the experiment
+            
+        Returns:
+            bool: Success status
+        """
+        if self.redis_client is None:
+            logger.warning("Redis client not available for publishing experiment update")
+            return False
+        
+        try:
+            # Create message payload for experiment name
+            message = {
+                "update_type": "experiment_name",  # Different from model updates
+                "experiment_name": experiment_name,
+                "timestamp": time.time()
+            }
+            
+            # Publish to Redis channel
+            message_json = json.dumps(message)
+            result = self.redis_client.publish(self.CHANNEL_MODEL_UPDATES, message_json)
+            logger.info(f"Published experiment name update: {experiment_name}, received by {result} subscribers")
+            return True
+        except Exception as e:
+            logger.error(f"Error publishing experiment name update to Redis: {e}")
+            return False
+    
+    # =====================================================================
+    # Key-Value Store Methods for Model Selection Storage
+    # =====================================================================
+    
+    def store_autoencoder_model(self, model_identifier: str) -> bool:
+        """
+        Store autoencoder model identifier in Redis
+        
+        Args:
+            model_identifier: Model identifier in "name:version" format (e.g., "model_v1:3")
+                            or just "name" for backward compatibility
+        """
+        if self.redis_client is None:
+            logger.warning("Redis client not available")
+            return False
+        
+        try:
+            logger.info(f"Storing autoencoder model: {model_identifier}")
+            self.redis_client.set(self.KEY_AUTOENCODER_MODEL, model_identifier)
+            
+            # Parse model identifier for pub/sub notification
+            # The publish_model_update expects the full identifier
+            self.publish_model_update("autoencoder", model_identifier)
+            
+            return True
+        except Exception as e:
+            logger.error(f"Error storing autoencoder model in Redis: {e}")
+            return False
+    
+    def store_dimred_model(self, model_identifier: str) -> bool:
+        """
+        Store dimension reduction model identifier in Redis
+        
+        Args:
+            model_identifier: Model identifier in "name:version" format (e.g., "umap_v1:2")
+                            or just "name" for backward compatibility
+        """
+        if self.redis_client is None:
+            logger.warning("Redis client not available")
+            return False
+        
+        try:
+            logger.info(f"Storing dimension reduction model: {model_identifier}")
+            self.redis_client.set(self.KEY_DIMRED_MODEL, model_identifier)
+            
+            # Parse model identifier for pub/sub notification
+            self.publish_model_update("dimred", model_identifier)
+            
+            return True
+        except Exception as e:
+            logger.error(f"Error storing dimension reduction model in Redis: {e}")
+            return False
+    
+    def get_autoencoder_model(self) -> str:
+        """
+        Get autoencoder model identifier from Redis
+        
+        Returns:
+            Model identifier in "name:version" format or just "name"
+        """
+        if self.redis_client is None:
+            logger.warning("Redis client not available")
+            return None
+        
+        try:
+            model_identifier = self.redis_client.get(self.KEY_AUTOENCODER_MODEL)
+            logger.info(f"Retrieved autoencoder model: {model_identifier}")
+            return model_identifier
+        except Exception as e:
+            logger.error(f"Error retrieving autoencoder model from Redis: {e}")
+            return None
+    
+    def get_dimred_model(self) -> str:
+        """
+        Get dimension reduction model identifier from Redis
+        
+        Returns:
+            Model identifier in "name:version" format or just "name"
+        """
+        if self.redis_client is None:
+            logger.warning("Redis client not available")
+            return None
+        
+        try:
+            model_identifier = self.redis_client.get(self.KEY_DIMRED_MODEL)
+            logger.info(f"Retrieved dimension reduction model: {model_identifier}")
+            return model_identifier
+        except Exception as e:
+            logger.error(f"Error retrieving dimension reduction model from Redis: {e}")
+            return None
+    
+    # =====================================================================
+    # Pub/Sub Methods for Real-time Model Updates
+    # =====================================================================
+    
+    def publish_model_update(self, model_type: str, model_identifier: str) -> bool:
+        """
+        Publish a model update notification to Redis
+        
+        Args:
+            model_type: Type of model ('autoencoder' or 'dimred')
+            model_identifier: Full model identifier in "name:version" format
+            
+        Returns:
+            bool: Success status
+        """
+        if self.redis_client is None:
+            logger.warning("Redis client not available for publishing model update")
+            return False
+        
+        try:
+            # Create message payload with full identifier
+            message = {
+                "model_type": model_type,
+                "model_name": model_identifier,  # This now contains "name:version"
+                "timestamp": time.time()
+            }
+            
+            # Publish to Redis channel
+            message_json = json.dumps(message)
+            result = self.redis_client.publish(self.CHANNEL_MODEL_UPDATES, message_json)
+            logger.info(f"Published model update: {message}, received by {result} subscribers")
+            return True
+        except Exception as e:
+            logger.error(f"Error publishing model update to Redis: {e}")
+            return False
+    
+    def subscribe_to_model_updates(self, callback):
+        """
+        Subscribe to model update notifications from Redis
+        
+        Args:
+            callback: Function to call when a model update is received
+        """
+        if self.redis_client is None:
+            logger.warning("Redis client not available for subscribing to model updates")
+            return
+        
+        # Create a new thread for listening to Redis Pub/Sub
+        def listener_thread():
+            while True:
+                try:
+                    # Create a new Redis connection for Pub/Sub
+                    redis_client = redis.Redis(
+                        host=self.host, 
+                        port=self.port,
+                        decode_responses=True
+                    )
+                    pubsub = redis_client.pubsub()
+                    pubsub.subscribe(self.CHANNEL_MODEL_UPDATES)
+                    logger.info(f"Subscribed to channel: {self.CHANNEL_MODEL_UPDATES}")
+                    
+                    # Listen for messages
+                    for message in pubsub.listen():
+                        if message["type"] == "message":
+                            try:
+                                data = message.get("data")
+                                if isinstance(data, str):
+                                    payload = json.loads(data)
+                                    logger.debug(f"Received model update: {payload}")
+                                    callback(payload)
+                            except json.JSONDecodeError:
+                                logger.warning(f"Received invalid JSON in model update: {message}")
+                            except Exception as e:
+                                logger.error(f"Error processing model update: {e}")
+                                # Continue processing other messages even if one fails
+                
+                except (redis.exceptions.ConnectionError, redis.exceptions.TimeoutError) as e:
+                    logger.warning(f"Redis connection error in listener: {e}. Retrying in 5 seconds...")
+                    import time
+                    time.sleep(5)
+                    
+                except Exception as e:
+                    logger.error(f"Unexpected error in model update listener: {e}")
+                    # For unexpected errors, wait a bit longer before retrying
+                    time.sleep(10)
+                    # Don't break out of the loop - keep trying to reconnect
+        
+        # Start the listener thread
+        thread = threading.Thread(target=listener_thread, daemon=True)
+        thread.start()
+        logger.info("Started model update listener thread")
+
+    def get_model_loading_state(self):
+        """
+        Get the current model loading state from Redis
+        
+        Returns:
+            dict: Dictionary with is_loading_model (bool) and loading_model_type (str or None)
+        """
+        if self.redis_client is None:
+            logger.warning("Redis client not available")
+            return {"is_loading_model": False, "loading_model_type": None}
+        
+        try:
+            # Get values directly from Redis
+            is_loading_str = self.redis_client.get("model_loading_state")
+            loading_type = self.redis_client.get("loading_model_type")
+            
+            # Convert is_loading to boolean - compare with string "True"
+            is_loading = str(is_loading_str) == "True"
+            
+            # Empty loading_type becomes None
+            if not loading_type:
+                loading_type = None
+            
+            return {
+                "is_loading_model": is_loading,
+                "loading_model_type": loading_type
+            }
+        except Exception as e:
+            logger.error(f"Error retrieving model loading state from Redis: {e}")
+            return {"is_loading_model": False, "loading_model_type": None}

@@ -46,30 +46,30 @@ services:
     networks:
       gisax_net1:
   
-  viz_operator:
-    command: python -m arroyosas.app.viz_operator_cli
-    build:
-      context: .
-    restart: unless-stopped
-    ports:
-      - "8021:8021"
-    volumes:
-      - .:/app:Z
-      - ./settings.yaml:/app/settings.yaml:Z
-    networks:
-      gisax_net1:
+  # viz_operator:
+  #   command: python -m arroyosas.app.viz_operator_cli
+  #   build:
+  #     context: .
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8021:8021"
+  #   volumes:
+  #     - .:/app:Z
+  #     - ./settings.yaml:/app/settings.yaml:Z
+  #   networks:
+  #     gisax_net1:
 
-  frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile_frontend
-    ports:
-      - "8080:80"
-    restart: unless-stopped
-    volumes:
-      - .:/app:Z
-    networks:
-      gisax_net1:
+  # frontend:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile_frontend
+  #   ports:
+  #     - "8080:80"
+  #   restart: unless-stopped
+  #   volumes:
+  #     - .:/app:Z
+  #   networks:
+  #     gisax_net1:
 
 
   kvrocks:

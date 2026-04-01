@@ -8,7 +8,6 @@ from typing import Any, Dict
 
 # import numpy as np
 from arroyopy.listener import Listener
-from arroyopy.operator import Operator
 from tiled.client import from_uri
 from tiled.client.base import BaseClient
 from tiled.client.stream import Subscription
@@ -21,7 +20,6 @@ from arroyosas.schemas import (  # SASStop,; SerializableNumpyArrayModel,
 
 logger = logging.getLogger(__name__)
 
-
 class TiledClientListener(Listener):
     """
     A listener that subscribes to Tiled events and processes them
@@ -33,14 +31,12 @@ class TiledClientListener(Listener):
 
     def __init__(
         self,
-        operator: Operator,
         tiled_client: BaseClient,
         stream_name: str,
         target: str = "img",
         create_run_logs: bool = True,
         log_dir: str = "tiled_logs",
     ):
-        self.operator = operator
         self.tiled_client = tiled_client
         self.stream_name = stream_name
         self.target = target
@@ -168,7 +164,7 @@ class TiledClientListener(Listener):
         await super().stop()
 
     def send_to_operator(self, message: SASMessage) -> None:
-        asyncio.run(self.operator.process(message))
+        asyncio.run(self.publish(message))
 
     def publish_start(self, data: Dict[str, Any]) -> None:
         start = SASStart(
@@ -235,34 +231,11 @@ class TiledClientListener(Listener):
         except Exception as e:
             logger.error(f"Failed to log event {event_name}: {e}")
 
-    @classmethod
-    def from_settings(cls, settings: Any, op: Operator) -> "TiledClientListener":
-        """Create a TiledClientListener from settings."""
-        client = from_uri(
-            settings.uri,
-            api_key=settings.api_key,
-        )
-        # for key in client.context.whoami()['api_keys']:
-        #     client.context.revoke_api_key(key['first_eight'])
-        logger.info(f"#### Listening for runs at {settings.base_segments}")
-        # logger.info(f"#### Frames segments: {settings.frames_segments}")
 
-        # Create log directory if specified in settings
-        log_dir = getattr(settings, "log_dir", "tiled_logs")
-
-        return cls(
-            op,
-            client,
-            settings.stream_name,
-            settings.target,
-            log_dir,
-        )
-
-
-def create_tiled_client_listener(
-    operator: Operator,
+def create_tiled_websocket_listener(
     uri: str,
     stream_name: str,
+    operator = None,
     target: str = "img",
     create_run_logs: bool = True,
     log_dir: str = "tiled_logs",
@@ -271,38 +244,4 @@ def create_tiled_client_listener(
     if api_key is None:
         api_key = os.environ.get("TILED_LIVE_API_KEY")
     client = from_uri(uri, api_key=api_key)
-    return TiledClientListener(operator, client, stream_name, target, create_run_logs, log_dir)
-
-
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-    # Example usage
-    settings = {
-        # "uri": "http://localhost:8000",
-        "uri": "https://tiled-dev.nsls2.bnl.gov/",
-        "api_key": None,  # Replace with actual API key if needed
-        "base_segments": [],
-        # "frames_segments": ["primary", "data"],
-        "stream_name": "primary",
-        "target": "pil2M_image",
-        "log_dir": "tiled_event_logs",  # Directory for JSON logs
-    }
-
-    class Settings:
-        def __init__(self, **kwargs):
-            self.__dict__.update(kwargs)
-
-    settings = Settings(**settings)
-
-    class NullOperator(Operator):
-        async def process(self, message: SASMessage) -> None:
-            # Dummy process method for demonstration
-            logger.info(f"Processing message: {message}")
-
-    n_operator = NullOperator()  # Replace with actual operator instance
-    listener = TiledClientListener.from_settings(settings, n_operator)
-
-    asyncio.run(listener.start())
-
-    while True:
-        time.sleep(5)  # Keep the script running
+    return TiledClientListener(client, stream_name, target, create_run_logs, log_dir)

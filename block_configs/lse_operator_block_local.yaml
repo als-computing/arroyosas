@@ -10,8 +10,8 @@ blocks:
     listeners:
       - class: arroyosas.tiled.tiled_websocket.create_tiled_websocket_listener
         kwargs:
-          uri: "https://tiled-staging.computing.als.lbl.gov"
-          stream_name: "beamlines"
+          uri: "http://127.0.0.1:8000"
+          stream_name: "primary"
           target: "img"
       # api_key: falls back to TILED_LIVE_API_KEY env var
 
@@ -22,4 +22,4 @@ blocks:
           port: 8020
       - class: arroyosas.lse_reduction.tiled_results_publisher.create_tiled_results_publisher
         kwargs:
-          tiled_uri: "https://tiled-staging.computing.als.lbl.gov"
+          tiled_uri: "http://127.0.0.1:8000"
