@@ -22,12 +22,13 @@ services:
     networks:
       gisax_net1:
   beamline_sim:
-    command: python -m arroyosas.app.tiled_poller_sim_cli
+    command: python -m arroyosas.app.tiled_event_sim_cli /app/tiled_event_logs
     image: ghcr.io/als-computing/arroyosas:main
     restart: unless-stopped
     volumes:
       - .:/app:Z
-      - ./settings.yaml:/app/settings.yaml:Z
+      - ./settings.yaml:/app/settings.yaml:z
+      - ./tiled_event_logs/:/app/tiled_event_logs:z
     networks:
       gisax_net1:
 
