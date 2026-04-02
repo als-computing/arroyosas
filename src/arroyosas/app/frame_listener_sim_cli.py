@@ -10,12 +10,7 @@ import zmq
 import zmq.asyncio
 
 from ..config import settings
-from ..schemas import (
-    RawFrameEvent,
-    SASStart,
-    SASStop,
-    SerializableNumpyArrayModel,
-)
+from ..schemas import RawFrameEvent, SASStart, SASStop, SerializableNumpyArrayModel
 
 """
 Simulates however we are going to get images and sends them
@@ -29,9 +24,7 @@ DATA_TYPE = "float32"
 app = typer.Typer()
 
 
-async def process_images(
-    socket: zmq.asyncio.Socket, cycles: int, frames: int, pause: float
-):
+async def process_images(socket: zmq.asyncio.Socket, cycles: int, frames: int, pause: float):
     for cycle_num in range(cycles):
         # Get current time formatted as YYYY-MM-DD HH:MM:SS
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")

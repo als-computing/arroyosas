@@ -18,14 +18,13 @@ class TiledIngestor:
         self.raw_tiled_root = raw_tiled_root
         self.path_to_raw_data = path_to_raw_data
 
-  
     def add_scan_tiled(self, scan_filepath: str) -> str:
         # gives a root path path, lie /raw_data/scan1/good.file, would give you /raw_data/scan1
         common_path = os.path.commonpath([self.path_to_raw_data, scan_filepath])
         if common_path is None:
             return None
 
-        relative_scan_filepath = os.path.relpath(scan_filepath, self.path_to_raw_data) 
+        relative_scan_filepath = os.path.relpath(scan_filepath, self.path_to_raw_data)
         scan_container, scan = os.path.split(relative_scan_filepath)
         scan_container_parts = os.path.normpath(scan_container).split(os.sep)
 
@@ -37,9 +36,7 @@ class TiledIngestor:
             if part in current_container_client:
                 current_container_client = current_container_client[part]
             else:
-                current_container_client = current_container_client.create_container(
-                    key=part
-                )
+                current_container_client = current_container_client.create_container(key=part)
         key = os.path.splitext(scan)[0]
 
         if key in current_container_client:
@@ -67,11 +64,7 @@ class TiledIngestor:
             data_sources=[
                 DataSource(
                     management=Management.external,
-                    mimetype=(
-                        "application/x-gb"
-                        if scan_filepath.endswith(".gb")
-                        else "application/x-edf"
-                    ),
+                    mimetype=("application/x-gb" if scan_filepath.endswith(".gb") else "application/x-edf"),
                     structure_family=StructureFamily.array,
                     structure=structure,
                     assets=[
@@ -87,7 +80,7 @@ class TiledIngestor:
             specs=[Spec("gb") if scan_filepath.endswith(".gb") else Spec("edf")],
         )
         return scan_client.uri
-    
+
 
 def parse_txt_accompanying_edf(filepath):
     """Pase a .txt file produced at ALS beamline 7.3.3 into a dictionary.

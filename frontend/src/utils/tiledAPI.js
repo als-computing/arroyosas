@@ -24,7 +24,7 @@ export const getSearchResults = async (searchPath, cb, mock = false) => {
         }
         // Detect if response is JSON or binary
         const contentType = response.headers.get("content-type");
-        
+
         if (contentType.includes("application/json")) {
             return await response.json(); // Parse JSON
         } else if (contentType.includes("application/octet-stream")) {

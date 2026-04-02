@@ -1,12 +1,11 @@
+import hashlib
 import logging
 import os
 import shutil
-import hashlib
-import tempfile  
+import tempfile
 
 import mlflow
 from mlflow.tracking import MlflowClient
-
 
 MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI")
 MLFLOW_TRACKING_USERNAME = os.getenv("MLFLOW_TRACKING_USERNAME", "")
@@ -19,20 +18,14 @@ logger = logging.getLogger("lse.mlflow_utils")
 
 class MLflowClient:
     """A wrapper class for MLflow client operations."""
-    
+
     # In-memory model cache (for quick access)
     _model_cache = {}
-    
-    def __init__(
-        self, 
-        tracking_uri=None,
-        username=None, 
-        password=None,
-        cache_dir=None
-    ):
+
+    def __init__(self, tracking_uri=None, username=None, password=None, cache_dir=None):
         """
         Initialize the MLflow client with connection parameters.
-        
+
         Args:
             tracking_uri: MLflow tracking server URI
             username: MLflow authentication username
@@ -43,54 +36,54 @@ class MLflowClient:
         self.username = username or os.getenv("MLFLOW_TRACKING_USERNAME", "")
         self.password = password or os.getenv("MLFLOW_TRACKING_PASSWORD", "")
         self.cache_dir = cache_dir or MLFLOW_CACHE_DIR
-        
+
         # Create cache directory if it doesn't exist
         os.makedirs(self.cache_dir, exist_ok=True)
-        
+
         # Set environment variables
-        os.environ['MLFLOW_TRACKING_USERNAME'] = self.username
-        os.environ['MLFLOW_TRACKING_PASSWORD'] = self.password
-        
+        os.environ["MLFLOW_TRACKING_USERNAME"] = self.username
+        os.environ["MLFLOW_TRACKING_PASSWORD"] = self.password
+
         # Set tracking URI
         mlflow.set_tracking_uri(self.tracking_uri)
-        
+
         # Create client
         self.client = MlflowClient()
 
     def check_model_compatibility(self, autoencoder_model, dim_reduction_model):
         """
         Check if autoencoder and dimension reduction models are compatible.
-        
+
         Models are compatible if autoencoder latent_dim matches dimension reduction input_dim.
-        
+
         Args:
             autoencoder_model (str): Autoencoder model name (or "name:version" format)
             dim_reduction_model (str): Dimension reduction model name (or "name:version" format)
-            
+
         Returns:
             bool: True if models are compatible, False otherwise
         """
         if not autoencoder_model or not dim_reduction_model:
             return False
-        
+
         # Check dimension compatibility
         try:
             # get_mlflow_params now handles "name:version" format automatically
             auto_params = self.get_mlflow_params(autoencoder_model)
             dimred_params = self.get_mlflow_params(dim_reduction_model)
-            
+
             auto_dim = int(auto_params.get("latent_dim", 0))
             dimred_dim = int(dimred_params.get("input_dim", 0))
-            
+
             return auto_dim > 0 and auto_dim == dimred_dim
         except Exception as e:
             logger.warning(f"Error checking dimensions: {e}")
             return False
-        
+
     def check_mlflow_ready(self):
         """
         Check if MLflow server is reachable by performing a lightweight API call.
-        
+
         Returns:
             bool: True if MLflow server is reachable, False otherwise
         """
@@ -107,11 +100,11 @@ class MLflowClient:
     def get_mlflow_params(self, mlflow_model_id, version=None):
         """
         Get MLflow model parameters for a specific version.
-        
+
         Args:
             mlflow_model_id: Model name or "name:version" format
             version: Specific version (optional, can be parsed from mlflow_model_id)
-        
+
         Returns:
             dict: Model parameters
         """
@@ -121,11 +114,8 @@ class MLflowClient:
                 mlflow_model_id, version = mlflow_model_id.split(":", 1)
             else:
                 version = "1"  # Default to version 1 for backward compatibility
-        
-        model_version_details = self.client.get_model_version(
-            name=mlflow_model_id,
-            version=str(version)
-        )
+
+        model_version_details = self.client.get_model_version(name=mlflow_model_id, version=str(version))
         run_id = model_version_details.run_id
 
         run_info = self.client.get_run(run_id)
@@ -196,42 +186,35 @@ class MLflowClient:
         except Exception as e:
             logger.warning(f"Error retrieving MLflow models: {e}")
             return [{"label": "Error loading models", "value": None}]
-        
+
     def get_model_versions(self, model_name):
         """
         Get all available versions for a specific model.
-        
+
         Args:
             model_name (str): Name of the model
-            
+
         Returns:
             list: List of version options sorted by version number (latest first)
         """
         try:
             versions = self.client.search_model_versions(f"name='{model_name}'")
-            
+
             if not versions:
                 return []
-            
+
             # Sort versions by version number (descending - latest first)
-            sorted_versions = sorted(
-                versions, 
-                key=lambda v: int(v.version), 
-                reverse=True
-            )
-            
+            sorted_versions = sorted(versions, key=lambda v: int(v.version), reverse=True)
+
             # Create dropdown options
-            version_options = [
-                {"label": f"Version {v.version}", "value": v.version}
-                for v in sorted_versions
-            ]
-            
+            version_options = [{"label": f"Version {v.version}", "value": v.version} for v in sorted_versions]
+
             return version_options
-            
+
         except Exception as e:
             logger.error(f"Error retrieving versions for model {model_name}: {e}")
             return []
-            
+
     def _get_cache_path(self, model_name, version=None):
         """Get the cache path for a model"""
         # Create a unique filename based on model name and version
@@ -247,39 +230,39 @@ class MLflowClient:
     def load_model(self, model_name, version=None):
         """
         Load a model from MLflow by name with disk caching
-        
+
         Args:
             model_name: Name of the model in MLflow
             version: Specific version to load (optional, defaults to latest)
-            
+
         Returns:
             The loaded model or None if loading fails
         """
         if model_name is None:
             logger.error("Cannot load model: model_name is None")
             return None
-        
+
         # Create a cache key that includes version if specified
         cache_key = f"{model_name}:{version}" if version else model_name
-        
+
         # Check in-memory cache first
         if cache_key in self._model_cache:
             logger.info(f"Using in-memory cached model: {cache_key}")
             return self._model_cache[cache_key]
-        
+
         try:
             # Get the specific version or latest version
             if version is None:
                 versions = self.client.search_model_versions(f"name='{model_name}'")
-                
+
                 if not versions:
                     logger.error(f"No versions found for model {model_name}")
                     return None
-                    
+
                 version = max([int(mv.version) for mv in versions])
-            
+
             model_uri = f"models:/{model_name}/{version}"
-            
+
             # Check disk cache
             cache_path = self._get_cache_path(model_name, version)
             if os.path.exists(cache_path):
@@ -291,50 +274,52 @@ class MLflowClient:
                     return model
                 except Exception as e:
                     logger.warning(f"Error loading model from cache: {e}")
-            
+
             # Create cache directory if it doesn't exist
-            os.makedirs(os.path.dirname(cache_path) if os.path.dirname(cache_path) else ".", exist_ok=True)
-            
+            os.makedirs(
+                os.path.dirname(cache_path) if os.path.dirname(cache_path) else ".",
+                exist_ok=True,
+            )
+
             logger.info(f"Downloading model {model_name}, version {version} from MLflow to cache")
-            
+
             try:
                 # Download the model directly to the cache location
                 download_path = mlflow.artifacts.download_artifacts(
-                    artifact_uri=f"models:/{model_name}/{version}",
-                    dst_path=cache_path
+                    artifact_uri=f"models:/{model_name}/{version}", dst_path=cache_path
                 )
                 logger.info(f"Downloaded model artifacts to: {download_path}")
-                
+
                 # Load the model from the cached location
                 model = mlflow.pyfunc.load_model(download_path)
                 logger.info(f"Successfully loaded model from cache: {cache_key}")
-                
+
                 # Store in memory cache
                 self._model_cache[cache_key] = model
-                
+
                 return model
             except Exception as e:
                 logger.warning(f"Error downloading artifacts: {e}")
-                
+
                 # Fallback: Load the model directly from MLflow
-                logger.info(f"Falling back to direct model loading from MLflow")
+                logger.info("Falling back to direct model loading from MLflow")
                 model = mlflow.pyfunc.load_model(model_uri)
                 logger.info(f"Successfully loaded model: {cache_key}")
-                
+
                 # Store in memory cache
                 self._model_cache[cache_key] = model
-                
+
                 return model
         except Exception as e:
             logger.error(f"Error loading model {cache_key}: {e}")
             return None
-    
+
     @classmethod
     def clear_memory_cache(cls):
         """Clear the in-memory model cache"""
         logger.info("Clearing in-memory model cache")
         cls._model_cache.clear()
-    
+
     def clear_disk_cache(self):
         """Clear the disk cache"""
         logger.info(f"Clearing disk cache at {self.cache_dir}")

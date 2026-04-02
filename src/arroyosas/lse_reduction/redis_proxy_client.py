@@ -1,6 +1,7 @@
 import json
-import httpx
 from typing import AsyncGenerator, Optional, Union
+
+import httpx
 
 
 class RedisHTTPClient:
@@ -9,7 +10,12 @@ class RedisHTTPClient:
     Methods are async: get, set, publish, subscribe (async generator), close.
     """
 
-    def __init__(self, base_url: str = "http://localhost:8000", token: Optional[str] = None, timeout: float = 10.0):
+    def __init__(
+        self,
+        base_url: str = "http://localhost:8000",
+        token: Optional[str] = None,
+        timeout: float = 10.0,
+    ):
         self.base_url = base_url.rstrip("/")
         self.token = token
         self.timeout = timeout
@@ -30,7 +36,14 @@ class RedisHTTPClient:
         r.raise_for_status()
         return r.json()
 
-    async def set(self, key: str, value, ttl: Optional[int] = None, nx: Optional[bool] = None, xx: Optional[bool] = None):
+    async def set(
+        self,
+        key: str,
+        value,
+        ttl: Optional[int] = None,
+        nx: Optional[bool] = None,
+        xx: Optional[bool] = None,
+    ):
         """POST /set"""
         payload = {"key": key, "value": value}
         if ttl is not None:

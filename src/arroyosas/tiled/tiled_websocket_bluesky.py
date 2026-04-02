@@ -20,6 +20,7 @@ from arroyosas.schemas import (  # SASStop,; SerializableNumpyArrayModel,
 
 logger = logging.getLogger(__name__)
 
+
 class TiledClientListener(Listener):
     """
     A listener that subscribes to Tiled events and processes them
@@ -45,9 +46,7 @@ class TiledClientListener(Listener):
             os.makedirs(log_dir, exist_ok=True)
         self.log_dir = log_dir
         self.current_run_dir = None
-        self.event_counters = defaultdict(
-            int
-        )  # Track sequence numbers for each event type
+        self.event_counters = defaultdict(int)  # Track sequence numbers for each event type
 
     def on_new_run(self, sub: Subscription, data: Dict[str, Any]):
         """
@@ -79,9 +78,7 @@ class TiledClientListener(Listener):
         if self.create_run_logs:
             self.log_message_to_json("on_streams_namespace", sub, data)
 
-        streams_sub = Subscription(
-            self.tiled_client.context, sub.segments + ["streams"], start=0
-        )
+        streams_sub = Subscription(self.tiled_client.context, sub.segments + ["streams"], start=0)
         streams_sub.add_callback(self.on_new_stream)
         streams_sub.start()
 
@@ -91,16 +88,12 @@ class TiledClientListener(Listener):
         """
         logger.debug(data) if logger.isEnabledFor(logging.DEBUG) else None
         stream_name = data["key"]
-        logger.info(f"new stream {stream_name}") if logger.isEnabledFor(
-            logging.INFO
-        ) else None
+        (logger.info(f"new stream {stream_name}") if logger.isEnabledFor(logging.INFO) else None)
 
         if self.create_run_logs:
             self.log_message_to_json("on_new_stream", sub, data)
 
-        stream_sub = Subscription(
-            self.tiled_client.context, sub.segments + [stream_name], start=0
-        )
+        stream_sub = Subscription(self.tiled_client.context, sub.segments + [stream_name], start=0)
         stream_sub.add_callback(self.on_node_in_stream)
         stream_sub.start()
 
@@ -121,23 +114,19 @@ class TiledClientListener(Listener):
             self.log_message_to_json("on_node_in_stream", sub, data)
 
         # Log what we're comparing for debugging
-        logger.info(
-            f"Checking key '{key}' against target '{self.target}'"
-        ) if logger.isEnabledFor(logging.INFO) else None
+        (logger.info(f"Checking key '{key}' against target '{self.target}'") if logger.isEnabledFor(logging.INFO) else None)
 
         if key != self.target:
-            logger.info(
-                f"Key '{key}' does not match target '{self.target}', skipping"
-            ) if logger.isEnabledFor(logging.INFO) else None
+            (
+                logger.info(f"Key '{key}' does not match target '{self.target}', skipping")
+                if logger.isEnabledFor(logging.INFO)
+                else None
+            )
             return
 
-        logger.info(
-            f"Key '{key}' matches target '{self.target}', proceeding"
-        ) if logger.isEnabledFor(logging.INFO) else None
+        (logger.info(f"Key '{key}' matches target '{self.target}', proceeding") if logger.isEnabledFor(logging.INFO) else None)
 
-        stream_sub = Subscription(
-            self.tiled_client.context, sub.segments + [key], start=0
-        )
+        stream_sub = Subscription(self.tiled_client.context, sub.segments + [key], start=0)
         # stream_sub.add_callback(print)
         stream_sub.add_callback(self.on_event)
         stream_sub.start()
@@ -195,9 +184,7 @@ class TiledClientListener(Listener):
         self.event_counters.clear()  # Reset counters for new run
         return run_folder
 
-    def log_message_to_json(
-        self, event_name: str, sub_data: Any, callback_data: Dict[str, Any]
-    ) -> None:
+    def log_message_to_json(self, event_name: str, sub_data: Any, callback_data: Dict[str, Any]) -> None:
         """Log event data to JSON file with sequence numbering"""
         if self.current_run_dir is None:
             return
@@ -215,9 +202,7 @@ class TiledClientListener(Listener):
             "event_name": event_name,
             "sequence": sequence,
             "timestamp": time.time(),
-            "subscription_segments": getattr(sub_data, "segments", None)
-            if hasattr(sub_data, "segments")
-            else None,
+            "subscription_segments": (getattr(sub_data, "segments", None) if hasattr(sub_data, "segments") else None),
             "callback_data": callback_data,
         }
 
@@ -225,9 +210,7 @@ class TiledClientListener(Listener):
         try:
             with open(filepath, "w") as f:
                 json.dump(log_data, f, indent=2, default=str)
-            logger.debug(
-                f"Logged {event_name} event to {filepath}"
-            ) if logger.isEnabledFor(logging.DEBUG) else None
+            (logger.debug(f"Logged {event_name} event to {filepath}") if logger.isEnabledFor(logging.DEBUG) else None)
         except Exception as e:
             logger.error(f"Failed to log event {event_name}: {e}")
 
@@ -235,7 +218,7 @@ class TiledClientListener(Listener):
 def create_tiled_websocket_listener(
     uri: str,
     stream_name: str,
-    operator = None,
+    operator=None,
     target: str = "img",
     create_run_logs: bool = True,
     log_dir: str = "tiled_logs",

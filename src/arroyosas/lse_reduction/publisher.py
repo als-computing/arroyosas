@@ -1,5 +1,4 @@
 import asyncio
-import json
 import logging
 from typing import Union
 
@@ -7,6 +6,7 @@ from typing import Union
 # import numpy as np
 import websockets
 from arroyopy.publisher import Publisher
+
 from arroyosas.schemas import SASStart, SASStop
 
 from .schemas import LatentSpaceEvent
@@ -25,7 +25,6 @@ class LSEWSResultPublisher(Publisher):
     current_start_message = None
 
     def __init__(self, host: str = "localhost", port: int = 8765, path="/lse_operator"):
-
         super().__init__()
         self.host = host
         self.port = port
@@ -46,9 +45,7 @@ class LSEWSResultPublisher(Publisher):
 
     async def publish(self, message: LatentSpaceEvent) -> None:
         if self.connected_clients:  # Only send if there are clients connected
-            asyncio.gather(
-                *(self.publish_ws(client, message) for client in self.connected_clients)
-            )
+            asyncio.gather(*(self.publish_ws(client, message) for client in self.connected_clients))
 
     async def publish_ws(
         self,
@@ -78,7 +75,7 @@ class LSEWSResultPublisher(Publisher):
 
     async def websocket_handler(self, websocket):
         logger.info(f"New connection from {websocket.remote_address}")
-        
+
         self.connected_clients.add(websocket)
         try:
             # Keep the connection open and do nothing until the client disconnects

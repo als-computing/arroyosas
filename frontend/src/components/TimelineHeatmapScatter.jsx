@@ -61,7 +61,7 @@ export default function TimelineHeatmapScatter ({arrayData=[], scatterData=[], d
             return <p>Waiting for data</p>
         }
     }
-    
+
     if (demo) {
         var sampleCumulativeData = [];
         const samples = 7;
@@ -87,7 +87,6 @@ export default function TimelineHeatmapScatter ({arrayData=[], scatterData=[], d
             </div>
         )
     }
-    
+
 }
 
-               

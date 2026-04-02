@@ -110,8 +110,8 @@ export default function InputSlider({
                     <div className="relative ">
                         <div className="absolute w-[0] h-4 top-1 bg-gray-400"></div>
                         <div className="absolute -translate-x-1/2 left-2 -y-translate-full -top-0">
-                            <input 
-                                type="number" 
+                            <input
+                                type="number"
                                 value={value}
                                 className="w-16 text-center text-xs appearance-none bg-transparent py-[1px] group-hover:border border-slate-400"
                                 onChange={handleChange}
@@ -134,15 +134,15 @@ export default function InputSlider({
             </div>
 
             {/** Optional Input Box on Right of Slider*/}
-            {showSideInput && 
+            {showSideInput &&
                 <div className="w-fit pl-2 text-gray-700 flex justify-center items-center">
-                    <input 
-                        type="number" 
+                    <input
+                        type="number"
                         value={value}
                         className="text-center text-md w-12 border appearance-none bg-white/50"
                         onChange={handleChange}
                     />
-                    <p className="pl-1">{units}</p> 
+                    <p className="pl-1">{units}</p>
                 </div>
             }
         </div>

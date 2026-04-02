@@ -45,7 +45,7 @@ services:
       - ./block_configs:/app/block_configs:Z
     networks:
       gisax_net1:
-  
+
   # viz_operator:
   #   command: python -m arroyosas.app.viz_operator_cli
   #   build:
@@ -85,4 +85,3 @@ services:
 networks:
   gisax_net1:
     driver: bridge
-

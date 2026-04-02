@@ -8,12 +8,7 @@ from arroyopy.operator import Operator
 from arroyopy.publisher import Publisher
 from zmq.asyncio import Context, Socket
 
-from .schemas import (
-    SASMessage,
-    RawFrameEvent,
-    SASStart,
-    SASStop,
-)
+from .schemas import RawFrameEvent, SASMessage, SASStart, SASStop
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +37,7 @@ class ZMQFrameListener(Listener):
                     # image = SerializableNumpyArrayModel.deserialize_array(
                     #     message["image"]
                     # )
-                   
+
                     message = RawFrameEvent(**message)
                 elif message_type == "stop":
                     logger.info(f"Received Stop {message}")
@@ -110,9 +105,7 @@ class ZMQBroker:
 
     """
 
-    def __init__(
-        self, zmq_dealer_address: str, zmq_router_address: str, router_hwm: int
-    ):
+    def __init__(self, zmq_dealer_address: str, zmq_router_address: str, router_hwm: int):
         self.zmq_dealer_address = zmq_dealer_address
         self.zmq_router_address = zmq_router_address
         self.router_hwm = router_hwm
@@ -131,6 +124,4 @@ class ZMQBroker:
 
     @classmethod
     def from_settings(cls, settings: dict) -> "ZMQBroker":
-        return cls(
-            settings.dealer_address, settings.router_address, settings.router_hwm
-        )
+        return cls(settings.dealer_address, settings.router_address, settings.router_hwm)

@@ -1,9 +1,6 @@
 import asyncio
-import json
 import logging
 import os
-import time
-from collections import defaultdict
 from typing import Any, Dict
 
 # import numpy as np
@@ -16,10 +13,11 @@ from arroyosas.schemas import (
     RawFrameEvent,
     SASMessage,
     SASStart,
-    SerializableNumpyArrayModel
+    SerializableNumpyArrayModel,
 )
 
 logger = logging.getLogger(__name__)
+
 
 class TiledClientListener(Listener):
     """
@@ -35,12 +33,11 @@ class TiledClientListener(Listener):
         operator,
         tiled_client: BaseClient,
         sub_path: str,
-
     ):
         self.tiled_client = tiled_client
         self.sub_path = sub_path
         super().__init__(operator)  # Operator will be set later when creating the listener
-    
+
     async def start(self) -> None:
         """Start the listener by calling _start method."""
         self._running = True
@@ -49,7 +46,6 @@ class TiledClientListener(Listener):
         await asyncio.to_thread(self._start)
         await self._stop_event.wait()
 
-
     def _start(self) -> None:
         try:
             """Subscribe to the socket at the provided base segments level"""
@@ -57,7 +53,11 @@ class TiledClientListener(Listener):
             catalog_sub = Subscription(node.context, node.path_parts)
             catalog_sub.add_callback(self.on_new_data_collection)
             catalog_sub.start()
-            logger.debug("TiledClientListener started and subscribed to base segments") if logger.isEnabledFor(logging.DEBUG) else None
+            (
+                logger.debug("TiledClientListener started and subscribed to base segments")
+                if logger.isEnabledFor(logging.DEBUG)
+                else None
+            )
         except Exception as e:
             logger.error(f"Error starting TiledClientListener: {e}")
 
@@ -68,8 +68,8 @@ class TiledClientListener(Listener):
         0 or more ArrayClients and maybe a Table or two.
         """
         try:
-            logger.info(f"New data collection {data}") if logger.isEnabledFor(logging.INFO) else None
-            
+            (logger.info(f"New data collection {data}") if logger.isEnabledFor(logging.INFO) else None)
+
             # # Subscribe to the run
             if data.get("key") is None:
                 # Does only happen once?
@@ -77,13 +77,11 @@ class TiledClientListener(Listener):
                 return
             run_sub = Subscription(self.tiled_client.context, sub.segments + [data["key"]])
             run_sub.add_callback(self.on_new_data_item)
-            # breakpoint()
             run_sub.start()
             # Publish start event
             self.publish_start(run_sub, data)
         except Exception as e:
             logger.exception(f"Error in on_new_data_collection: {e}")
-
 
     def on_new_data_item(self, sub, data):
         """
@@ -93,18 +91,15 @@ class TiledClientListener(Listener):
         try:
             logger.debug(data) if logger.isEnabledFor(logging.DEBUG) else None
             if data.get("key") is None:
-               # Does only happen once?
-               logger.warning("Received on_new_data_item event without 'key' in data, skipping")
-               return
+                # Does only happen once?
+                logger.warning("Received on_new_data_item event without 'key' in data, skipping")
+                return
             data_name = data["key"]
-            logger.info(f"new stream {data_name}") if logger.isEnabledFor(
-                logging.INFO
-            ) else None
+            (logger.info(f"new stream {data_name}") if logger.isEnabledFor(logging.INFO) else None)
 
             self.publish_event(sub, data)
         except Exception as e:
             logger.exception(f"Error in on_new_data_item: {e}")
-
 
     async def stop(self) -> None:
         """Stop the listener by calling _stop method."""
@@ -115,14 +110,13 @@ class TiledClientListener(Listener):
 
     def send_to_operator(self, message: SASMessage) -> None:
         try:
-            future = asyncio.run_coroutine_threadsafe(self.operator.publish(message), self._loop)
+            future = asyncio.run_coroutine_threadsafe(self.operator.notify(message), self._loop)
             future.result()
         except Exception as e:
             logger.error(f"Error sending message to operator: {e}")
 
-    def publish_start(self, sub: Subscription,data: Dict[str, Any]) -> None:
+    def publish_start(self, sub: Subscription, data: Dict[str, Any]) -> None:
         run_key = data["key"]
-        # breakpoint()
         run_node = self.tiled_client["/".join(sub.segments)]
         meta = run_node.metadata
         start = SASStart(
@@ -141,22 +135,19 @@ class TiledClientListener(Listener):
         """
         data_node = self.tiled_client["/".join(sub.segments + [data["key"]])]
         event = RawFrameEvent(
-            image=SerializableNumpyArrayModel(array=data_node[:]),  # Assuming the data node is an array-like object. Adjust as needed.
+            image=SerializableNumpyArrayModel(
+                array=data_node[:]
+            ),  # Assuming the data node is an array-like object. Adjust as needed.
             frame_number=data.get("sequence", 0),
             tiled_url="",  # Placeholder for actual URL if needed
         )
         self.send_to_operator(event)
 
-    def print_event(self, event_name: str, data: Dict[str, Any]) -> None:
-        """Print event information - placeholder method"""
-        print(f"Event: {event_name}, Data: {data}")
 
-
-   
 def create_tiled_websocket_listener(
     uri: str,
     sub_path: str,
-    operator = None,
+    operator=None,
     api_key: str = None,
 ) -> TiledClientListener:
     if api_key is None:

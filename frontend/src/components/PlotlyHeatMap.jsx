@@ -118,9 +118,9 @@ export default function PlotlyHeatMap({
                         title: yAxisTitle,
                         range: [-0.5, array.length - 0.5], // Dynamically adjust y-axis range
                         autorange: false,
-                        tickmode: showTicks ? 'linear' : '', 
-                        tick0: 0, 
-                        dtick: showTicks ? tickStep : 10000, 
+                        tickmode: showTicks ? 'linear' : '',
+                        tick0: 0,
+                        dtick: showTicks ? tickStep : 10000,
                         showticklabels: showTicks
                     },
                     autosize: false,
@@ -137,8 +137,8 @@ export default function PlotlyHeatMap({
                             {
                                 type: 'line',
                                 x0: Math.max(linecutData.x0, 0),
-                                x1: Math.min(linecutData.x1, array[0].length - 1), 
-                                y0: linecutData.y0, 
+                                x1: Math.min(linecutData.x1, array[0].length - 1),
+                                y0: linecutData.y0,
                                 y1: linecutData.y1,
                                 line: {
                                     color: 'red',

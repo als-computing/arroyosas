@@ -182,7 +182,7 @@ export const flip2DArray = (array) => {
 export  function generateEggData(size, maxVal=255, offset=2) {
     const center = size / offset; // Center of the Egg
     const data = [];
-  
+
     for (let y = 0; y < size; y++) {
       const row = [];
       for (let x = 0; x < size; x++) {
@@ -190,7 +190,7 @@ export  function generateEggData(size, maxVal=255, offset=2) {
         const dx = x - center;
         const dy = y - center;
         const distance = Math.sqrt(dx * dx + dy * dy);
-  
+
         // Egg-like function: exponential decay from center
         const intensity = maxVal * Math.exp(-distance * distance / (2 * (center / 2) ** 2));
         row.push(Math.round(intensity)); // Normalize to integer
@@ -218,7 +218,7 @@ export const normalizeArray = (arr, maxLimit) => {
 
     if (max === min) return arr; // Avoid divide by zero
 
-    return arr.map(row => row.map(value => 
+    return arr.map(row => row.map(value =>
         ((value - min) / (max - min)) * maxLimit
     ));
 };

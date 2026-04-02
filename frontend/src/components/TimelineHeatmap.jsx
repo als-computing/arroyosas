@@ -29,7 +29,7 @@ export default function TimelineHeatmap ({cumulativeArrayData=[], demo=false}) {
             </div>
         )
     }
-    
+
     if (demo) {
         var sampleCumulativeData = [];
         const samples = 7;
@@ -51,7 +51,6 @@ export default function TimelineHeatmap ({cumulativeArrayData=[], demo=false}) {
             </div>
         )
     }
-    
+
 }
 
-               

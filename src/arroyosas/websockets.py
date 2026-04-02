@@ -8,7 +8,7 @@ import numpy as np
 import websockets
 from arroyopy.publisher import Publisher
 
-from .schemas import SAS1DReduction, SASStart, SASStop, SerializableNumpyArrayModel
+from .schemas import SAS1DReduction, SASStart, SASStop
 
 logger = logging.getLogger(__name__)
 
@@ -42,9 +42,7 @@ class OneDWSPublisher(Publisher):
 
     async def publish(self, message: SAS1DReduction) -> None:
         if self.connected_clients:  # Only send if there are clients connected
-            asyncio.gather(
-                *(self.publish_ws(client, message) for client in self.connected_clients)
-            )
+            asyncio.gather(*(self.publish_ws(client, message) for client in self.connected_clients))
 
     async def publish_ws(
         self,
@@ -101,9 +99,7 @@ def convert_to_uint8(image: np.ndarray) -> bytes:
     log_stretched = np.log1p(image_normalized)  # log(1 + x) to handle near-zero values
 
     # Normalize the log-stretched image to [0, 1] again
-    log_stretched_normalized = (log_stretched - log_stretched.min()) / (
-        log_stretched.max() - log_stretched.min()
-    )
+    log_stretched_normalized = (log_stretched - log_stretched.min()) / (log_stretched.max() - log_stretched.min())
 
     # Convert to uint8 (range [0, 255])
     image_uint8 = (log_stretched_normalized * 255).astype(np.uint8)
@@ -137,12 +133,7 @@ async def test_client(publisher: OneDWSPublisher, num_frames: int = 10):
     import pandas as pd
     from arroyopy.schemas import DataFrameModel, NumpyArrayModel
 
-    from arroyosas.schemas import (
-        GISAXSImageInfo,
-        RawFrameEvent,
-        SASStart,
-        SASStop,
-    )
+    from arroyosas.schemas import GISAXSImageInfo, RawFrameEvent, SASStart, SASStop
 
     await asyncio.sleep(2)
     for y in range(100):
@@ -156,9 +147,7 @@ async def test_client(publisher: OneDWSPublisher, num_frames: int = 10):
 
             # Create a 1D sine wave pattern
             x = np.linspace(0, 2 * np.pi, 100)
-            one_d_reduction = pd.DataFrame(
-                {"q": x, "qy": np.sin(x + frame_number * 0.1)}
-            )
+            one_d_reduction = pd.DataFrame({"q": x, "qy": np.sin(x + frame_number * 0.1)})
             image_info = {
                 "frame_number": frame_number,
                 "width": image.shape[1],

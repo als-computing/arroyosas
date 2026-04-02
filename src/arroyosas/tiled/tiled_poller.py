@@ -36,7 +36,8 @@ logger = logging.getLogger(__name__)
 
 
 class TiledTestframeListener(Listener):
-    """ Depcrecated now that tiled can watch for new files, but keeping as an example of how to write a tiled listener"""
+    """Depcrecated now that tiled can watch for new files, but keeping as an example of how to write a tiled listener"""
+
     def __init__(self, tiled_array: ArrayClient):
         super().__init__()
         self.tiled_array = tiled_array
@@ -127,9 +128,7 @@ class TiledPollingRedisListener(Listener):
                 except (json.JSONDecodeError, ValidationError) as e:
                     print(f"[Error parsing message]: {e}")
 
-                relative_tiled_path = msg.file_path.split(self.beamline_runs_tiled.uri)[
-                    1
-                ]
+                relative_tiled_path = msg.file_path.split(self.beamline_runs_tiled.uri)[1]
                 array = self.beamline_runs_tiled[relative_tiled_path]
                 image = SerializableNumpyArrayModel(array=array.read())
                 raw_event = RawFrameEvent(
@@ -207,17 +206,11 @@ class TiledPollingFrameListener(Listener):
                     logger.info(
                         f"Most Recent run: {current_run.metadata['start']['scan_id']} {current_run.metadata['start']['uid']}"
                     )
-                    if (
-                        last_processed_run
-                        and current_run.start["scan_id"]
-                        == last_processed_run.start["scan_id"]
-                    ):
+                    if last_processed_run and current_run.start["scan_id"] == last_processed_run.start["scan_id"]:
                         logger.debug("No new runs")
                         time.sleep(self.poll_pause_sec)
                         continue
-                logger.info(
-                    f"Processing: {current_run.metadata['start']['scan_id']} {current_run.metadata['start']['uid']}"
-                )
+                logger.info(f"Processing: {current_run.metadata['start']['scan_id']} {current_run.metadata['start']['uid']}")
                 data = current_run[tuple(self.tiled_frame_segments.to_list())]
                 start_message = SASStart(
                     width=data.shape[0],
@@ -244,9 +237,7 @@ class TiledPollingFrameListener(Listener):
                 frames_index = 1
                 if frames_array.shape[1] == 1:
                     frames_index = 0
-                unsents = unsent_frame_numbers(
-                    sent_frames, frames_array.shape[frames_index]
-                )
+                unsents = unsent_frame_numbers(sent_frames, frames_array.shape[frames_index])
                 logger.debug(f"Unsent frames: {unsents}")
                 for unsent_frame in unsents:
                     if frames_index == 1:
@@ -327,9 +318,7 @@ def unsent_frame_numbers(sent_frames: list, num_frames: int):
     if len(sent_frames) == 0:
         return list(range(num_frames))
     # Find the gaps in my_list
-    gaps = [
-        i for i in range(min(sent_frames), max(sent_frames) + 1) if i not in sent_frames
-    ]
+    gaps = [i for i in range(min(sent_frames), max(sent_frames) + 1) if i not in sent_frames]
 
     # Find numbers between new_number and the max of my_list
     extra_numbers = list(range(max(sent_frames) + 1, num_frames + 1))
@@ -350,9 +339,7 @@ class TiledProcessedPublisher(Publisher):
     async def publish(self, message: Union[SASStart | SAS1DReduction | LatentSpaceEvent | SASStop]) -> None:
         try:
             if isinstance(message, SASStart):
-                self.run_node = await asyncio.to_thread(
-                    get_run_container, self.root_container, message
-                )
+                self.run_node = await asyncio.to_thread(get_run_container, self.root_container, message)
                 return
             if self.run_node is None:
                 logger.error("No run node found. Probably started after start message.")
@@ -362,18 +349,14 @@ class TiledProcessedPublisher(Publisher):
 
             if isinstance(message, SAS1DReduction):
                 if self.one_d_array_node is None:
-                    one_d_array_node = await asyncio.to_thread(
-                        create_one_d_node, self.run_node, message
-                    )
+                    one_d_array_node = await asyncio.to_thread(create_one_d_node, self.run_node, message)
                     self.one_d_array_node = one_d_array_node
                 else:
                     await asyncio.to_thread(self.update_1d_nodes, message)
 
             elif isinstance(message, LatentSpaceEvent):  # Changed from 'if' to 'elif'
                 if self.dim_reduced_array_node is None:
-                    dim_reduced_array_node = await asyncio.to_thread(
-                        create_dim_reduction_node, self.run_node, message
-                    )
+                    dim_reduced_array_node = await asyncio.to_thread(create_dim_reduction_node, self.run_node, message)
                     self.dim_reduced_array_node = dim_reduced_array_node
                 else:
                     await asyncio.to_thread(self.update_ls_nodes, message)
@@ -397,10 +380,9 @@ class TiledProcessedPublisher(Publisher):
         return cls(root_container)
 
 
-def create_tiled_processed_publisher(
-    uri: str, root_segments: list, api_key: str = None
-) -> TiledProcessedPublisher:
+def create_tiled_processed_publisher(uri: str, root_segments: list, api_key: str = None) -> TiledProcessedPublisher:
     import os
+
     if api_key is None:
         api_key = os.environ.get("TILED_LIVE_API_KEY")
     client = from_uri(uri, api_key=api_key)
@@ -409,9 +391,7 @@ def create_tiled_processed_publisher(
 
 
 def create_one_d_node(run_node: Container, message: SAS1DReduction) -> None:
-    one_d_array_node = run_node.write_array(
-        message.curve.array[np.newaxis, :], key="one_d_reduction"
-    )
+    one_d_array_node = run_node.write_array(message.curve.array[np.newaxis, :], key="one_d_reduction")
     return one_d_array_node
 
 
@@ -466,9 +446,7 @@ def get_nested_client(client: BaseClient, path) -> BaseClient:
     return client
 
 
-def create_array_node(
-    run_container: Container, key: str, array: np.ndarray
-) -> ArrayClient:
+def create_array_node(run_container: Container, key: str, array: np.ndarray) -> ArrayClient:
     return run_container.write_array(array, key=key)
 
 

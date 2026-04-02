@@ -101,21 +101,21 @@ export default function HomeAlternate() {
               <Widget title='Most Recent' width='w-full' defaultHeight='h-1/2'>
                 <div className="flex w-full h-full pt-4">
                   <div className="w-1/2 h-full">
-                    <PlotlyHeatMap 
+                    <PlotlyHeatMap
                       array={currentArrayData}
-                      linecutData={linecutData} 
-                      flipArray={heatmapSettings.flipImg.value} 
-                      title='' 
-                      xAxisTitle='' 
-                      yAxisTitle='' 
-                      width='w-full' 
-                      fixPlotHeightToParent={true} 
-                      showTicks={heatmapSettings.showTicks.value} 
+                      linecutData={linecutData}
+                      flipArray={heatmapSettings.flipImg.value}
+                      title=''
+                      xAxisTitle=''
+                      yAxisTitle=''
+                      width='w-full'
+                      fixPlotHeightToParent={true}
+                      showTicks={heatmapSettings.showTicks.value}
                       tickStep={heatmapSettings.tickStep.value}
-                    />              
+                    />
                   </div>
                   <div className="w-1/2 h-full">
-                    <PlotlyScatterMultiple data={currentScatterPlot} title='All Plots' xAxisTitle='x' yAxisTitle='y'/>                  
+                    <PlotlyScatterMultiple data={currentScatterPlot} title='All Plots' xAxisTitle='x' yAxisTitle='y'/>
                   </div>
                 </div>
               </Widget>

@@ -2,7 +2,7 @@ blocks:
   - name: LSE Operator
     description: 2D latent space operator for SAS Data
     operator:
-      class: arroyosas.lse.build_lse_operator
+      class: arroyosas.lse_reduction.operator.build_lse_operator
       kwargs:
         redis_host: 127.0.0.1
         redis_port: 6666
