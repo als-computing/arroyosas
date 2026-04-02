@@ -1,16 +1,16 @@
 """Extra tests for arroyosas.tiled.tiled_poller covering uncovered branches."""
+
 import asyncio
-from unittest.mock import AsyncMock, MagicMock, call, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import numpy as np
 import pytest
 
 from arroyosas.schemas import (
+    LatentSpaceEvent,
     SAS1DReduction,
     SASStart,
-    SASStop,
     SerializableNumpyArrayModel,
-    LatentSpaceEvent,
 )
 from arroyosas.tiled.tiled_poller import (
     TiledPollingFrameListener,
@@ -18,12 +18,10 @@ from arroyosas.tiled.tiled_poller import (
     create_array_node,
     create_dim_reduction_node,
     create_one_d_node,
-    create_run_container,
     create_tiled_processed_publisher,
     get_nested_client,
     get_runs_container,
     patch_tiled_frame,
-    sub_container,
 )
 
 pytestmark = pytest.mark.asyncio
@@ -152,8 +150,9 @@ def test_create_tiled_processed_publisher():
     mock_client = MagicMock()
     mock_runs_container = MagicMock()
 
-    with patch("arroyosas.tiled.tiled_poller.from_uri", return_value=mock_client), patch(
-        "arroyosas.tiled.tiled_poller.get_runs_container", return_value=mock_runs_container
+    with (
+        patch("arroyosas.tiled.tiled_poller.from_uri", return_value=mock_client),
+        patch("arroyosas.tiled.tiled_poller.get_runs_container", return_value=mock_runs_container),
     ):
         segments = MagicMock()
         publisher = create_tiled_processed_publisher(
@@ -171,8 +170,9 @@ def test_create_tiled_processed_publisher_no_api_key(monkeypatch):
     mock_client = MagicMock()
     mock_runs_container = MagicMock()
 
-    with patch("arroyosas.tiled.tiled_poller.from_uri", return_value=mock_client), patch(
-        "arroyosas.tiled.tiled_poller.get_runs_container", return_value=mock_runs_container
+    with (
+        patch("arroyosas.tiled.tiled_poller.from_uri", return_value=mock_client),
+        patch("arroyosas.tiled.tiled_poller.get_runs_container", return_value=mock_runs_container),
     ):
         segments = MagicMock()
         publisher = create_tiled_processed_publisher(
@@ -284,9 +284,10 @@ def test_tiled_polling_frame_listener_single_run_exits():
     mock_frames.shape = (1, 5, 10, 10)  # frames_index=0 path (shape[1]==5 != 1)
     mock_frames.__getitem__ = MagicMock(return_value=np.zeros((10, 10), dtype=np.float32))
 
-    with patch("arroyosas.tiled.tiled_poller.sub_container", return_value=mock_frames), patch(
-        "arroyosas.tiled.tiled_poller.asyncio.run"
-    ) as mock_asyncio_run:
+    with (
+        patch("arroyosas.tiled.tiled_poller.sub_container", return_value=mock_frames),
+        patch("arroyosas.tiled.tiled_poller.asyncio.run") as mock_asyncio_run,
+    ):
         # With single_run set, it processes one run and breaks
         listener._start()
 

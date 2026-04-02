@@ -209,7 +209,11 @@ class LatentSpaceReducer(Reducer):
             def listen_for_updates():
                 """Listen for model updates in a separate thread"""
                 try:
-                    redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
+                    redis_client = redis.Redis(
+                        host=self.redis_model_store.host,
+                        port=self.redis_model_store.port,
+                        decode_responses=True,
+                    )
                     pubsub = redis_client.pubsub()
                     pubsub.subscribe("model_updates")
 

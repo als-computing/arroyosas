@@ -1,4 +1,5 @@
 """Tests for arroyosas.lse_reduction.base_model_store"""
+
 import pytest
 
 from arroyosas.lse_reduction.base_model_store import BaseModelStore

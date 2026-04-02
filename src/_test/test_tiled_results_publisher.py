@@ -1,8 +1,7 @@
 """Tests for arroyosas.lse_reduction.tiled_results_publisher (TiledResultsPublisher)"""
-from datetime import datetime
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import numpy as np
 import pandas as pd
 import pytest
 
@@ -263,9 +262,10 @@ class TestStartSync:
         prefix_container.__contains__ = MagicMock(return_value=True)
         prefix_container.__getitem__ = MagicMock(return_value=prefix_container)
 
-        with patch("arroyosas.lse_reduction.tiled_results_publisher.from_uri", return_value=mock_client), patch.object(
-            pub, "_setup_containers_sync"
-        ) as mock_setup:
+        with (
+            patch("arroyosas.lse_reduction.tiled_results_publisher.from_uri", return_value=mock_client),
+            patch.object(pub, "_setup_containers_sync") as mock_setup,
+        ):
             mock_client.__contains__ = MagicMock(return_value=True)
             mock_client.__getitem__ = MagicMock(return_value=prefix_container)
             pub.day_container = MagicMock()

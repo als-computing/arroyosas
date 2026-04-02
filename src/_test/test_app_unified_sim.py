@@ -1,9 +1,7 @@
 """Tests for arroyosas.app.unified_sim_cli (unified simulator)"""
-import asyncio
+
 import json
-import os
-from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import aiosqlite
 import pytest
@@ -54,9 +52,7 @@ class TestGetUrlsFromDb:
     async def test_get_urls_from_db(self, tmp_path):
         db_path = str(tmp_path / "test.db")
         async with aiosqlite.connect(db_path) as conn:
-            await conn.execute(
-                "CREATE TABLE vectors (id INTEGER PRIMARY KEY, tiled_url TEXT, feature_vector TEXT)"
-            )
+            await conn.execute("CREATE TABLE vectors (id INTEGER PRIMARY KEY, tiled_url TEXT, feature_vector TEXT)")
             await conn.execute("INSERT INTO vectors (tiled_url, feature_vector) VALUES (?, ?)", ("http://url1", "[]"))
             await conn.execute("INSERT INTO vectors (tiled_url, feature_vector) VALUES (?, ?)", ("http://url2", "[]"))
             await conn.commit()
@@ -67,13 +63,9 @@ class TestGetUrlsFromDb:
     async def test_get_urls_from_db_with_limit(self, tmp_path):
         db_path = str(tmp_path / "limit_test.db")
         async with aiosqlite.connect(db_path) as conn:
-            await conn.execute(
-                "CREATE TABLE vectors (id INTEGER PRIMARY KEY, tiled_url TEXT, feature_vector TEXT)"
-            )
+            await conn.execute("CREATE TABLE vectors (id INTEGER PRIMARY KEY, tiled_url TEXT, feature_vector TEXT)")
             for i in range(5):
-                await conn.execute(
-                    "INSERT INTO vectors (tiled_url, feature_vector) VALUES (?, ?)", (f"http://url{i}", "[]")
-                )
+                await conn.execute("INSERT INTO vectors (tiled_url, feature_vector) VALUES (?, ?)", (f"http://url{i}", "[]"))
             await conn.commit()
 
         results = await get_urls_from_db(db_path, limit=3)
@@ -82,9 +74,7 @@ class TestGetUrlsFromDb:
     async def test_get_urls_from_db_empty(self, tmp_path):
         db_path = str(tmp_path / "empty.db")
         async with aiosqlite.connect(db_path) as conn:
-            await conn.execute(
-                "CREATE TABLE vectors (id INTEGER PRIMARY KEY, tiled_url TEXT, feature_vector TEXT)"
-            )
+            await conn.execute("CREATE TABLE vectors (id INTEGER PRIMARY KEY, tiled_url TEXT, feature_vector TEXT)")
             await conn.commit()
 
         results = await get_urls_from_db(db_path)
@@ -178,12 +168,13 @@ class TestMainCli:
         from arroyosas.app.unified_sim_cli import app
 
         runner = CliRunner()
-        with patch("arroyosas.app.unified_sim_cli.asyncio.run") as mock_run, patch(
-            "arroyosas.app.unified_sim_cli.settings"
-        ) as mock_settings:
+        with (
+            patch("arroyosas.app.unified_sim_cli.asyncio.run") as mock_run,
+            patch("arroyosas.app.unified_sim_cli.settings") as mock_settings,
+        ):
             mock_settings.tiled_poller.zmq_frame_publisher.address = "tcp://localhost:5556"
             mock_run.return_value = None
-            result = runner.invoke(app, ["--mode", "direct"])
+            runner.invoke(app, ["--mode", "direct"])
             mock_run.assert_called_once()
 
     def test_main_db_replay_no_db(self, tmp_path):
@@ -192,12 +183,13 @@ class TestMainCli:
         from arroyosas.app.unified_sim_cli import app
 
         runner = CliRunner()
-        with patch("arroyosas.app.unified_sim_cli.asyncio.run") as mock_run, patch(
-            "arroyosas.app.unified_sim_cli.settings"
-        ) as mock_settings:
+        with (
+            patch("arroyosas.app.unified_sim_cli.asyncio.run") as mock_run,
+            patch("arroyosas.app.unified_sim_cli.settings") as mock_settings,
+        ):
             mock_settings.tiled_poller.zmq_frame_publisher.address = "tcp://localhost:5556"
             mock_run.return_value = None
-            result = runner.invoke(
+            runner.invoke(
                 app,
                 ["--mode", "db_replay", "--db-path", str(tmp_path / "missing.db")],
             )
@@ -209,12 +201,13 @@ class TestMainCli:
         from arroyosas.app.unified_sim_cli import app
 
         runner = CliRunner()
-        with patch("arroyosas.app.unified_sim_cli.asyncio.run") as mock_run, patch(
-            "arroyosas.app.unified_sim_cli.settings"
-        ) as mock_settings:
+        with (
+            patch("arroyosas.app.unified_sim_cli.asyncio.run") as mock_run,
+            patch("arroyosas.app.unified_sim_cli.settings") as mock_settings,
+        ):
             mock_settings.tiled_poller.zmq_frame_publisher.address = "tcp://localhost:5556"
             mock_run.return_value = None
-            result = runner.invoke(
+            runner.invoke(
                 app,
                 ["--mode", "local_tiled", "--url-file", str(tmp_path / "missing.json")],
             )
@@ -226,10 +219,11 @@ class TestMainCli:
         from arroyosas.app.unified_sim_cli import app
 
         runner = CliRunner()
-        with patch("arroyosas.app.unified_sim_cli.asyncio.run") as mock_run, patch(
-            "arroyosas.app.unified_sim_cli.settings"
-        ) as mock_settings:
+        with (
+            patch("arroyosas.app.unified_sim_cli.asyncio.run") as mock_run,
+            patch("arroyosas.app.unified_sim_cli.settings") as mock_settings,
+        ):
             mock_settings.tiled_poller.zmq_frame_publisher.address = "tcp://localhost:5556"
             mock_run.return_value = None
-            result = runner.invoke(app, ["--mode", "unknown_mode"])
+            runner.invoke(app, ["--mode", "unknown_mode"])
             mock_run.assert_called_once()

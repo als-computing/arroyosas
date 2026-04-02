@@ -1,12 +1,10 @@
 """Additional tests for arroyosas.lse_reduction.tiled_results_publisher."""
-from datetime import datetime
-from unittest.mock import MagicMock, patch, AsyncMock
 
-import numpy as np
+from unittest.mock import MagicMock, patch
+
 import pandas as pd
 import pytest
 
-from arroyosas.lse_reduction.schemas import LatentSpaceEvent
 from arroyosas.lse_reduction.tiled_results_publisher import (
     TiledResultsPublisher,
     create_tiled_results_publisher,
@@ -343,9 +341,10 @@ def test_start_sync_no_prefix():
 
     mock_client = MagicMock()
 
-    with patch("arroyosas.lse_reduction.tiled_results_publisher.from_uri", return_value=mock_client), patch.object(
-        pub, "_setup_containers_sync"
-    ) as mock_setup:
+    with (
+        patch("arroyosas.lse_reduction.tiled_results_publisher.from_uri", return_value=mock_client),
+        patch.object(pub, "_setup_containers_sync") as mock_setup,
+    ):
         pub.day_container = MagicMock()
         pub.day_container.__iter__ = MagicMock(return_value=iter(["uuid1", "uuid2"]))
         pub._start_sync()
@@ -366,9 +365,10 @@ def test_start_sync_creates_prefix_container():
     mock_client.create_container = MagicMock(return_value=prefix_node)
     mock_client.__getitem__ = MagicMock(return_value=prefix_node)
 
-    with patch("arroyosas.lse_reduction.tiled_results_publisher.from_uri", return_value=mock_client), patch.object(
-        pub, "_setup_containers_sync"
-    ) as mock_setup:
+    with (
+        patch("arroyosas.lse_reduction.tiled_results_publisher.from_uri", return_value=mock_client),
+        patch.object(pub, "_setup_containers_sync") as mock_setup,
+    ):
         pub.day_container = MagicMock()
         pub.day_container.__iter__ = MagicMock(return_value=iter([]))
         pub._start_sync()

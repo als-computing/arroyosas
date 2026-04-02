@@ -1,4 +1,5 @@
 """Extended tests for arroyosas.tiled.tiled_poller"""
+
 import asyncio
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -7,7 +8,6 @@ import numpy as np
 import pytest
 
 from arroyosas.schemas import (
-    RawFrameEvent,
     SASStart,
     SASStop,
     SerializableNumpyArrayModel,
@@ -19,7 +19,6 @@ from arroyosas.tiled.tiled_poller import (
     create_run_container,
     get_most_recent_run,
     get_run_container,
-    get_runs_container,
     sub_container,
     unsent_frame_numbers,
 )

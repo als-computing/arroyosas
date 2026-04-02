@@ -1,4 +1,5 @@
 """Tests for arroyosas.tiled.tiled_websocket_bluesky (TiledClientListener)"""
+
 import json
 import os
 from pathlib import Path
@@ -6,7 +7,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from arroyosas.schemas import RawFrameEvent, SASStart
 from arroyosas.tiled.tiled_websocket_bluesky import TiledClientListener, create_tiled_websocket_listener
 
 
@@ -85,8 +85,9 @@ class TestTiledClientListenerBluesky:
 
     def test_on_new_run_creates_subscription(self, listener, mock_tiled_client):
         data = {"key": "run_uid_123"}
-        with patch("arroyosas.tiled.tiled_websocket_bluesky.Subscription") as mock_sub_cls, patch.object(
-            listener, "publish_start"
+        with (
+            patch("arroyosas.tiled.tiled_websocket_bluesky.Subscription") as mock_sub_cls,
+            patch.object(listener, "publish_start"),
         ):
             mock_sub = MagicMock()
             mock_sub_cls.return_value = mock_sub
@@ -98,9 +99,10 @@ class TestTiledClientListenerBluesky:
 
     def test_on_new_run_calls_publish_start(self, listener):
         data = {"key": "run_001"}
-        with patch("arroyosas.tiled.tiled_websocket_bluesky.Subscription") as mock_sub_cls, patch.object(
-            listener, "publish_start"
-        ) as mock_pub:
+        with (
+            patch("arroyosas.tiled.tiled_websocket_bluesky.Subscription") as mock_sub_cls,
+            patch.object(listener, "publish_start") as mock_pub,
+        ):
             mock_sub_cls.return_value = MagicMock()
             listener.on_new_run(MagicMock(), data)
             mock_pub.assert_called_once_with(data)
@@ -128,9 +130,10 @@ class TestTiledClientListenerBluesky:
         sub.segments = ["run_uid", "streams", "primary"]
         data = {"key": "img", "sequence": 0}
 
-        with patch("arroyosas.tiled.tiled_websocket_bluesky.Subscription") as mock_sub_cls, patch.object(
-            listener, "publish_event"
-        ) as mock_pub:
+        with (
+            patch("arroyosas.tiled.tiled_websocket_bluesky.Subscription") as mock_sub_cls,
+            patch.object(listener, "publish_event") as mock_pub,
+        ):
             mock_sub = MagicMock()
             mock_sub_cls.return_value = mock_sub
             listener.on_node_in_stream(sub, data)
@@ -141,9 +144,10 @@ class TestTiledClientListenerBluesky:
         sub.segments = ["run_uid", "streams", "primary"]
         data = {"key": "other_key", "sequence": 0}
 
-        with patch("arroyosas.tiled.tiled_websocket_bluesky.Subscription"), patch.object(
-            listener, "publish_event"
-        ) as mock_pub:
+        with (
+            patch("arroyosas.tiled.tiled_websocket_bluesky.Subscription"),
+            patch.object(listener, "publish_event") as mock_pub,
+        ):
             listener.on_node_in_stream(sub, data)
             mock_pub.assert_not_called()
 
@@ -160,7 +164,7 @@ class TestTiledClientListenerBluesky:
         # publish_start calls SASStart(data=data) which fails validation (missing fields)
         # The exception propagates from send_to_operator -> asyncio.run
         data = {"key": "run_001"}
-        with patch.object(listener, "send_to_operator") as mock_send:
+        with patch.object(listener, "send_to_operator"):
             # The actual call will raise ValidationError; just verify send_to_operator is called
             # (it's called even if message construction fails inside send_to_operator)
             try:
@@ -174,7 +178,7 @@ class TestTiledClientListenerBluesky:
         # publish_event in bluesky uses image=None which fails pydantic validation.
         # The ValidationError propagates from RawFrameEvent construction.
         data = {"key": "frame_0", "sequence": 7}
-        with patch.object(listener, "send_to_operator") as mock_send:
+        with patch.object(listener, "send_to_operator"):
             try:
                 listener.publish_event(data)
             except Exception:

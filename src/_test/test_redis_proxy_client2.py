@@ -1,5 +1,5 @@
 """Additional tests for arroyosas.lse_reduction.redis_proxy_client covering subscribe."""
-import json
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -180,8 +180,6 @@ class TestRedisHTTPClientSubscribe:
     async def test_subscribe_uses_token_in_header(self):
         """Test that token is included in subscribe request headers."""
         from arroyosas.lse_reduction.redis_proxy_client import RedisHTTPClient
-
-        sse_lines = []  # empty stream
 
         mock_resp = MagicMock()
         mock_resp.raise_for_status = MagicMock()

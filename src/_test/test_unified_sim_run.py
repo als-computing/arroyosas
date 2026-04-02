@@ -1,8 +1,6 @@
 """Additional coverage for arroyosas.app.unified_sim_cli inner run() logic."""
-import asyncio
+
 import json
-import os
-from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiosqlite
@@ -21,8 +19,6 @@ async def test_db_replay_mode_full_flow(tmp_path):
     """Test the db_replay code path via calling the inner run() directly."""
     from arroyosas.app.unified_sim_cli import (
         get_urls_from_db,
-        read_image_from_tiled_url,
-        transform_url_for_env,
     )
 
     # create a test DB
@@ -73,8 +69,9 @@ async def test_process_images_from_tiled(tmp_path):
     frame_data = np.zeros((10, 10), dtype=np.uint32)
     mock_client.__getitem__ = MagicMock(return_value=frame_data)
 
-    with patch("arroyosas.app.unified_sim_cli.from_uri", return_value=mock_client), patch(
-        "arroyosas.app.unified_sim_cli.get_num_frames", return_value=3
+    with (
+        patch("arroyosas.app.unified_sim_cli.from_uri", return_value=mock_client),
+        patch("arroyosas.app.unified_sim_cli.get_num_frames", return_value=3),
     ):
         await process_images_from_tiled(
             socket=mock_socket,

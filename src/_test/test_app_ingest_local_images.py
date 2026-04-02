@@ -1,8 +1,7 @@
 """Tests for arroyosas.app.ingest_local_images"""
+
 import json
-import os
-from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
@@ -157,7 +156,7 @@ class TestMainCli:
         runner = CliRunner()
         with patch("arroyosas.app.ingest_local_images.asyncio.run") as mock_run:
             mock_run.return_value = None
-            result = runner.invoke(
+            runner.invoke(
                 app,
                 [
                     "--image-folder",
@@ -176,7 +175,7 @@ class TestMainCli:
         runner = CliRunner()
         with patch("arroyosas.app.ingest_local_images.asyncio.run") as mock_run:
             mock_run.return_value = None
-            result = runner.invoke(
+            runner.invoke(
                 app,
                 [
                     "--image-folder",

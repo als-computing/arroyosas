@@ -1097,7 +1097,7 @@ packages:
 - pypi: ./
   name: arroyosas
   version: 0.1.0
-  sha256: 9ec17f89b8151134849a7c5028597576d6ce467d3bf1b4a46771a8ba62c732ff
+  sha256: 237e95884c109460f8ae35c2acbcc6eabbb9f16abf19977e5a15ef9764a4b82c
   requires_dist:
   - arroyopy>=0.3.0a4
   - dynaconf

@@ -1,5 +1,5 @@
 """Tests for arroyosas.lse_reduction.reducer (LatentSpaceReducer, Reducer)"""
-import json
+
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -25,9 +25,7 @@ def _make_mock_redis_store():
 
 def _make_mock_mlflow_client():
     mock_model = MagicMock()
-    mock_model.predict.return_value = {
-        "latent_features": np.random.rand(1, 16).astype(np.float32)
-    }
+    mock_model.predict.return_value = {"latent_features": np.random.rand(1, 16).astype(np.float32)}
     mock_mlflow = MagicMock()
     mock_mlflow.load_model.return_value = mock_model
     return mock_mlflow
@@ -47,9 +45,10 @@ def reducer_instance():
         mock_dimred,  # dimred
     ]
 
-    with patch("arroyosas.lse_reduction.reducer.MLflowClient") as mock_mlflow_cls, patch(
-        "arroyosas.lse_reduction.reducer.redis.Redis"
-    ) as mock_redis_cls:
+    with (
+        patch("arroyosas.lse_reduction.reducer.MLflowClient") as mock_mlflow_cls,
+        patch("arroyosas.lse_reduction.reducer.redis.Redis") as mock_redis_cls,
+    ):
         mock_mlflow_cls.return_value = mock_mlflow_client
         mock_redis_cls.return_value = MagicMock()
 

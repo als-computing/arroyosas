@@ -1,6 +1,5 @@
 """Tests for arroyosas.lse_reduction.redis_model_store (RedisModelStore)"""
-import json
-import threading
+
 import time
 from unittest.mock import MagicMock, patch
 
@@ -36,8 +35,9 @@ class TestRedisModelStore:
 
     def test_init_defaults_from_env(self):
         fake = fakeredis.FakeRedis(decode_responses=True)
-        with patch("arroyosas.lse_reduction.redis_model_store.redis.Redis") as mock_cls, patch.dict(
-            "os.environ", {"REDIS_HOST": "envhost", "REDIS_PORT": "9999"}
+        with (
+            patch("arroyosas.lse_reduction.redis_model_store.redis.Redis") as mock_cls,
+            patch.dict("os.environ", {"REDIS_HOST": "envhost", "REDIS_PORT": "9999"}),
         ):
             mock_cls.return_value = fake
             from arroyosas.lse_reduction.redis_model_store import RedisModelStore

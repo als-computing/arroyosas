@@ -1,4 +1,5 @@
 """Tests for arroyosas.redis (RedisConn async wrapper)"""
+
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -56,9 +57,7 @@ class TestRedisConn:
         settings.host = "localhost"
         settings.port = 6379
 
-        with patch("arroyosas.redis.redis.ConnectionPool") as mock_pool, patch(
-            "arroyosas.redis.redis.Redis"
-        ) as mock_redis:
+        with patch("arroyosas.redis.redis.ConnectionPool") as mock_pool, patch("arroyosas.redis.redis.Redis") as mock_redis:
             mock_redis.return_value = AsyncMock()
             conn = RedisConn.from_settings(settings)
             assert isinstance(conn, RedisConn)
@@ -67,9 +66,7 @@ class TestRedisConn:
     async def test_create(self):
         from arroyosas.redis import RedisConn
 
-        with patch("arroyosas.redis.redis.ConnectionPool") as mock_pool, patch(
-            "arroyosas.redis.redis.Redis"
-        ) as mock_redis:
+        with patch("arroyosas.redis.redis.ConnectionPool") as mock_pool, patch("arroyosas.redis.redis.Redis") as mock_redis:
             mock_redis.return_value = AsyncMock()
             conn = RedisConn.create("myhost", 1234)
             assert isinstance(conn, RedisConn)

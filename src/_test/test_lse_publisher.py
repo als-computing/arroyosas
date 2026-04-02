@@ -1,4 +1,5 @@
 """Tests for arroyosas.lse_reduction.publisher (LSEWSResultPublisher)"""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest

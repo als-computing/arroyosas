@@ -1,4 +1,5 @@
 """Tests for arroyosas.lse_reduction.vector_save"""
+
 import pytest
 
 from arroyosas.lse_reduction.schemas import LatentSpaceEvent

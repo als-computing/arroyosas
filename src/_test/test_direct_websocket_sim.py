@@ -1,4 +1,5 @@
 """Tests for arroyosas.directWebsocketSim (OneDWSPublisher, convert_to_uint8, pack_images)"""
+
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 

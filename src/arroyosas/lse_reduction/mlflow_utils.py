@@ -172,12 +172,7 @@ class MLflowClient:
                 if livemode:
                     label = name
                 else:
-                    try:
-                        parent_id = get_flow_run_parent_id(name)
-                        label = get_flow_run_name(parent_id)
-                    except Exception as e:
-                        logger.warning(f"Failed to get label for model '{name}': {e}")
-                        label = name  # fallback
+                    label = name  # fallback
 
                 model_options.append({"label": label, "value": name})
 

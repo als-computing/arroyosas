@@ -1,9 +1,9 @@
 """Tests for arroyosas.lse_reduction.operator (LatentSpaceOperator)"""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import numpy as np
 import pytest
-from arroyopy.schemas import Start, Stop
 
 from arroyosas.lse_reduction.operator import LatentSpaceOperator
 from arroyosas.lse_reduction.reducer import Reducer
@@ -94,7 +94,7 @@ class TestLatentSpaceOperator:
         mock_redis_store.get_autoencoder_model.return_value = "ae_v1"
         mock_redis_store.get_dimred_model.return_value = "umap_v1"
 
-        with patch.object(operator, "publish", new=AsyncMock()) as mock_pub:
+        with patch.object(operator, "publish", new=AsyncMock()):
             with patch.object(operator, "dispatch", new=AsyncMock(return_value=None)):
                 frame = _make_raw_frame()
                 await operator.process(frame)
@@ -103,7 +103,7 @@ class TestLatentSpaceOperator:
         mock_redis_store.get_autoencoder_model.return_value = None
         mock_redis_store.get_dimred_model.return_value = None
 
-        with patch.object(operator, "publish", new=AsyncMock()) as mock_pub:
+        with patch.object(operator, "publish", new=AsyncMock()):
             frame = _make_raw_frame()
             await operator.process(frame)
             # Should not publish raw frame
@@ -111,8 +111,9 @@ class TestLatentSpaceOperator:
     async def test_process_raw_frame_no_store(self, mock_reducer):
         op = LatentSpaceOperator(mock_reducer, None)
         op._publishers = []
-        with patch.object(op, "publish", new=AsyncMock()) as mock_pub, patch.object(
-            op, "dispatch", new=AsyncMock(return_value=None)
+        with (
+            patch.object(op, "publish", new=AsyncMock()) as mock_pub,
+            patch.object(op, "dispatch", new=AsyncMock(return_value=None)),
         ):
             frame = _make_raw_frame()
             await op.process(frame)

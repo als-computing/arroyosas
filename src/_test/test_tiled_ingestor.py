@@ -1,10 +1,7 @@
 """Tests for arroyosas.tiled.ingestor (TiledIngestor, parse_txt_accompanying_edf)"""
-import os
-import pathlib
-from unittest.mock import MagicMock, patch
 
-import numpy as np
-import pytest
+import pathlib
+from unittest.mock import MagicMock
 
 from arroyosas.tiled.ingestor import TiledIngestor, parse_txt_accompanying_edf
 
@@ -179,6 +176,6 @@ class TestTiledIngestor:
             raw_tiled_root="raw",
             path_to_raw_data=str(tmp_path),
         )
-        uri = ingestor.add_scan_tiled(str(edf_file))
+        ingestor.add_scan_tiled(str(edf_file))
         # Should reuse existing container, not create new one
         root_container.create_container.assert_not_called()

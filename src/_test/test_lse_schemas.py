@@ -1,6 +1,6 @@
 """Tests for arroyosas.lse_reduction.schemas"""
+
 import numpy as np
-import pytest
 
 from arroyosas.lse_reduction.schemas import LatentSpaceEvent, SerializableNumpyArrayModel
 

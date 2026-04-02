@@ -1,8 +1,6 @@
 """Tests for inner run() logic of unified_sim_cli.py."""
-import asyncio
+
 import json
-import os
-from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiosqlite
@@ -158,8 +156,9 @@ async def test_process_images_from_tiled_zero_frames():
     mock_client = MagicMock()
     mock_client.shape = (0,)
 
-    with patch("arroyosas.app.unified_sim_cli.from_uri", return_value=mock_client), patch(
-        "arroyosas.app.unified_sim_cli.get_num_frames", return_value=0
+    with (
+        patch("arroyosas.app.unified_sim_cli.from_uri", return_value=mock_client),
+        patch("arroyosas.app.unified_sim_cli.get_num_frames", return_value=0),
     ):
         await process_images_from_tiled(
             socket=mock_socket,
@@ -183,8 +182,9 @@ async def test_process_images_from_tiled_frame_error():
     good_frame = np.zeros((10, 10), dtype=np.uint32)
     mock_client.__getitem__ = MagicMock(side_effect=[Exception("frame error"), good_frame])
 
-    with patch("arroyosas.app.unified_sim_cli.from_uri", return_value=mock_client), patch(
-        "arroyosas.app.unified_sim_cli.get_num_frames", return_value=2
+    with (
+        patch("arroyosas.app.unified_sim_cli.from_uri", return_value=mock_client),
+        patch("arroyosas.app.unified_sim_cli.get_num_frames", return_value=2),
     ):
         await process_images_from_tiled(
             socket=mock_socket,
@@ -224,9 +224,6 @@ async def test_run_db_replay_mode(tmp_path):
     """Test the inner run() db_replay mode end-to-end."""
     import msgpack
 
-    from arroyosas.app.unified_sim_cli import app
-    from typer.testing import CliRunner
-
     # Create a test DB with one URL
     db_path = str(tmp_path / "test.db")
     async with aiosqlite.connect(db_path) as conn:
@@ -246,21 +243,21 @@ async def test_run_db_replay_mode(tmp_path):
     fake_image = np.zeros((10, 10), dtype=np.uint32)
 
     async def fake_run():
-        import zmq.asyncio
         import zmq
+        import zmq.asyncio
 
         context = mock_context
         socket = context.socket(zmq.PUB)
         socket.bind("tcp://localhost:5556")
+
+        from datetime import datetime
 
         from arroyosas.app.unified_sim_cli import (
             get_urls_from_db,
             read_image_from_tiled_url,
             transform_url_for_env,
         )
-        from arroyosas.schemas import SASStart, SASStop, RawFrameEvent, SerializableNumpyArrayModel
-        import msgpack
-        from datetime import datetime
+        from arroyosas.schemas import RawFrameEvent, SASStart, SASStop, SerializableNumpyArrayModel
 
         urls = await get_urls_from_db(db_path, limit=10000)
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -288,8 +285,9 @@ async def test_run_db_replay_mode(tmp_path):
         stop = SASStop(num_frames=len(urls))
         await socket.send(msgpack.packb(stop.model_dump()))
 
-    with patch("arroyosas.app.unified_sim_cli.from_uri", return_value=MagicMock()), patch(
-        "arroyosas.app.unified_sim_cli._read_image_from_tiled_url_sync", return_value=(fake_image, 0)
+    with (
+        patch("arroyosas.app.unified_sim_cli.from_uri", return_value=MagicMock()),
+        patch("arroyosas.app.unified_sim_cli._read_image_from_tiled_url_sync", return_value=(fake_image, 0)),
     ):
         await fake_run()
 

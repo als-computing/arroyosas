@@ -1,6 +1,6 @@
 """Tests for arroyosas.lse_reduction.mlflow_utils (MLflowClient)"""
+
 import os
-import tempfile
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -19,9 +19,10 @@ def clear_mlflow_cache():
 @pytest.fixture
 def mock_mlflow():
     """Patch all mlflow calls used by MLflowClient."""
-    with patch("arroyosas.lse_reduction.mlflow_utils.mlflow") as mock_mlflow, patch(
-        "arroyosas.lse_reduction.mlflow_utils.MlflowClient"
-    ) as mock_mlflow_client_cls:
+    with (
+        patch("arroyosas.lse_reduction.mlflow_utils.mlflow") as mock_mlflow,
+        patch("arroyosas.lse_reduction.mlflow_utils.MlflowClient") as mock_mlflow_client_cls,
+    ):
         mock_inner_client = MagicMock()
         mock_mlflow_client_cls.return_value = mock_inner_client
         yield mock_mlflow, mock_mlflow_client_cls, mock_inner_client
@@ -46,7 +47,7 @@ class TestMLflowClientInit:
         mock_ml, _, _ = mock_mlflow
         from arroyosas.lse_reduction.mlflow_utils import MLflowClient
 
-        c = MLflowClient(
+        MLflowClient(
             tracking_uri="http://mlflow:5000",
             cache_dir=str(tmp_path / "cache"),
         )
@@ -57,7 +58,7 @@ class TestMLflowClientInit:
         from arroyosas.lse_reduction.mlflow_utils import MLflowClient
 
         cache_dir = str(tmp_path / "my_cache")
-        c = MLflowClient(cache_dir=cache_dir)
+        MLflowClient(cache_dir=cache_dir)
         assert os.path.exists(cache_dir)
 
     def test_init_creates_inner_client(self, mock_mlflow, tmp_path):
@@ -107,7 +108,7 @@ class TestGetMlflowParams:
         mock_run.data.params = {"input_dim": "32"}
         inner.get_run.return_value = mock_run
 
-        params = client.get_mlflow_params("my_model:5")
+        client.get_mlflow_params("my_model:5")
         inner.get_model_version.assert_called_once_with(name="my_model", version="5")
 
     def test_defaults_to_version_1(self, client, mock_mlflow):

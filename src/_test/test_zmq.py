@@ -1,4 +1,5 @@
 """Tests for arroyosas.zmq (ZMQFrameListener, ZMQFramePublisher, ZMQBroker)"""
+
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -223,9 +224,7 @@ class TestZMQBroker:
     async def test_start_calls_proxy(self):
         broker = ZMQBroker("tcp://localhost:5555", "tcp://localhost:5556", 1000)
 
-        with patch("arroyosas.zmq.zmq.asyncio.Context") as mock_context, patch(
-            "arroyosas.zmq.zmq.proxy"
-        ) as mock_proxy:
+        with patch("arroyosas.zmq.zmq.asyncio.Context") as mock_context, patch("arroyosas.zmq.zmq.proxy") as mock_proxy:
             mock_ctx = MagicMock()
             mock_context.return_value = mock_ctx
             mock_router = MagicMock()

@@ -91,7 +91,7 @@ class RedisHTTPClient:
                         data_lines = []
                         continue
                     # concatenate data: lines starting with 'data:'
-                    data = "\n".join(l.partition(":")[2].lstrip() for l in data_lines if l.startswith("data:"))
+                    data = "\n".join(line_.partition(":")[2].lstrip() for line_ in data_lines if line_.startswith("data:"))
                     data_lines = []
                     if not data:
                         continue

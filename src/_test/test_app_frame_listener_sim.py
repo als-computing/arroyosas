@@ -1,9 +1,8 @@
 """Tests for arroyosas.app.frame_listener_sim_cli"""
-import asyncio
-from unittest.mock import AsyncMock, MagicMock, patch
+
+from unittest.mock import AsyncMock, patch
 
 import pytest
-
 from arroyosas.app.frame_listener_sim_cli import process_images
 
 pytestmark = pytest.mark.asyncio
@@ -38,8 +37,6 @@ class TestProcessImages:
     async def test_process_images_first_message_is_start(self, mock_zmq_socket):
         import msgpack
 
-        from arroyosas.schemas import SASStart
-
         await process_images(mock_zmq_socket, cycles=1, frames=1, pause=0)
         first_call_args = mock_zmq_socket.send.call_args_list[0][0][0]
         unpacked = msgpack.unpackb(first_call_args, raw=False)
@@ -48,15 +45,15 @@ class TestProcessImages:
 
 class TestMainCli:
     def test_main_calls_asyncio_run(self):
+        from arroyosas.app.frame_listener_sim_cli import app
         from typer.testing import CliRunner
 
-        from arroyosas.app.frame_listener_sim_cli import app
-
         runner = CliRunner()
-        with patch("arroyosas.app.frame_listener_sim_cli.asyncio.run") as mock_run, patch(
-            "arroyosas.app.frame_listener_sim_cli.settings"
-        ) as mock_settings:
+        with (
+            patch("arroyosas.app.frame_listener_sim_cli.asyncio.run") as mock_run,
+            patch("arroyosas.app.frame_listener_sim_cli.settings") as mock_settings,
+        ):
             mock_settings.tiled_poller.zmq_frame_publisher.address = "tcp://localhost:5556"
             mock_run.return_value = None
-            result = runner.invoke(app, ["--cycles", "1", "--frames", "1", "--pause", "0"])
+            runner.invoke(app, ["--cycles", "1", "--frames", "1", "--pause", "0"])
             mock_run.assert_called_once()

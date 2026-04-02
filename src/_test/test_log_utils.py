@@ -2,8 +2,6 @@
 
 import logging
 
-import pytest
-
 from arroyosas.log_utils import setup_logger
 
 

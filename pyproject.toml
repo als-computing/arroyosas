@@ -67,9 +67,11 @@ lse = [
 
 [tool.ruff]
 line-length = 127
+extend-exclude = ["notebooks", "scripts/tiled-ws"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I"]
+ignore = ["E501"]
 
 
 

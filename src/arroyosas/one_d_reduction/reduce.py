@@ -120,7 +120,6 @@ if __name__ == "__main__":
         "chi_max": 180,
         "inner_radius": 1,
         "outer_radius": 2900,
-        "polarization_factor": 0.99,
         "rotation": 0.0,
         "tilt": 0.0,
         "num_bins": 800,

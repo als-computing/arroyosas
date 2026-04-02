@@ -1,6 +1,7 @@
 """Tests for arroyosas.shared_settings"""
+
 import json
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import fakeredis
 import pytest
@@ -28,7 +29,7 @@ class TestSharedSettings:
     def test_init_creates_redis_client(self, fake_redis_instance):
         with patch("arroyosas.shared_settings.redis") as mock_redis_module:
             mock_redis_module.Redis.return_value = fake_redis_instance
-            ss = SharedSettings(redis=mock_redis_module)
+            SharedSettings(redis=mock_redis_module)
             mock_redis_module.Redis.assert_called_once_with(host="localhost", port=6379, db=0)
 
     def test_set_and_get(self, shared_settings):

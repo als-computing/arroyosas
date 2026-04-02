@@ -1,5 +1,5 @@
 """Tests for arroyosas.lse_reduction.redis_proxy_client (RedisHTTPClient)"""
-import json
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -32,7 +32,7 @@ class TestRedisHTTPClientInit:
             mock_client = MagicMock()
             mock_client.headers = {}
             mock_cls.return_value = mock_client
-            c = RedisHTTPClient(base_url="http://localhost:8000", token="mytoken")
+            RedisHTTPClient(base_url="http://localhost:8000", token="mytoken")
             assert mock_client.headers["Authorization"] == "Bearer mytoken"
 
     def test_init_without_token(self):
@@ -40,7 +40,7 @@ class TestRedisHTTPClientInit:
             mock_client = MagicMock()
             mock_client.headers = {}
             mock_cls.return_value = mock_client
-            c = RedisHTTPClient(base_url="http://localhost:8000")
+            RedisHTTPClient(base_url="http://localhost:8000")
             assert "Authorization" not in mock_client.headers
 
 
@@ -89,7 +89,7 @@ class TestRedisHTTPClientSet:
             mock_http.post = AsyncMock(return_value=mock_response)
 
             c = RedisHTTPClient(base_url="http://localhost:8000")
-            result = await c.set("mykey", "myvalue")
+            await c.set("mykey", "myvalue")
             mock_http.post.assert_called_once()
             call_kwargs = mock_http.post.call_args[1]
             assert call_kwargs["json"]["key"] == "mykey"

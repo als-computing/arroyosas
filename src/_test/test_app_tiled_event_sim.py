@@ -1,8 +1,6 @@
 """Tests for arroyosas.app.tiled_event_sim_cli (TiledEventSimulator)"""
-import asyncio
+
 import json
-import os
-from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -155,5 +153,5 @@ class TestMainCli:
         runner = CliRunner()
         with patch("arroyosas.app.tiled_event_sim_cli.asyncio.run") as mock_run:
             mock_run.return_value = None
-            result = runner.invoke(app, [str(tmp_path)])
+            runner.invoke(app, [str(tmp_path)])
             mock_run.assert_called_once()

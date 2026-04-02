@@ -1,11 +1,12 @@
 """Tests for arroyosas.tiled.tiled_websocket_bl733 (TiledClientListener)"""
+
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import numpy as np
 import pytest
 
-from arroyosas.schemas import RawFrameEvent, SASStart, SerializableNumpyArrayModel
+from arroyosas.schemas import RawFrameEvent, SASStart
 from arroyosas.tiled.tiled_websocket_bl733 import TiledClientListener, create_tiled_websocket_listener
 
 pytestmark = pytest.mark.asyncio
