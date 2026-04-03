@@ -6,8 +6,6 @@ import pytest
 
 from arroyosas.lse_reduction.redis_proxy_client import RedisHTTPClient, from_url
 
-pytestmark = pytest.mark.asyncio
-
 
 @pytest.fixture
 def client():

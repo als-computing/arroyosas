@@ -10,8 +10,6 @@ from arroyosas.lse_reduction.tiled_results_publisher import (
     create_tiled_results_publisher,
 )
 
-pytestmark = pytest.mark.asyncio
-
 
 def _make_publisher_with_containers(
     has_day_container=True,
@@ -236,6 +234,7 @@ class TestWriteTableToTiledSync:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.asyncio
 async def test_write_table_to_tiled_calls_sync():
     pub = TiledResultsPublisher()
     with patch.object(pub, "_write_table_to_tiled_sync") as mock_sync:
@@ -243,6 +242,7 @@ async def test_write_table_to_tiled_calls_sync():
         mock_sync.assert_called_once_with("some-uuid")
 
 
+@pytest.mark.asyncio
 async def test_write_table_to_tiled_handles_exception():
     pub = TiledResultsPublisher()
     with patch.object(pub, "_write_table_to_tiled_sync", side_effect=Exception("write error")):

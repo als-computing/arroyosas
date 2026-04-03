@@ -7,8 +7,6 @@ import aiosqlite
 import numpy as np
 import pytest
 
-pytestmark = pytest.mark.asyncio
-
 
 # ---------------------------------------------------------------------------
 # _read_image_from_tiled_url_sync  (lines 136-198)
@@ -98,6 +96,7 @@ def test_read_image_sync_slice_without_digit():
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.asyncio
 async def test_fetch_image_from_tiled_success():
     from arroyosas.app.unified_sim_cli import fetch_image_from_tiled
 
@@ -114,6 +113,7 @@ async def test_fetch_image_from_tiled_success():
     assert isinstance(result, np.ndarray)
 
 
+@pytest.mark.asyncio
 async def test_fetch_image_from_tiled_returns_numpy():
     from arroyosas.app.unified_sim_cli import fetch_image_from_tiled
 
@@ -131,6 +131,7 @@ async def test_fetch_image_from_tiled_returns_numpy():
     assert isinstance(result, np.ndarray)
 
 
+@pytest.mark.asyncio
 async def test_fetch_image_from_tiled_error():
     from arroyosas.app.unified_sim_cli import fetch_image_from_tiled
 
@@ -148,6 +149,7 @@ async def test_fetch_image_from_tiled_error():
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.asyncio
 async def test_process_images_from_tiled_zero_frames():
     """Test that the zero frames path logs warning and skips."""
     from arroyosas.app.unified_sim_cli import process_images_from_tiled
@@ -172,6 +174,7 @@ async def test_process_images_from_tiled_zero_frames():
     assert mock_socket.send.call_count == 1  # just the start
 
 
+@pytest.mark.asyncio
 async def test_process_images_from_tiled_frame_error():
     """Test that frame-level exceptions are caught per-frame."""
     from arroyosas.app.unified_sim_cli import process_images_from_tiled
@@ -198,6 +201,7 @@ async def test_process_images_from_tiled_frame_error():
     assert mock_socket.send.call_count == 3
 
 
+@pytest.mark.asyncio
 async def test_process_images_from_tiled_outer_exception():
     """Test that outer exception is caught and logged."""
     from arroyosas.app.unified_sim_cli import process_images_from_tiled
@@ -220,6 +224,7 @@ async def test_process_images_from_tiled_outer_exception():
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.asyncio
 async def test_run_db_replay_mode(tmp_path):
     """Test the inner run() db_replay mode end-to-end."""
     import msgpack
@@ -300,6 +305,7 @@ async def test_run_db_replay_mode(tmp_path):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.asyncio
 async def test_run_local_tiled_mode_no_url_file():
     """Test local_tiled mode when url_file is missing."""
     from arroyosas.app.unified_sim_cli import load_url_from_file
@@ -309,6 +315,7 @@ async def test_run_local_tiled_mode_no_url_file():
     assert metadata is None
 
 
+@pytest.mark.asyncio
 async def test_run_local_tiled_mode_missing_metadata(tmp_path):
     """Test local_tiled mode with missing dimension metadata."""
     from arroyosas.app.unified_sim_cli import load_url_from_file
@@ -328,6 +335,7 @@ async def test_run_local_tiled_mode_missing_metadata(tmp_path):
     assert "width" not in metadata
 
 
+@pytest.mark.asyncio
 async def test_run_local_tiled_mode_with_image_pattern(tmp_path):
     """Test local_tiled run with image_pattern in metadata."""
     from arroyosas.app.unified_sim_cli import get_matching_keys

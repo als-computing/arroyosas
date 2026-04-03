@@ -9,8 +9,6 @@ from arroyosas.lse_reduction.schemas import LatentSpaceEvent
 from arroyosas.lse_reduction.tiled_results_publisher import TiledResultsPublisher
 from arroyosas.schemas import SASStop
 
-pytestmark = pytest.mark.asyncio
-
 
 @pytest.fixture
 def mock_container():

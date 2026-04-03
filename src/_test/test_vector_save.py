@@ -6,8 +6,6 @@ from arroyosas.lse_reduction.schemas import LatentSpaceEvent
 from arroyosas.lse_reduction.vector_save import VectorSavePublisher
 from arroyosas.schemas import SASStart, SASStop
 
-pytestmark = pytest.mark.asyncio
-
 
 @pytest.fixture
 async def publisher(tmp_path):

@@ -4,8 +4,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-pytestmark = pytest.mark.asyncio
-
 
 class TestRedisHTTPClientSubscribe:
     """Tests for the subscribe async generator (lines 69-105)."""

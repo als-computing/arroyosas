@@ -10,8 +10,6 @@ import pytest
 from arroyosas.schemas import SASStart, SASStop, SerializableNumpyArrayModel
 from arroyosas.websockets import OneDWSPublisher, convert_to_uint8, pack_images
 
-pytestmark = pytest.mark.asyncio
-
 
 @pytest.fixture(autouse=True)
 def reset_connected_clients():

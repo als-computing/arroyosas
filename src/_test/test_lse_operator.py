@@ -10,8 +10,6 @@ from arroyosas.lse_reduction.reducer import Reducer
 from arroyosas.lse_reduction.schemas import LatentSpaceEvent
 from arroyosas.schemas import RawFrameEvent, SASStart, SASStop, SerializableNumpyArrayModel
 
-pytestmark = pytest.mark.asyncio
-
 
 @pytest.fixture
 def mock_reducer():

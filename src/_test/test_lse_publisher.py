@@ -8,8 +8,6 @@ from arroyosas.lse_reduction.publisher import LSEWSResultPublisher
 from arroyosas.lse_reduction.schemas import LatentSpaceEvent
 from arroyosas.schemas import SASStart, SASStop
 
-pytestmark = pytest.mark.asyncio
-
 
 @pytest.fixture(autouse=True)
 def reset_connected_clients():

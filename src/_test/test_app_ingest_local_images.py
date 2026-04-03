@@ -13,8 +13,6 @@ from arroyosas.app.ingest_local_images import (
     save_url_to_file,
 )
 
-pytestmark = pytest.mark.asyncio
-
 
 class TestLoadImageFiles:
     def test_finds_jpg_files(self, tmp_path):

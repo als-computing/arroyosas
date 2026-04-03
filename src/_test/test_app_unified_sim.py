@@ -14,8 +14,6 @@ from arroyosas.app.unified_sim_cli import (
     transform_url_for_env,
 )
 
-pytestmark = pytest.mark.asyncio
-
 
 class TestTransformUrlForEnv:
     def test_dev_url_unchanged(self):

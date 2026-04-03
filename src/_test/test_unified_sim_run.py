@@ -7,14 +7,13 @@ import aiosqlite
 import numpy as np
 import pytest
 
-pytestmark = pytest.mark.asyncio
-
 
 async def _make_zmq_socket():
     socket = AsyncMock()
     return socket
 
 
+@pytest.mark.asyncio
 async def test_db_replay_mode_full_flow(tmp_path):
     """Test the db_replay code path via calling the inner run() directly."""
     from arroyosas.app.unified_sim_cli import (
@@ -35,6 +34,7 @@ async def test_db_replay_mode_full_flow(tmp_path):
     assert len(urls) == 1
 
 
+@pytest.mark.asyncio
 async def test_read_image_from_tiled_url():
     from arroyosas.app.unified_sim_cli import read_image_from_tiled_url
 
@@ -50,6 +50,7 @@ async def test_read_image_from_tiled_url():
     assert index == 0
 
 
+@pytest.mark.asyncio
 async def test_read_image_invalid_url():
     from arroyosas.app.unified_sim_cli import read_image_from_tiled_url
 
@@ -58,6 +59,7 @@ async def test_read_image_invalid_url():
     assert index == 0
 
 
+@pytest.mark.asyncio
 async def test_process_images_from_tiled(tmp_path):
     """Test process_images_from_tiled sends messages correctly."""
     from arroyosas.app.unified_sim_cli import process_images_from_tiled
@@ -85,6 +87,7 @@ async def test_process_images_from_tiled(tmp_path):
     assert mock_socket.send.call_count == 5
 
 
+@pytest.mark.asyncio
 async def test_load_url_from_file_with_metadata(tmp_path):
     from arroyosas.app.unified_sim_cli import load_url_from_file
 
@@ -100,6 +103,7 @@ async def test_load_url_from_file_with_metadata(tmp_path):
     assert metadata["width"] == 100
 
 
+@pytest.mark.asyncio
 async def test_transform_url_with_slice():
     from arroyosas.app.unified_sim_cli import transform_url_for_env
 
@@ -109,6 +113,7 @@ async def test_transform_url_with_slice():
     assert "smi/raw" in result
 
 
+@pytest.mark.asyncio
 async def test_transform_url_unknown_env_fallback():
     from arroyosas.app.unified_sim_cli import transform_url_for_env
 

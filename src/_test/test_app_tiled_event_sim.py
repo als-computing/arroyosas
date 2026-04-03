@@ -7,8 +7,6 @@ import pytest
 
 from arroyosas.app.tiled_event_sim_cli import TiledEventSimulator
 
-pytestmark = pytest.mark.asyncio
-
 
 @pytest.fixture
 def log_dir(tmp_path):

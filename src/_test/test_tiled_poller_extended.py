@@ -23,8 +23,6 @@ from arroyosas.tiled.tiled_poller import (
     unsent_frame_numbers,
 )
 
-pytestmark = pytest.mark.asyncio
-
 
 # ---------------------------------------------------------------------------
 # unsent_frame_numbers (extending existing tests)
@@ -165,6 +163,7 @@ def test_get_run_container_returns_existing():
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.asyncio
 async def test_tiled_raw_frame_operator_publishes():
     op = TiledRawFrameOperator()
 
@@ -193,6 +192,7 @@ async def test_tiled_raw_frame_operator_publishes():
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.asyncio
 async def test_redis_listener_processes_message():
     operator = AsyncMock()
     beamline_runs = MagicMock()
@@ -240,6 +240,7 @@ async def test_redis_listener_processes_message():
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.asyncio
 async def test_processed_publisher_handles_start():
     root_container = MagicMock()
     publisher = TiledProcessedPublisher(root_container)
@@ -262,6 +263,7 @@ async def test_processed_publisher_handles_start():
     assert publisher.run_node is run_container
 
 
+@pytest.mark.asyncio
 async def test_processed_publisher_handles_stop():
     root_container = MagicMock()
     publisher = TiledProcessedPublisher(root_container)
@@ -271,6 +273,7 @@ async def test_processed_publisher_handles_stop():
     await publisher.publish(stop)  # Should not raise
 
 
+@pytest.mark.asyncio
 async def test_processed_publisher_no_run_node_logs_error():
     root_container = MagicMock()
     publisher = TiledProcessedPublisher(root_container)
@@ -290,6 +293,7 @@ async def test_processed_publisher_no_run_node_logs_error():
     await publisher.publish(msg)  # Should log error and return
 
 
+@pytest.mark.asyncio
 async def test_processed_publisher_handles_latent_space_event():
     # tiled_poller imports LatentSpaceEvent from arroyosas.schemas (not lse_reduction)
     from arroyosas.schemas import LatentSpaceEvent as LSEEvent

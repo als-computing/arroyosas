@@ -9,8 +9,6 @@ import pytest
 from arroyosas.schemas import RawFrameEvent, SASStart
 from arroyosas.tiled.tiled_websocket_bl733 import TiledClientListener, create_tiled_websocket_listener
 
-pytestmark = pytest.mark.asyncio
-
 
 @pytest.fixture
 def mock_tiled_client():
