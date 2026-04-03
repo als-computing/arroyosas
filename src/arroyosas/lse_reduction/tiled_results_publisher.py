@@ -467,7 +467,7 @@ class TiledResultsPublisher(Publisher):
             return None
 
 
-def create_tiled_results_publisher(tiled_uri=None, tiled_api_key=None, root_segments=None, tiled_prefix=None):
+def tiled_results_publisher_factory(tiled_uri=None, tiled_api_key=None, root_segments=None, tiled_prefix=None):
     return TiledResultsPublisher(
         tiled_uri=tiled_uri,
         root_segments=root_segments,

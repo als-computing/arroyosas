@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from arroyosas.tiled.tiled_websocket_bluesky import TiledClientListener, create_tiled_websocket_listener
+from arroyosas.tiled.tiled_websocket_bluesky import TiledClientListener, tiled_ws_listener_factory
 
 
 @pytest.fixture
@@ -197,7 +197,7 @@ class TestCreateTiledWebsocketListenerBluesky:
         with patch("arroyosas.tiled.tiled_websocket_bluesky.from_uri") as mock_from_uri:
             mock_client = MagicMock()
             mock_from_uri.return_value = mock_client
-            listener = create_tiled_websocket_listener(
+            listener = tiled_ws_listener_factory(
                 uri="http://example.com",
                 stream_name="primary",
                 api_key="test_key",

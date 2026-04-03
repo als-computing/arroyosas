@@ -7,7 +7,7 @@ import pytest
 
 from arroyosas.lse_reduction.tiled_results_publisher import (
     TiledResultsPublisher,
-    create_tiled_results_publisher,
+    tiled_results_publisher_factory,
 )
 
 
@@ -388,13 +388,13 @@ def test_start_sync_exception_reraises():
 
 
 # ---------------------------------------------------------------------------
-# create_tiled_results_publisher
+# tiled_results_publisher_factory
 # ---------------------------------------------------------------------------
 
 
-def test_create_tiled_results_publisher():
+def test_tiled_results_publisher_factory():
     """Test the factory function creates a TiledResultsPublisher."""
-    pub = create_tiled_results_publisher(
+    pub = tiled_results_publisher_factory(
         tiled_uri="http://tiled:8000",
         tiled_api_key="key",
         root_segments=["results"],

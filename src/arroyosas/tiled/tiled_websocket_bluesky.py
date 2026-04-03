@@ -215,7 +215,7 @@ class TiledClientListener(Listener):
             logger.error(f"Failed to log event {event_name}: {e}")
 
 
-def create_tiled_websocket_listener(
+def tiled_ws_listener_factory(
     uri: str,
     stream_name: str,
     operator=None,

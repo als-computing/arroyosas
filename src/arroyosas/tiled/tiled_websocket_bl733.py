@@ -144,7 +144,7 @@ class TiledClientListener(Listener):
         self.send_to_operator(event)
 
 
-def create_tiled_websocket_listener(
+def tiled_ws_listener_factory(
     uri: str,
     sub_path: str,
     operator=None,
