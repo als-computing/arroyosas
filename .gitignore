@@ -187,3 +187,5 @@ data/models/
 .settings.yaml
 
 mlflow.db
+.claude
+.ruff_cache
