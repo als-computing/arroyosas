@@ -286,7 +286,10 @@ def test_tiled_polling_frame_listener_single_run_exits():
 
     with (
         patch("arroyosas.tiled.tiled_poller.sub_container", return_value=mock_frames),
+        # asyncio.run within TiledPollingFrameListener._start runs in a separate loop
+        # and mocking it helps avoid nested event loop errors and hangs in pytest-asyncio
         patch("arroyosas.tiled.tiled_poller.asyncio.run") as mock_asyncio_run,
+        patch("time.sleep") as mock_sleep,
     ):
         # With single_run set, it processes one run and breaks
         listener._start()
