@@ -27,8 +27,7 @@ class SerializableNumpyArrayModel(BaseModel):
             return np.frombuffer(value["data"], dtype=np.dtype(value["dtype"])).reshape(value["shape"])
         return value
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = {"arbitrary_types_allowed": True}
 
 
 class LatentSpaceEvent(Event):
