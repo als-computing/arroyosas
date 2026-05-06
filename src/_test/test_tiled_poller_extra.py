@@ -1,6 +1,5 @@
 """Extra tests for arroyosas.tiled.tiled_poller covering uncovered branches."""
 
-import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import numpy as np
@@ -23,7 +22,6 @@ from arroyosas.tiled.tiled_poller import (
     get_runs_container,
     patch_tiled_frame,
 )
-
 
 # ---------------------------------------------------------------------------
 # create_one_d_node
@@ -252,7 +250,7 @@ def test_processed_publisher_get_run_path():
 def test_tiled_polling_frame_listener_single_run_exits():
     """Test single_run mode with last_processed_run set exits loop."""
     import threading
-    
+
     operator = MagicMock()
 
     # Build mock tiled structure
@@ -262,7 +260,7 @@ def test_tiled_polling_frame_listener_single_run_exits():
         "stop": None,
     }
     mock_run.uri = "http://example.com/run/uid-1"  # Must be a string for pydantic validation
-    
+
     mock_data = MagicMock()
     mock_data.shape = (10, 10)
     mock_data.dtype.name = "float32"
@@ -299,7 +297,7 @@ def test_tiled_polling_frame_listener_single_run_exits():
         test_thread.daemon = True
         test_thread.start()
         test_thread.join(timeout=2.0)
-        
+
         if test_thread.is_alive():
             pytest.fail("Listener._start() did not exit within timeout (infinite loop detected)")
 
@@ -310,18 +308,18 @@ def test_tiled_polling_frame_listener_single_run_exits():
 @pytest.mark.skip(reason="This test exposes an infinite loop bug in _start() when exceptions occur with single_run mode")
 def test_tiled_polling_frame_listener_exception_in_loop():
     """Test that exceptions in the loop are caught and logged.
-    
+
     NOTE: This test is skipped because it exposes a bug in the implementation:
     When single_run is set and an exception occurs before last_processed_run is set,
     the loop continues infinitely, retrying the same operation that caused the exception.
-    
+
     The implementation should be fixed to:
     - Break the loop after N retries, or
     - Break the loop on exception when in single_run mode, or
     - Add exponential backoff for retries
     """
     import threading
-    
+
     operator = MagicMock()
 
     beamline_runs = MagicMock()
@@ -345,7 +343,7 @@ def test_tiled_polling_frame_listener_exception_in_loop():
     test_thread.daemon = True
     test_thread.start()
     test_thread.join(timeout=0.5)
-    
+
     # The thread should still be running (infinite loop after exception)
     # or it should have exited if there's proper exception handling
     # Either way, it shouldn't crash the test suite

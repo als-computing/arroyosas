@@ -133,7 +133,6 @@ def pack_images(message: RawFrameEvent) -> bytes:
 
 
 async def test_client(publisher: OneDWSPublisher, num_frames: int = 10):
-
     from arroyosas.schemas import (  # GISAXSImageInfo,
         RawFrameEvent,
         SASStart,

@@ -4,7 +4,6 @@ import json
 from unittest.mock import MagicMock, patch
 
 import aiosqlite
-import pytest
 
 from arroyosas.app.unified_sim_cli import (
     get_matching_keys,

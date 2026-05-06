@@ -23,7 +23,6 @@ from arroyosas.tiled.tiled_poller import (
     unsent_frame_numbers,
 )
 
-
 # ---------------------------------------------------------------------------
 # unsent_frame_numbers (extending existing tests)
 # ---------------------------------------------------------------------------
