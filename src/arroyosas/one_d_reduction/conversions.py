@@ -128,15 +128,7 @@ def q_x(wl, t_f, a_f, a_i):
     .. math::
     {q}_{x} = \frac{2 \pi}{\lambda} (\cos(\alpha_f) * \cos(\theta_f) - \cos(\alpha_i))
     """
-    return (
-        2
-        * np.pi
-        / wl
-        * (
-            np.cos(t_f / 180 * np.pi) * np.cos(a_f / 180 * np.pi)
-            - np.cos(a_i / 180 * np.pi)
-        )
-    )
+    return 2 * np.pi / wl * (np.cos(t_f / 180 * np.pi) * np.cos(a_f / 180 * np.pi) - np.cos(a_i / 180 * np.pi))
 
 
 def q_parallel(wl, t_f, a_f, a_i):
@@ -151,13 +143,7 @@ def qp_to_pix(q, wl, a_f, a_i, sdd, pix_size):
         / np.pi
         * np.arccos(
             (
-                (
-                    4 * np.pi**2
-                    - wl**2 * q**2
-                    + 2
-                    * np.pi**2
-                    * (np.cos(a_f * np.pi / 90) + np.cos(a_i * np.pi / 90))
-                )
+                (4 * np.pi**2 - wl**2 * q**2 + 2 * np.pi**2 * (np.cos(a_f * np.pi / 90) + np.cos(a_i * np.pi / 90)))
                 * 1
                 / (np.cos(a_f * np.pi / 180))
                 * 1

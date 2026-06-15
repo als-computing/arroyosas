@@ -1,0 +1,25 @@
+blocks:
+  - name: LSE Operator
+    description: 2D latent space operator for SAS Data
+    operator:
+      class: arroyosas.lse.build_lse_operator
+      kwargs:
+        redis_host: 127.0.0.1
+        redis_port: 6666
+
+    listeners:
+      - class: arroyosas.tiled.tiled_websocket.tiled_ws_listener_factory
+        kwargs:
+          uri: "http://127.0.0.1:8000"
+          stream_name: "primary"
+          target: "img"
+      # api_key: falls back to TILED_LIVE_API_KEY env var
+
+    publishers:
+      - class: arroyosas.websockets.OneDWSPublisher
+        kwargs:
+          host: "0.0.0.0"
+          port: 8020
+      - class: arroyosas.lse_reduction.tiled_results_publisher.tiled_results_publisher_factory
+        kwargs:
+          tiled_uri: "http://127.0.0.1:8000"

@@ -8,12 +8,7 @@ from arroyopy.operator import Operator
 from arroyopy.publisher import Publisher
 from zmq.asyncio import Context, Socket
 
-from .schemas import (
-    SASMessage,
-    RawFrameEvent,
-    SASStart,
-    SASStop,
-)
+from .schemas import RawFrameEvent, SASMessage, SASStart, SASStop
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +37,7 @@ class ZMQFrameListener(Listener):
                     # image = SerializableNumpyArrayModel.deserialize_array(
                     #     message["image"]
                     # )
-                   
+
                     message = RawFrameEvent(**message)
                 elif message_type == "stop":
                     logger.info(f"Received Stop {message}")
@@ -59,14 +54,18 @@ class ZMQFrameListener(Listener):
 
     @classmethod
     def from_settings(cls, settings: dict, operator: Operator) -> "ZMQFrameListener":
-        context = Context()
-        zmq_socket = context.socket(zmq.SUB)
-        zmq_socket.connect(settings.zmq_address)
-        zmq_socket.setsockopt_string(zmq.SUBSCRIBE, "")
-        zmq_socket.setsockopt(zmq.SNDHWM, 10000)  # Allow up to 10,000 messages
-        zmq_socket.setsockopt(zmq.RCVHWM, 10000)
-        logger.info(f"##### Listening for frames on {settings.zmq_address}")
-        return cls(operator, zmq_socket)
+        return cls(operator, settings.zmq_address)
+
+
+def create_zmq_frame_listener(operator: Operator, zmq_address: str) -> ZMQFrameListener:
+    context = Context()
+    zmq_socket = context.socket(zmq.SUB)
+    zmq_socket.connect(zmq_address)
+    zmq_socket.setsockopt_string(zmq.SUBSCRIBE, "")
+    zmq_socket.setsockopt(zmq.SNDHWM, 10000)
+    zmq_socket.setsockopt(zmq.RCVHWM, 10000)
+    logger.info(f"##### Listening for frames on {zmq_address}")
+    return ZMQFrameListener(operator, zmq_socket)
 
 
 class ZMQFramePublisher(Publisher):
@@ -106,9 +105,7 @@ class ZMQBroker:
 
     """
 
-    def __init__(
-        self, zmq_dealer_address: str, zmq_router_address: str, router_hwm: int
-    ):
+    def __init__(self, zmq_dealer_address: str, zmq_router_address: str, router_hwm: int):
         self.zmq_dealer_address = zmq_dealer_address
         self.zmq_router_address = zmq_router_address
         self.router_hwm = router_hwm
@@ -127,6 +124,4 @@ class ZMQBroker:
 
     @classmethod
     def from_settings(cls, settings: dict) -> "ZMQBroker":
-        return cls(
-            settings.dealer_address, settings.router_address, settings.router_hwm
-        )
+        return cls(settings.dealer_address, settings.router_address, settings.router_hwm)

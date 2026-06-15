@@ -5,7 +5,7 @@ const images = [
     "images/xrayIcon/gif3.png",
     "images/xrayIcon/gif4.png",
   ];
-  
+
   export default function Status({height='h-14', cycleTime=5, slideshow=true}) {
     return (
         <div className="flex justify-center mix-blend-multiply">
@@ -28,4 +28,3 @@ const images = [
         </div>
     );
   }
-  

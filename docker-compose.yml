@@ -4,14 +4,14 @@ services:
 
   tiled:
     # see the file ./tiled/deploy/config.yml for detailed configuration of tiled
-    image: ghcr.io/bluesky/tiled:0.1.0-b17
+    image: ghcr.io/bluesky/tiled:0.2.8
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     environment:
       - TILED_SINGLE_USER_API_KEY=${TILED_SINGLE_USER_API_KEY}
     volumes:
-      - ./conf/tiled/deploy:/deploy:Z
-      - ./data:/data:Z
+      - ./conf/tiled/deploy:/config:z
+      - ./data:/data:z
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://tiled:8000/healthz"]
@@ -22,66 +22,55 @@ services:
     networks:
       gisax_net1:
   beamline_sim:
-    command: python -m arroyosas.app.tiled_poller_sim_cli
+    command: python -m arroyosas.app.tiled_event_sim_cli /app/tiled_event_logs
     image: ghcr.io/als-computing/arroyosas:main
     restart: unless-stopped
     volumes:
       - .:/app:Z
-      - ./settings.yaml:/app/settings.yaml:Z
+      - ./settings.yaml:/app/settings.yaml:z
+      - ./tiled_event_logs/:/app/tiled_event_logs:z
     networks:
       gisax_net1:
 
   lse_operator:
-    command: python -m arroyogisaxs.app.kse_operator_cli
+    command: python -m arroyopy.cli run block_configs/lse_operator_block.yaml
     build:
       context: .
     restart: unless-stopped
+    environment:
+      TILED_API_KEY=${TILED_SINGLE_USER_API_KEY}
     ports:
       - "8021:8021"
     volumes:
       - .:/app:Z
-      - ./settings.yaml:/app/settings.yaml:Z
-    networks:
-      gisax_net1:
-  viz_operator:
-    command: python -m arroyosas.app.viz_operator_cli
-    build:
-      context: .
-    restart: unless-stopped
-    ports:
-      - "8021:8021"
-    volumes:
-      - .:/app:Z
-      - ./settings.yaml:/app/settings.yaml:Z
+      - ./block_configs:/app/block_configs:Z
     networks:
       gisax_net1:
 
-  frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile_frontend
-    ports:
-      - "8080:80"
-    restart: unless-stopped
-    volumes:
-      - .:/app:Z
-    networks:
-      gisax_net1:
+  # viz_operator:
+  #   command: python -m arroyosas.app.viz_operator_cli
+  #   build:
+  #     context: .
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8021:8021"
+  #   volumes:
+  #     - .:/app:Z
+  #     - ./settings.yaml:/app/settings.yaml:Z
+  #   networks:
+  #     gisax_net1:
 
-  tiled_poller:
-    command: python -m debugpy --listen 0.0.0.0:5678 --wait-for-client -m arroyosas.app.tiled_poller_cli
-    build:
-      context: .
-      dockerfile: Dockerfile
-    volumes:
-      - .:/app:Z
-      - ./settings_container.yaml:/app/settings.yaml:Z
-      - ./data:/data:Z
-    ports:
-      - "5678:5678"
-    hostname: tiled_poller
-    networks:
-      gisax_net1:
+  # frontend:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile_frontend
+  #   ports:
+  #     - "8080:80"
+  #   restart: unless-stopped
+  #   volumes:
+  #     - .:/app:Z
+  #   networks:
+  #     gisax_net1:
 
 
   kvrocks:

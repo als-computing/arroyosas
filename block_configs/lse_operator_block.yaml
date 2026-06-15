@@ -1,0 +1,24 @@
+blocks:
+  - name: LSE Operator
+    description: 2D latent space operator for SAS Data
+    operator:
+      class: arroyosas.lse_reduction.operator.build_lse_operator
+      kwargs:
+        redis_host: 127.0.0.1
+        redis_port: 6666
+
+    listeners:
+      - class: arroyosas.tiled.tiled_websocket_bl733.tiled_ws_listener_factory
+        kwargs:
+          uri: "https://tiled-staging.computing.als.lbl.gov"
+          sub_path: "beamlines/bl733/dylan_test"
+      # api_key: falls back to TILED_LIVE_API_KEY env var
+
+    publishers:
+      - class: arroyosas.websockets.OneDWSPublisher
+        kwargs:
+          host: "0.0.0.0"
+          port: 8020
+      - class: arroyosas.lse_reduction.tiled_results_publisher.tiled_results_publisher_factory
+        kwargs:
+          tiled_uri: "https://tiled-staging.computing.als.lbl.gov"

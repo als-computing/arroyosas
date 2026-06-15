@@ -2,11 +2,8 @@ import json
 import logging
 
 import redis.asyncio as redis
-from arroyosas.config import settings
-from arroyosas.log_utils import setup_logger
 
 logger = logging.getLogger(__name__)
-setup_logger(logger, log_level=settings.logging_level)
 
 
 class RedisConn:
@@ -40,24 +37,18 @@ class RedisConn:
         logger.info(f"Listening for messages on '{channel_name}'...")
 
         async for message in pubsub.listen():
-            if (
-                message["type"] == "message"
-            ):  # Ignore subscription confirmation messages
+            if message["type"] == "message":  # Ignore subscription confirmation messages
                 if message["channel"] == channel_name:
                     await callback(message["data"])
 
     @classmethod
     def from_settings(cls, settings: dict) -> "RedisConn":
-        pool = redis.ConnectionPool(
-            host=settings.host, port=settings.port, decode_responses=True
-        )
+        pool = redis.ConnectionPool(host=settings.host, port=settings.port, decode_responses=True)
         redis_conn = redis.Redis(connection_pool=pool)
         return cls(redis_conn)
 
     @classmethod
     def create(cls, host: str, port: int) -> "RedisConn":
-        pool = redis.ConnectionPool(
-            host=host, port=port, decode_responses=True
-        )
+        pool = redis.ConnectionPool(host=host, port=port, decode_responses=True)
         redis_conn = redis.Redis(connection_pool=pool)
         return cls(redis_conn)

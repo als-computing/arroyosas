@@ -76,12 +76,12 @@ export default function TimelineTiledHeatmapScatter ({tiledLinks=[], demo=false,
         }
 
         if (xValues.length > 0 && yValues.length > 0) {
-            const newScatterPlot = { 
+            const newScatterPlot = {
                 x: xValues,
                 y: yValues,
                 type: 'scatter',
                 mode: 'lines+markers',
-                marker: {color: 'red'}, 
+                marker: {color: 'red'},
             };
             setScatterPlot(newScatterPlot);
         }
@@ -104,9 +104,9 @@ export default function TimelineTiledHeatmapScatter ({tiledLinks=[], demo=false,
                     <div className="h-full w-1/2 max-w-[50rem] pt-4 ">
                         {heatmapArray &&
                             <PlotlyHeatMap
-                                array={heatmapArray} 
-                                fixPlotHeightToParent={true} 
-                                title={"frame " + index + " - " + tiledLinks[index].timestamp} 
+                                array={heatmapArray}
+                                fixPlotHeightToParent={true}
+                                title={"frame " + index + " - " + tiledLinks[index].timestamp}
                                 flipArray={flipArray}
                                 linecutData={linecutData}
                             />
@@ -128,7 +128,7 @@ export default function TimelineTiledHeatmapScatter ({tiledLinks=[], demo=false,
             return <p>Waiting for data</p>
         }
     }
-    
+
     if (demo) {
         var sampleCumulativeData = [];
         const samples = 7;
@@ -154,5 +154,5 @@ export default function TimelineTiledHeatmapScatter ({tiledLinks=[], demo=false,
             </div>
         )
     }
-    
+
 }

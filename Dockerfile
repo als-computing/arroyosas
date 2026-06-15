@@ -4,8 +4,9 @@ WORKDIR /app
 
 COPY . /app
 
-RUN pip install --upgrade pip && \
-    pip install .[all]
+RUN pip install uv && \
+    uv pip install --system torch torchvision --index-url https://download.pytorch.org/whl/cpu && \
+    uv pip install --system ".[lse]"
 
 RUN pip install debugpy
 

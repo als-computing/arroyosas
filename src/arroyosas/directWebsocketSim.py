@@ -1,20 +1,21 @@
-#pip install -e .
-#cd src/
+# pip install -e .
+# cd src/
 import asyncio
 import json
 import logging
-from typing import Union
 from glob import glob
+from typing import Union
 
-from PIL import Image
 import msgpack
 import numpy as np
 import websockets
 from arroyopy.publisher import Publisher
+from PIL import Image
 
-from .schemas import RawFrameEvent, SASStart, SASStop, SerializableNumpyArrayModel
+from .schemas import RawFrameEvent, SASStart, SASStop
 
 logger = logging.getLogger(__name__)
+
 
 class OneDWSPublisher(Publisher):
     """
@@ -45,9 +46,7 @@ class OneDWSPublisher(Publisher):
 
     async def publish(self, message: RawFrameEvent) -> None:
         if self.connected_clients:  # Only send if there are clients connected
-            asyncio.gather(
-                *(self.publish_ws(client, message) for client in self.connected_clients)
-            )
+            asyncio.gather(*(self.publish_ws(client, message) for client in self.connected_clients))
 
     async def publish_ws(
         self,
@@ -104,9 +103,7 @@ def convert_to_uint8(image: np.ndarray) -> bytes:
     log_stretched = np.log1p(image_normalized)  # log(1 + x) to handle near-zero values
 
     # Normalize the log-stretched image to [0, 1] again
-    log_stretched_normalized = (log_stretched - log_stretched.min()) / (
-        log_stretched.max() - log_stretched.min()
-    )
+    log_stretched_normalized = (log_stretched - log_stretched.min()) / (log_stretched.max() - log_stretched.min())
 
     # Convert to uint8 (range [0, 255])
     image_uint8 = (log_stretched_normalized * 255).astype(np.uint8)
@@ -122,12 +119,12 @@ def pack_images(message: RawFrameEvent) -> bytes:
         return msgpack.packb(
             {
                 "raw_frame": convert_to_uint8(message.image.array),
-                #"curve": message.curve.df.to_json(),
+                # "curve": message.curve.df.to_json(),
                 "raw_frame_tiled_url": message.tiled_url,
                 "curve_tiled_url": message.tiled_url,
                 "width": message.image.array.shape[1],
                 "height": message.image.array.shape[0],
-                #"data_type": message.image.array.dtype,
+                # "data_type": message.image.array.dtype,
             }
         )
     except Exception as e:
@@ -136,54 +133,48 @@ def pack_images(message: RawFrameEvent) -> bytes:
 
 
 async def test_client(publisher: OneDWSPublisher, num_frames: int = 10):
-    import time
-
-    import pandas as pd
-    from arroyopy.schemas import DataFrameModel, NumpyArrayModel
-
-    from arroyosas.schemas import (
-       # GISAXSImageInfo,
+    from arroyosas.schemas import (  # GISAXSImageInfo,
         RawFrameEvent,
         SASStart,
         SASStop,
-        SerializableNumpyArrayModel
+        SerializableNumpyArrayModel,
     )
 
     await asyncio.sleep(2)
     for y in range(100):
-        await publisher.publish(SASStart(
-            run_name="test_run",
-            run_id="12345",
-            width=1043,
-            height=981,
-            data_type="float32",
-            tiled_url="http://example.com/tiled"
-        ))
+        await publisher.publish(
+            SASStart(
+                run_name="test_run",
+                run_id="12345",
+                width=1043,
+                height=981,
+                data_type="float32",
+                tiled_url="http://example.com/tiled",
+            )
+        )
         # for x in range(num_frames):
         #     await asyncio.sleep(1)
         #     # Create a test pattern image that changes slightly each time
         #     frame_number = int(time.time()) % 100  # Change pattern every second
 
-
-        #files = glob("/Users/seij/SMI_Experiments/exp01/*.tif")
+        # files = glob("/Users/seij/SMI_Experiments/exp01/*.tif")
         files = glob("/Users/seij/SMI_Experiments/feb/*.tiff")
-        #path = "/Users/seij/SMI_Experiments/feb/"
-        #for f in os.listdir(path):
-         #   print(f"{repr(f)}")
+        # path = "/Users/seij/SMI_Experiments/feb/"
+        # for f in os.listdir(path):
+        #   print(f"{repr(f)}")
 
         print(f"Total files found: {len(files)}")
         frame_num = 0
         for file in files:
             with Image.open(file) as img:
-                #print(f"Image mode: {img.mode}")  # 'L', 'RGB', 'RGBA', or multi-band
-                img = img.convert("L")  #Force greyscale
-                arr = np.array(img)  # 
-                #arr_normalized = (arr - arr.min()) / (arr.max() - arr.min()) * 255
-                #arr_normalized = arr_normalized.astype(np.uint8)  # Convert to uint8
-                #print(f"Loaded image {file}, shape: {arr.shape}, dtype: {arr.dtype}")
-                #link ="http://127.0.0.1:8000/api/v1/array/full/exp01/ML_exp01-144J-22_id836920_?slice=" + str(frame_num) + ",::1,::1"
-                link ="http://127.0.0.1:8000/api/v1/array/full/feb/pil1M_image?slice=" + str(frame_num)
-
+                # print(f"Image mode: {img.mode}")  # 'L', 'RGB', 'RGBA', or multi-band
+                img = img.convert("L")  # Force greyscale
+                arr = np.array(img)  #
+                # arr_normalized = (arr - arr.min()) / (arr.max() - arr.min()) * 255
+                # arr_normalized = arr_normalized.astype(np.uint8)  # Convert to uint8
+                # print(f"Loaded image {file}, shape: {arr.shape}, dtype: {arr.dtype}")
+                # link ="http://127.0.0.1:8000/api/v1/array/full/exp01/ML_exp01-144J-22_id836920_?slice=" + str(frame_num) + ",::1,::1"
+                link = "http://127.0.0.1:8000/api/v1/array/full/feb/pil1M_image?slice=" + str(frame_num)
 
                 event = RawFrameEvent(
                     image=SerializableNumpyArrayModel(array=arr),
@@ -194,7 +185,7 @@ async def test_client(publisher: OneDWSPublisher, num_frames: int = 10):
                 await publisher.publish(event)
             await asyncio.sleep(5)
 
-            # #Creates a sample image 
+            # #Creates a sample image
             # image = np.zeros((100, 100), dtype=np.float32)
             # np.fill_diagonal(image, frame_number % 255)
 
@@ -219,7 +210,7 @@ async def test_client(publisher: OneDWSPublisher, num_frames: int = 10):
             #     tiled_url="fake_url"
             # )
 
-            #await publisher.publish(message)
+            # await publisher.publish(message)
             frame_num = frame_num + 1
         await publisher.publish(SASStop(num_frames=num_frames))
 

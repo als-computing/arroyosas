@@ -154,7 +154,7 @@ export const useGISAXSAlternate = ({}) => {
                 if (newMessage.msg_type === 'start') {
                     resetAllData();
                     setIsExperimentRunning(true);
-                    
+
                 }
                 if (newMessage.msg_type === 'stop') {
                     setIsExperimentRunning(false);

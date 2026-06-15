@@ -4,8 +4,6 @@ import os
 
 import numpy as np
 from arroyopy.operator import Operator
-from tiled.client import from_uri
-from tiled.client.base import BaseClient
 
 from ..redis import RedisConn
 from ..schemas import (
@@ -25,17 +23,13 @@ REDUCTION_CHANNEL = "scattering"
 
 
 class OneDReductionOperator(Operator):
-    def __init__(self, tiled_client: BaseClient, redis_conn: RedisConn):
+    def __init__(self, redis_conn: RedisConn):
         super().__init__()
-        self.tiled_client = tiled_client
         self.redis_conn = redis_conn
         self.current_scan_metadata = None
-        # self.mask = None
         self.mask = self.load_static_mask_file()
 
-        asyncio.create_task(
-            self.redis_conn.redis_subscribe(REDUCTION_CHANNEL, self.compute_callback)
-        )
+        asyncio.create_task(self.redis_conn.redis_subscribe(REDUCTION_CHANNEL, self.compute_callback))
 
     async def process(self, message):
         try:
@@ -43,9 +37,7 @@ class OneDReductionOperator(Operator):
                 logger.info(f"Processing Start {message}")
                 self.current_scan_metadata = message
                 logger.info("Calculating mask")
-                reduction_settings = await self.redis_conn.get_json(
-                    REDUCTION_CONFIG_KEY
-                )
+                reduction_settings = await self.redis_conn.get_json(REDUCTION_CONFIG_KEY)
                 # Currently a static file for the mask is loaded. Future iterations it can be generated dynamically
                 # self.mask = await asyncio.to_thread(self.calculate_mask, reduction_settings)
                 await self.publish(message)
@@ -58,25 +50,17 @@ class OneDReductionOperator(Operator):
 
             if isinstance(message, RawFrameEvent):
                 if self.current_scan_metadata is None:
-                    logger.error(
-                        "No current scan metadata. Perhaps the Viz Operator was started mid-scan?"
-                    )
+                    logger.error("No current scan metadata. Perhaps the Viz Operator was started mid-scan?")
                     return
-                reduction_settings = await self.redis_conn.get_json(
-                    REDUCTION_CONFIG_KEY
-                )
+                reduction_settings = await self.redis_conn.get_json(REDUCTION_CONFIG_KEY)
                 if reduction_settings is None or len(reduction_settings) == 0:
                     logger.error("No reduction settings found")
                     return
                 reduction_settings.pop("input_uri_data")
                 reduction_settings.pop("input_uri_mask")
-                masked_image = self.generate_masked_image(
-                    message.image.array, self.mask
-                )
+                masked_image = self.generate_masked_image(message.image.array, self.mask)
                 reduction_settings["masked_image"] = masked_image
-                reduction, _, _ = await asyncio.to_thread(
-                    pixel_roi_horizontal_cut, **reduction_settings
-                )
+                reduction, _, _ = await asyncio.to_thread(pixel_roi_horizontal_cut, **reduction_settings)
                 #
                 serializable_reduction = SerializableNumpyArrayModel(array=reduction)
                 reduction_msg = SAS1DReduction(
@@ -102,9 +86,7 @@ class OneDReductionOperator(Operator):
             if data != "compute_reduction":
                 return
             reduction_settings = await self.redis_conn.get_json(REDUCTION_CONFIG_KEY)
-            (reduction, line_average, errror) = await asyncio.to_thread(
-                self.do_reduction, reduction_settings
-            )
+            (reduction, line_average, errror) = await asyncio.to_thread(self.do_reduction, reduction_settings)
             reduction_msg = SAS1DReduction(
                 curve=reduction[0],
                 curve_tiled_url="curve",
@@ -122,13 +104,6 @@ class OneDReductionOperator(Operator):
                 logger.error("No reduction settings found")
                 return
             reduction_settings.pop("input_uri_data")
-            # mask_uri = reduction_settings.pop("input_uri_mask")
-            # image_container = get_nested_client(self.tiled_client, mask_uri)
-            # image = image_container
-            # mask = self.calculate_mask(reduction_settings)
-            # masked_image = image[0][0] + mask.T
-            # reduction_settings["masked_image"] = masked_image
-            # reduction_settings["masked_image"] = image
             reduction = pixel_roi_horizontal_cut(**reduction_settings)
             return reduction
         except Exception as e:
@@ -137,14 +112,10 @@ class OneDReductionOperator(Operator):
     def load_static_mask_file(self):
         try:
             # assumed path from project root is masks/mask.npy
-            project_root = os.path.abspath(
-                os.path.join(os.path.dirname(__file__), "../../../")
-            )
+            project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../"))
             mask_path = os.path.join(project_root, "masks", "mask.npy")
             mask = np.load(mask_path)
-            logger.info(
-                f"Mask loaded successfully from {mask_path}, shape: {mask.shape}"
-            )
+            logger.info(f"Mask loaded successfully from {mask_path}, shape: {mask.shape}")
             return mask
 
         except FileNotFoundError:
@@ -160,10 +131,16 @@ class OneDReductionOperator(Operator):
         masked_image = image * masked_float  # Multiply to set masked values to NaN
         return masked_image
 
+    async def start(self):
+        publisher_tasks = [asyncio.create_task(p.start()) for p in self.publishers if hasattr(p, "start")]
+        await asyncio.gather(super().start(), *publisher_tasks)
+
     @classmethod
     def from_settings(cls, settings) -> "OneDReductionOperator":
         redis_conn = RedisConn.from_settings(settings.redis)
-        tiled_client = from_uri(
-            settings.tiled.raw.uri, api_key=settings.tiled.raw.api_key
-        )
-        return cls(tiled_client, redis_conn)
+        return cls(redis_conn)
+
+
+def create_one_d_reduction_operator(redis_host: str, redis_port: int) -> OneDReductionOperator:
+    redis_conn = RedisConn.create(redis_host, redis_port)
+    return OneDReductionOperator(redis_conn)

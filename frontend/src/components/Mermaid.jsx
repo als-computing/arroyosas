@@ -25,14 +25,14 @@ export default function Mermaid() {
     const graph = `
         flowchart LR
             style Mars1Group stroke:#bbb,stroke-width:4px,stroke-dasharray: 5,5,fill:none;
-            
+
             btiled(Beamline Tiled) <--http--> framelisten(Frame Listener);
-            
+
             subgraph Mars1Group["mars1.nsls2.bnl.gov"];
                 framelisten --zmq frame--> viz_op(Viz Operator);
                 framelisten --zmq frame + tiledurl--> lse_op(LSE Operator);
                 lse_op --websocket--> lse(Latent Space Explorer dash);
-        
+
                 lse <--http--> browser(Browser);
                 viz_op --http 1D reductions--> tiled(Tiled);
                 viz_op --websocket 2 tiled urls + data--> browser;
@@ -40,14 +40,14 @@ export default function Mermaid() {
                 lse_op <--zmq raw frame--> lse_worker2(LSE Worker 2);
                 lse_op <--zmq raw frame--> lse_worker3(LSE Worker N);
                 lse_op --http feature vec and url--> tiled;
-        
+
                 browser <--http get data--> tiled;
                 tiled <----> postgres;
                 wf_viz(Workflow Viz) <--http--> browser;
                 wf_viz --> redis(Redis);
                 redis --> viz_op;
-        
-        
+
+
             end;
     `
 
@@ -56,10 +56,10 @@ export default function Mermaid() {
         const callBackFunction = (event) => {
             console.log("Clicked element:", event.currentTarget);
         };
-    
+
         // Select all node elements
         const nodes = document.querySelectorAll("g.node");
-    
+
         // Attach the event handler to each node
         nodes.forEach(node => {
             node.addEventListener("click", callBackFunction);
@@ -111,7 +111,7 @@ export default function Mermaid() {
             return false;
         }
     };
-    
+
     const changeBackgroundColor = (element, color="red") => {
         element.style.fill = color;
     }
@@ -160,7 +160,7 @@ export default function Mermaid() {
                 window.mermaid.contentLoaded();
                 attachEventHandler();
             });
-        }   
+        }
     }, []);
 
 
@@ -174,7 +174,7 @@ export default function Mermaid() {
             <Button cb={changeColorTest} text="change to red"/>
             <p>{sampleText}</p>
         </div>
-        
+
         </>
     )
 }

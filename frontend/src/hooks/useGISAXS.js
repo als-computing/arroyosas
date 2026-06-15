@@ -100,7 +100,7 @@ export const useGISAXS = ({}) => {
                         console.log('Exceeded allowable message prints, suppressing future websocket messages');
                         websocketMessageCount.current = websocketMessageCount.current + 1;
                     }
-                }/* 
+                }/*
                 var websocketMessage = {}
                 for (var key in newMessage) {
                     if (key === 'raw_frame') {
@@ -252,7 +252,7 @@ export const useGISAXS = ({}) => {
                 if (newMessage.msg_type === 'start') {
                     resetAllData();
                     setIsExperimentRunning(true);
-                    
+
                 }
                 if (newMessage.msg_type === 'stop') {
                     setIsExperimentRunning(false);

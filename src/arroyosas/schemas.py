@@ -41,13 +41,10 @@ class SerializableNumpyArrayModel(BaseModel):
     def deserialize_array(cls, value):
         """Convert bytes back to NumPy array"""
         if isinstance(value, dict) and "data" in value:
-            return np.frombuffer(value["data"], dtype=np.dtype(value["dtype"])).reshape(
-                value["shape"]
-            )
+            return np.frombuffer(value["data"], dtype=np.dtype(value["dtype"])).reshape(value["shape"])
         return value
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = {"arbitrary_types_allowed": True}
 
 
 class SASMessage(Message):

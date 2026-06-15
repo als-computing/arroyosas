@@ -21,7 +21,7 @@ export default function Services(){
         try {
             const result = await getSearchResults(url);
             const flippedArray = flip2DArray(result);
-            setPlot(flippedArray); 
+            setPlot(flippedArray);
         } catch (error) {
             console.error("Error fetching search results:", error);
         }
