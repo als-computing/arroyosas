@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import numpy as np
 import pytest
 
 from arroyosas.tiled.tiled_websocket_bluesky import TiledClientListener, tiled_ws_listener_factory
@@ -137,7 +138,7 @@ class TestTiledClientListenerBluesky:
             mock_sub = MagicMock()
             mock_sub_cls.return_value = mock_sub
             listener.on_node_in_stream(sub, data)
-            mock_pub.assert_called_once_with(data)
+            mock_pub.assert_called_once_with(sub, data)  # ← was publish_event(data)
 
     def test_on_node_in_stream_non_matching_target(self, listener):
         sub = MagicMock()
@@ -174,17 +175,22 @@ class TestTiledClientListenerBluesky:
             # send_to_operator is called with whatever SASStart produces (or raises)
             # The important thing is publish_start calls send_to_operator
 
-    def test_publish_event(self, listener):
-        # publish_event in bluesky uses image=None which fails pydantic validation.
-        # The ValidationError propagates from RawFrameEvent construction.
-        data = {"key": "frame_0", "sequence": 7}
-        with patch.object(listener, "send_to_operator"):
-            try:
-                listener.publish_event(data)
-            except Exception:
-                pass
-            # Whether or not it raises, verify the data.get("sequence") is used
-            # (the method passes frame_number=data.get("sequence", 0))
+    def test_publish_event(self, listener, mock_tiled_client):  # ← add mock_tiled_client
+        sub = MagicMock()
+        sub.segments = ["run_uid", "streams", "primary"]
+        data = {"key": "img", "sequence": 7}
+
+        data_node = MagicMock()
+        data_node.__getitem__ = MagicMock(return_value=np.zeros((5, 5)))
+        mock_tiled_client.__getitem__ = MagicMock(return_value=data_node)
+
+        with patch.object(listener, "send_to_operator") as mock_send:
+            listener.publish_event(sub, data)  # ← pass sub
+            mock_send.assert_called_once()
+            from arroyosas.schemas import RawFrameEvent
+            msg = mock_send.call_args[0][0]
+            assert isinstance(msg, RawFrameEvent)
+            assert msg.frame_number == 7
 
     def test_print_event(self, listener, capsys):
         listener.print_event("test_event", {"data": "value"})
