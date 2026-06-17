@@ -188,6 +188,7 @@ class TestTiledClientListenerBluesky:
             listener.publish_event(sub, data)  # ← pass sub
             mock_send.assert_called_once()
             from arroyosas.schemas import RawFrameEvent
+
             msg = mock_send.call_args[0][0]
             assert isinstance(msg, RawFrameEvent)
             assert msg.frame_number == 7
