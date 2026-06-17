@@ -16,6 +16,7 @@ from arroyosas.schemas import (  # SASStop,; SerializableNumpyArrayModel,
     RawFrameEvent,
     SASMessage,
     SASStart,
+    SerializableNumpyArrayModel,  # ← added
 )
 
 logger = logging.getLogger(__name__)
@@ -130,7 +131,7 @@ class TiledClientListener(Listener):
         # stream_sub.add_callback(print)
         stream_sub.add_callback(self.on_event)
         stream_sub.start()
-        self.publish_event(data)
+        self.publish_event(sub, data)  # ← pass sub
 
     async def start(self) -> None:
         """Start the listener by calling _start method."""
@@ -161,12 +162,13 @@ class TiledClientListener(Listener):
         )
         self.send_to_operator(start)
 
-    def publish_event(self, data: Dict[str, Any]) -> None:
+    def publish_event(self, sub: Subscription, data: Dict[str, Any]) -> None:  # ← add sub
         """
         Publish an event to the operator.
         """
+        data_node = self.tiled_client["/".join(sub.segments + [data["key"]])]  # ← read from tiled
         event = RawFrameEvent(
-            image=None,
+            image=SerializableNumpyArrayModel(array=data_node[:]),  # ← was None
             frame_number=data.get("sequence", 0),
             tiled_url="",  # Placeholder for actual URL if needed
         )
