@@ -4,13 +4,13 @@ import logging
 import os
 import time
 from collections import defaultdict
-from typing import Any, Dict
+from typing import Any, Dict, TypeAlias
 
 # import numpy as np
 from arroyopy.listener import Listener
 from tiled.client import from_uri
 from tiled.client.base import BaseClient
-from tiled.client.stream import Subscription
+from tiled.client.stream import LiveArrayData, LiveArrayRef, LiveChildCreated
 
 from arroyosas.schemas import (  # SASStop,; SerializableNumpyArrayModel,
     RawFrameEvent,
@@ -20,6 +20,9 @@ from arroyosas.schemas import (  # SASStop,; SerializableNumpyArrayModel,
 )
 
 logger = logging.getLogger(__name__)
+
+ChildCreatedEvent: TypeAlias = LiveChildCreated
+FrameDataEvent: TypeAlias = LiveArrayData | LiveArrayRef
 
 
 class TiledClientListener(Listener):
@@ -35,12 +38,14 @@ class TiledClientListener(Listener):
         self,
         tiled_client: BaseClient,
         stream_name: str,
+        raw_data_path: str = None,
         target: str = "img",
         create_run_logs: bool = True,
         log_dir: str = "tiled_logs",
     ):
         self.tiled_client = tiled_client
         self.stream_name = stream_name
+        self.raw_data_path = raw_data_path
         self.target = target
         self.create_run_logs = create_run_logs
         if not os.path.exists(log_dir):
@@ -49,70 +54,79 @@ class TiledClientListener(Listener):
         self.current_run_dir = None
         self.event_counters = defaultdict(int)  # Track sequence numbers for each event type
 
-    def on_new_run(self, sub: Subscription, data: Dict[str, Any]):
+    def on_new_run(self, event: ChildCreatedEvent) -> None:
         """
         Handle new run events by creating a subscription for the run.
         """
-        uid = data["key"]
+        uid = event.key
         logger.debug(f"New run {uid}") if logger.isEnabledFor(logging.DEBUG) else None
 
         # Create new folder for this run
         if self.create_run_logs:
             self.create_run_folder(uid)
-            self.log_message_to_json("on_new_run", sub, data)
+            self.log_message_to_json("on_new_run", event.subscription, event.model_dump())
 
         # Subscribe to the run
-        run_sub = Subscription(self.tiled_client.context, [uid], start=0)
-        run_sub.add_callback(self.on_streams_namespace)
+        run_node = event.child()
+        run_sub = run_node.subscribe(start=0)
+        run_sub.child_created.add_callback(self.on_streams_namespace)
         run_sub.start()
         # Publish start event
-        self.publish_start(data)
+        self.publish_start(run_node, {"key": uid})
 
-    def on_streams_namespace(self, sub, data):
+    def on_streams_namespace(self, event: ChildCreatedEvent) -> None:
         """
         Handle new streams namespace events by subscribing to the 'streams' segment.
         For example, this might be the creation of 'baseline' or 'primary' streams.
         """
-        logger.debug(data) if logger.isEnabledFor(logging.DEBUG) else None
+        logger.debug(event) if logger.isEnabledFor(logging.DEBUG) else None
+
+        if event.key != "streams":
+            return
 
         # Log the event
         if self.create_run_logs:
-            self.log_message_to_json("on_streams_namespace", sub, data)
+            self.log_message_to_json("on_streams_namespace", event.subscription, event.model_dump())
 
-        streams_sub = Subscription(self.tiled_client.context, sub.segments + ["streams"], start=0)
-        streams_sub.add_callback(self.on_new_stream)
+        streams_sub = event.child().subscribe(start=0)
+        streams_sub.child_created.add_callback(self.on_new_stream)
         streams_sub.start()
 
-    def on_new_stream(self, sub, data):
+    def on_new_stream(self, event: ChildCreatedEvent) -> None:
         """
         Handle new stream
         """
-        logger.debug(data) if logger.isEnabledFor(logging.DEBUG) else None
-        stream_name = data["key"]
+        logger.debug(event) if logger.isEnabledFor(logging.DEBUG) else None
+        stream_name = event.key
         (logger.info(f"new stream {stream_name}") if logger.isEnabledFor(logging.INFO) else None)
 
-        if self.create_run_logs:
-            self.log_message_to_json("on_new_stream", sub, data)
+        if stream_name != self.stream_name:
+            return
 
-        stream_sub = Subscription(self.tiled_client.context, sub.segments + [stream_name], start=0)
-        stream_sub.add_callback(self.on_node_in_stream)
+        if self.create_run_logs:
+            self.log_message_to_json("on_new_stream", event.subscription, event.model_dump())
+
+        stream_sub = event.child().subscribe(start=0)
+        stream_sub.child_created.add_callback(self.on_node_in_stream)
         stream_sub.start()
 
-    def on_event(self, sub: Subscription, data: Dict[str, Any]) -> None:
+    def on_event(self, event: FrameDataEvent) -> None:
         """
         Handle new event
         """
 
-        logger.info(data) if logger.isEnabledFor(logging.INFO) else None
+        logger.info(event) if logger.isEnabledFor(logging.INFO) else None
         if self.create_run_logs:
-            self.log_message_to_json("on_event", sub, data)
+            self.log_message_to_json("on_event", event.subscription, event.model_dump())
 
-    def on_node_in_stream(self, sub, data):
-        logger.debug(data) if logger.isEnabledFor(logging.DEBUG) else None
-        key = data["key"]
+        self.publish_event(event)
+
+    def on_node_in_stream(self, event: ChildCreatedEvent) -> None:
+        logger.debug(event) if logger.isEnabledFor(logging.DEBUG) else None
+        key = event.key
 
         if self.create_run_logs:
-            self.log_message_to_json("on_node_in_stream", sub, data)
+            self.log_message_to_json("on_node_in_stream", event.subscription, event.model_dump())
 
         # Log what we're comparing for debugging
         (logger.info(f"Checking key '{key}' against target '{self.target}'") if logger.isEnabledFor(logging.INFO) else None)
@@ -127,11 +141,9 @@ class TiledClientListener(Listener):
 
         (logger.info(f"Key '{key}' matches target '{self.target}', proceeding") if logger.isEnabledFor(logging.INFO) else None)
 
-        stream_sub = Subscription(self.tiled_client.context, sub.segments + [key], start=0)
-        # stream_sub.add_callback(print)
-        stream_sub.add_callback(self.on_event)
+        stream_sub = event.child().subscribe(start=0)
+        stream_sub.new_data.add_callback(self.on_event)
         stream_sub.start()
-        self.publish_event(sub, data)  # ← pass sub
 
     async def start(self) -> None:
         """Start the listener by calling _start method."""
@@ -141,10 +153,9 @@ class TiledClientListener(Listener):
     def _start(self) -> None:
         """Subscribe to the socket at the provided base segments level"""
 
-        node = self.tiled_client
-        catalog_sub = Subscription(node.context)
-        catalog_sub.add_callback(self.on_new_run)
-        # catalog_sub.add_callback(self.test)
+        node = self.tiled_client[self.raw_data_path]
+        catalog_sub = node.subscribe()
+        catalog_sub.child_created.add_callback(self.on_new_run)
         catalog_sub.start()
         print("I'm running")
 
@@ -156,23 +167,29 @@ class TiledClientListener(Listener):
     def send_to_operator(self, message: SASMessage) -> None:
         asyncio.run(self.publish(message))
 
-    def publish_start(self, data: Dict[str, Any]) -> None:
+    def publish_start(self, run_node: BaseClient, data: Dict[str, Any]) -> None:
+        metadata = getattr(run_node, "metadata", {}) or {}
+        base_url = getattr(self.tiled_client.context, "base_url", "")
         start = SASStart(
-            data=data,  # Include any relevant data for the start event
+            run_id=data["key"],
+            run_name=metadata.get("run_name", data["key"]),
+            width=metadata.get("width", 0),
+            height=metadata.get("height", 0),
+            data_type=metadata.get("data_type", ""),
+            tiled_url=str(base_url),
         )
         self.send_to_operator(start)
 
-    def publish_event(self, sub: Subscription, data: Dict[str, Any]) -> None:  # ← add sub
+    def publish_event(self, event: FrameDataEvent) -> None:
         """
         Publish an event to the operator.
         """
-        data_node = self.tiled_client["/".join(sub.segments + [data["key"]])]  # ← read from tiled
-        event = RawFrameEvent(
-            image=SerializableNumpyArrayModel(array=data_node[:]),  # ← was None
-            frame_number=data.get("sequence", 0),
+        message = RawFrameEvent(
+            image=SerializableNumpyArrayModel(array=event.data()),
+            frame_number=event.sequence,
             tiled_url="",  # Placeholder for actual URL if needed
         )
-        self.send_to_operator(event)
+        self.send_to_operator(message)
 
     def print_event(self, event_name: str, data: Dict[str, Any]) -> None:
         """Print event information - placeholder method"""
@@ -221,12 +238,25 @@ def tiled_ws_listener_factory(
     uri: str,
     stream_name: str,
     operator=None,
+    raw_data_path: str = None,
     target: str = "img",
     create_run_logs: bool = True,
     log_dir: str = "tiled_logs",
     api_key: str = None,
 ) -> TiledClientListener:
     if api_key is None:
-        api_key = os.environ.get("TILED_LIVE_API_KEY")
+        api_key = os.environ.get("TILED_LIVE_API_KEY") or os.environ.get("TILED_API_KEY")
     client = from_uri(uri, api_key=api_key)
-    return TiledClientListener(client, stream_name, target, create_run_logs, log_dir)
+    return TiledClientListener(
+        tiled_client=client,
+        stream_name=stream_name,
+        raw_data_path=raw_data_path,
+        target=target,
+        create_run_logs=create_run_logs,
+        log_dir=log_dir,
+    )
+
+
+if __name__ == "__main__":
+    listener = tiled_ws_listener_factory("https://tiled.nsls2.bnl.gov", "primary", raw_data_path="smi/migration")
+    asyncio.run(listener.start())
