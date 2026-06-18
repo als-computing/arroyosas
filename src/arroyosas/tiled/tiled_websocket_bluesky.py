@@ -258,6 +258,5 @@ def tiled_ws_listener_factory(
 
 
 if __name__ == "__main__":
-    import sys
     listener = tiled_ws_listener_factory("https://tiled.nsls2.bnl.gov", "primary", raw_data_path="smi/migration")
     asyncio.run(listener.start())
