@@ -38,7 +38,7 @@ class TiledClientListener(Listener):
         self,
         tiled_client: BaseClient,
         stream_name: str,
-        raw_data_path: str,
+        raw_data_path: str = None,
         target: str = "img",
         create_run_logs: bool = True,
         log_dir: str = "tiled_logs",
