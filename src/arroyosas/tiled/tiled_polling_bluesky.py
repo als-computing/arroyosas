@@ -334,6 +334,7 @@ def tiled_poller_factory(
     poll_interval: float = 2.0,
     lookback_runs: int | None = 0,
     api_key: str | None = None,
+    operator=None,
     on_new_event: Callable[[str, str, int, Any], None] | None = None,
 ) -> TiledPoller:
     """Create a TiledPoller connected to the given URI.
