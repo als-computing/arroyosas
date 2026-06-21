@@ -24,6 +24,8 @@ logger = logging.getLogger(__name__)
 ChildCreatedEvent: TypeAlias = LiveChildCreated
 FrameDataEvent: TypeAlias = LiveArrayData | LiveArrayRef
 
+subs = []  # List to keep track of all subscriptions
+
 
 class TiledClientListener(Listener):
     """
@@ -70,7 +72,7 @@ class TiledClientListener(Listener):
         run_node = event.child()
         run_sub = run_node.subscribe(start=0)
         run_sub.child_created.add_callback(self.on_streams_namespace)
-        run_sub.start()
+        run_sub.start_in_thread()
         # Publish start event
         self.publish_start(run_node, {"key": uid})
 
@@ -90,7 +92,7 @@ class TiledClientListener(Listener):
 
         streams_sub = event.child().subscribe(start=0)
         streams_sub.child_created.add_callback(self.on_new_stream)
-        streams_sub.start()
+        streams_sub.start_in_thread()
 
     def on_new_stream(self, event: ChildCreatedEvent) -> None:
         """
@@ -108,7 +110,7 @@ class TiledClientListener(Listener):
 
         stream_sub = event.child().subscribe(start=0)
         stream_sub.child_created.add_callback(self.on_node_in_stream)
-        stream_sub.start()
+        stream_sub.start_in_thread()
 
     def on_event(self, event: FrameDataEvent) -> None:
         """
@@ -156,8 +158,14 @@ class TiledClientListener(Listener):
         node = self.tiled_client[self.raw_data_path]
         catalog_sub = node.subscribe()
         catalog_sub.child_created.add_callback(self.on_new_run)
-        catalog_sub.start()
-        print("I'm running")
+        catalog_sub.start_in_thread()
+        while True:
+            try:
+                if not self._running:
+                    break
+            except KeyboardInterrupt:
+                break
+            time.sleep(1)  # Sleep to prevent busy waiting
 
     async def stop(self) -> None:
         """Stop the listener by calling _stop method."""
