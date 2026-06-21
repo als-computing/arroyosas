@@ -102,7 +102,7 @@ class TestTiledClientListenerBluesky:
 
         run_node.subscribe.assert_called_once_with(start=0)
         run_sub.child_created.add_callback.assert_called_once_with(listener.on_streams_namespace)
-        run_sub.start.assert_called_once()
+        run_sub.start_in_thread.assert_called_once()
         mock_publish_start.assert_called_once_with(run_node, {"key": "run_uid_123"})
 
     def test_on_new_run_calls_publish_start(self, listener):

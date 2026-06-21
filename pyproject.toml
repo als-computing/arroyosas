@@ -25,9 +25,10 @@ dependencies = [
     "zarr",
     "transformers",
     "tiled[all]",
-    "redis"]
+    "redis",
+]
 
-[project.optional-dependencies]
+[dependency-groups]
 workflow-viz = [
     "joblib",
     "numpy<2.0.0",
@@ -37,7 +38,8 @@ workflow-viz = [
     "pyarrow>=14.0.1",
     "requests==2.26.0",
     "diskcache==5.6.3",
-    "scikit-learn==1.3.0"]
+    "scikit-learn==1.3.0",
+]
 
 dev = [
     "fakeredis",
@@ -46,8 +48,8 @@ dev = [
     "pytest-asyncio",
     "pytest-cov",
     "pytest-mock",
-    "tiled[server]"
-    ]
+    "tiled[server]",
+]
 
 lse = [
     "aiosqlite",
@@ -63,6 +65,8 @@ lse = [
     "umap-learn",
     "joblib==1.4.2",
     "mlflow",
+    "protobuf<4.0.0",
+    "setuptools<71",
 ]
 
 
@@ -92,7 +96,7 @@ cpuonly = {version = "*", channel = "pytorch"}
 numpy = "<2.0"
 
 [tool.pixi.pypi-dependencies]
-arroyosas = { path = ".", editable = true, extras = ["lse"] }
+arroyosas = { path = ".", editable = true }
 arroyopy = { path = "../arroyopy", editable = true }
 
 [tool.pixi.tasks]
