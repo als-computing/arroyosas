@@ -4,6 +4,7 @@ import asyncio
 import logging
 import os
 import sys
+import time
 from collections import defaultdict
 from typing import Any, Callable
 
@@ -55,19 +56,24 @@ class TiledPoller:
         self._event_counts: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
 
         self._initialized = False
-        # Created lazily in start() so it always belongs to the running event loop.
-        self._stop_event: asyncio.Event | None = None
+        self._running = False
 
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
 
     async def start(self) -> None:
-        """Run the polling loop until stop() is called or KeyboardInterrupt."""
-        self._stop_event = asyncio.Event()
+        """Start the polling loop in a background thread and block until stopped."""
+        self._running = True
         logger.info("TiledPoller starting (interval=%.1fs)", self.poll_interval)
+        await asyncio.to_thread(self._run)
+
+    def _run(self) -> None:
+        """Blocking poll loop — runs in a thread via asyncio.to_thread."""
         try:
-            await self._poll_loop()
+            while self._running:
+                self._poll_once()
+                time.sleep(self.poll_interval)
         except KeyboardInterrupt:
             logger.info("TiledPoller interrupted by user")
         finally:
@@ -75,8 +81,7 @@ class TiledPoller:
 
     def stop(self) -> None:
         """Signal the polling loop to exit."""
-        if self._stop_event is not None:
-            self._stop_event.set()
+        self._running = False
 
     # ------------------------------------------------------------------
     # Internal helpers
@@ -89,18 +94,6 @@ class TiledPoller:
             for part in self.raw_data_path.strip("/").split("/"):
                 node = node[part]
         return node
-
-    async def _poll_loop(self) -> None:
-        """Main async loop: wake every poll_interval and walk the tree."""
-        while not self._stop_event.is_set():
-            try:
-                await asyncio.to_thread(self._poll_once)
-            except Exception as e:
-                logger.warning("Poll cycle raised an exception: %s", e)
-            try:
-                await asyncio.wait_for(self._stop_event.wait(), timeout=self.poll_interval)
-            except asyncio.TimeoutError:
-                pass  # normal — just means stop was not signalled
 
     def _poll_once(self) -> None:
         """Execute one full tree walk synchronously (called in a thread)."""
