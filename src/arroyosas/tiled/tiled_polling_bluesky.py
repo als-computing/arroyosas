@@ -24,6 +24,8 @@ class TiledPoller:
     Args:
         tiled_client: An authenticated Tiled root client.
         raw_data_path: Slash-separated path within the catalog to poll under.
+        stream_name: Name of the namespace/stream to watch (e.g. ``"primary"``).
+            Only namespaces whose key matches this value are descended into.
         target: Key within each stream to watch for frame data (e.g. ``"img"``).
         poll_interval: Seconds between polls at each level.
         lookback_runs: Number of already-existing runs to process before watching
@@ -38,6 +40,7 @@ class TiledPoller:
         self,
         tiled_client: BaseClient,
         raw_data_path: str | None = None,
+        stream_name: str = "primary",
         target: str = "img",
         poll_interval: float = 2.0,
         lookback_runs: int | None = 0,
@@ -45,6 +48,7 @@ class TiledPoller:
     ) -> None:
         self.tiled_client = tiled_client
         self.raw_data_path = raw_data_path
+        self.stream_name = stream_name
         self.target = target
         self.poll_interval = poll_interval
         self.lookback_runs = lookback_runs
@@ -229,6 +233,8 @@ class TiledPoller:
             logger.info("New namespace: %s  (run: %s)", key, run_uid)
 
         for key in seen:
+            if key != self.stream_name:
+                continue
             try:
                 ns_node = run_node[key]
                 self._poll_streams(run_uid, key, ns_node)
@@ -323,6 +329,7 @@ class TiledPoller:
 def tiled_poller_factory(
     uri: str,
     raw_data_path: str | None = None,
+    stream_name: str = "primary",
     target: str = "img",
     poll_interval: float = 2.0,
     lookback_runs: int | None = 0,
@@ -334,6 +341,7 @@ def tiled_poller_factory(
     Args:
         uri: Tiled server URI.
         raw_data_path: Path within the catalog to poll under.
+        stream_name: Name of the namespace/stream to watch (e.g. ``"primary"``).
         target: Key within each stream to watch for frame data.
         poll_interval: Seconds between polls.
         lookback_runs: Number of already-existing runs to process on startup.
@@ -351,6 +359,7 @@ def tiled_poller_factory(
     return TiledPoller(
         tiled_client=client,
         raw_data_path=raw_data_path,
+        stream_name=stream_name,
         target=target,
         poll_interval=poll_interval,
         lookback_runs=lookback_runs,
