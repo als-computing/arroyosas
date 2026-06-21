@@ -38,7 +38,7 @@ services:
       context: .
     restart: unless-stopped
     environment:
-      TILED_API_KEY=${TILED_SINGLE_USER_API_KEY}
+      TILED_API_KEY: ${TILED_SINGLE_USER_API_KEY}
     ports:
       - "8021:8021"
     volumes:
