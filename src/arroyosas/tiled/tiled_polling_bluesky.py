@@ -8,13 +8,14 @@ import time
 from collections import defaultdict
 from typing import Any, Callable
 
+from arroyopy.listener import Listener
 from tiled.client import from_uri
 from tiled.client.base import BaseClient
 
 logger = logging.getLogger(__name__)
 
 
-class TiledPoller:
+class TiledPoller(Listener):
     """Polls a Tiled catalog for new scans, namespaces, streams, and events.
 
     Rather than subscribing to websocket events, this class periodically walks
