@@ -49,15 +49,14 @@ class TiledPoller:
         self.lookback_runs = lookback_runs
         self.on_new_event = on_new_event
 
-        # Seen-key sets, keyed by node path string to allow re-use across levels.
         self._seen_scans: set[str] = set()
         self._seen_namespaces: dict[str, set[str]] = defaultdict(set)
         self._seen_streams: dict[str, set[str]] = defaultdict(set)
-        # event_counts[run_uid][stream_name] = last known length
         self._event_counts: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
 
         self._initialized = False
-        self._stop_event = asyncio.Event()
+        # Created lazily in start() so it always belongs to the running event loop.
+        self._stop_event: asyncio.Event | None = None
 
     # ------------------------------------------------------------------
     # Public API
@@ -65,6 +64,7 @@ class TiledPoller:
 
     async def start(self) -> None:
         """Run the polling loop until stop() is called or KeyboardInterrupt."""
+        self._stop_event = asyncio.Event()
         logger.info("TiledPoller starting (interval=%.1fs)", self.poll_interval)
         try:
             await self._poll_loop()
@@ -75,7 +75,8 @@ class TiledPoller:
 
     def stop(self) -> None:
         """Signal the polling loop to exit."""
-        self._stop_event.set()
+        if self._stop_event is not None:
+            self._stop_event.set()
 
     # ------------------------------------------------------------------
     # Internal helpers
@@ -178,7 +179,6 @@ class TiledPoller:
             )
         else:
             n = max(0, self.lookback_runs)
-            # page is oldest-first; the n newest entries are at the tail.
             skip_keys = page_keys[:-n] if n < len(page_keys) else []
             self._seen_scans = set(skip_keys)
             live_count = len(page_keys) - len(skip_keys)
@@ -194,11 +194,7 @@ class TiledPoller:
     # ------------------------------------------------------------------
 
     def _poll_scans(self, root: Any) -> None:
-        """Detect new scan (run) keys in the most-recent page of the root node.
-
-        Only fetches one page (oldest-first within the window) per cycle rather
-        than listing the full catalog.
-        """
+        """Detect new scan (run) keys in the most-recent page of the root node."""
         page = self._recent_page(root, self._PAGE_SIZE)
         if not page:
             return
@@ -216,7 +212,6 @@ class TiledPoller:
                 except Exception as e:
                     logger.warning("Error handling new scan %s: %s", key, e)
             else:
-                # Re-visit known scans to catch late-arriving namespaces/streams.
                 try:
                     self._poll_namespaces(key, run_node)
                 except Exception as e:
@@ -240,7 +235,6 @@ class TiledPoller:
             seen.add(key)
             logger.info("New namespace: %s  (run: %s)", key, run_uid)
 
-        # Visit all known namespaces to catch new streams inside them.
         for key in seen:
             try:
                 ns_node = run_node[key]
@@ -267,7 +261,6 @@ class TiledPoller:
             seen.add(key)
             logger.info("New stream: %s  (run: %s  ns: %s)", key, run_uid, ns_key)
 
-        # Visit all known streams to check for new events.
         for key in seen:
             try:
                 stream_node = ns_node[key]
@@ -281,7 +274,6 @@ class TiledPoller:
 
     def _poll_events(self, run_uid: str, stream_name: str, stream_node: Any) -> None:
         """Detect new events in the target array node inside a stream."""
-        # Only inspect the target key (e.g. "img") if it exists.
         try:
             target_keys = set(stream_node.keys())
         except Exception as e:
@@ -402,10 +394,9 @@ if __name__ == "__main__":
         format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
         handlers=[logging.StreamHandler(sys.stdout)],
     )
-    # httpx (used by Tiled internally) is suppressed to WARNING by default so it
-    # doesn't flood output. Pass --httpx-debug to see every HTTP request.
     logging.getLogger("httpx").setLevel(logging.WARNING)
     logging.getLogger("httpcore").setLevel(logging.WARNING)
+    logging.getLogger("numexpr").setLevel(logging.WARNING)
 
     parser = argparse.ArgumentParser(description="Poll a Tiled catalog for new scan data.")
     parser.add_argument("--uri", default="https://tiled.nsls2.bnl.gov")
@@ -419,16 +410,8 @@ if __name__ == "__main__":
         metavar="N",
         help="Process the N most-recent existing runs on startup (0 = new runs only).",
     )
-    parser.add_argument(
-        "--debug",
-        action="store_true",
-        help="Set this module's logger to DEBUG.",
-    )
-    parser.add_argument(
-        "--httpx-debug",
-        action="store_true",
-        help="Also enable DEBUG logging for httpx/httpcore (shows every HTTP request).",
-    )
+    parser.add_argument("--debug", action="store_true", help="Enable DEBUG logging for this module.")
+    parser.add_argument("--httpx-debug", action="store_true", help="Enable DEBUG logging for httpx/httpcore.")
     args = parser.parse_args()
 
     if args.debug:
