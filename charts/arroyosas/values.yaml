@@ -1,0 +1,131 @@
+nameOverride: ""
+fullnameOverride: ""
+
+tiled:
+  enabled: true
+  image:
+    repository: ghcr.io/bluesky/tiled
+    tag: 0.2.8
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8000
+  apiKey: ""
+  config: |
+    authentication:
+      allow_anonymous_access: true
+      single_user_api_key: ${TILED_SINGLE_USER_API_KEY}
+    trees:
+      - path: /
+        tree: catalog
+        args:
+          uri: "/data/tiled_catalog.db"
+          readable_storage: ["/data/tiled_storage", "/data/test_data"]
+          writable_storage: "/data/tiled_storage"
+          init_if_not_exists: true
+    uvicorn:
+      host: 0.0.0.0
+      port: 8000
+    metrics:
+      prometheus: false
+  persistence:
+    enabled: false
+    existingClaim: ""
+    storageClassName: ""
+    size: 10Gi
+
+beamlineSim:
+  enabled: true
+  image:
+    repository: ghcr.io/als-computing/arroyosas
+    tag: main
+    pullPolicy: IfNotPresent
+  command:
+    - python
+    - -m
+    - arroyosas.app.tiled_event_sim_cli
+    - /app/tiled_event_logs
+  persistence:
+    enabled: false
+    existingClaim: ""
+    storageClassName: ""
+    size: 10Gi
+
+lseOperator:
+  enabled: true
+  image:
+    repository: ghcr.io/als-computing/arroyosas
+    tag: main
+    pullPolicy: IfNotPresent
+  command:
+    - python
+    - -m
+    - arroyopy.cli
+    - run
+    - /etc/arroyosas/lse_operator_block.yaml
+  service:
+    type: ClusterIP
+    port: 8021
+  tiledApiKey: ""
+  mlflowTrackingUri: ""
+  blockConfig: |
+    blocks:
+      - name: LSE Operator
+        description: 2D latent space operator for SAS Data
+        operator:
+          class: arroyosas.lse_reduction.operator.build_lse_operator
+          kwargs:
+            redis_host: {{ include "arroyosas.fullname" . }}-kvrocks
+            redis_port: 6666
+
+        listeners:
+          - class: arroyosas.tiled.tiled_websocket_bl733.tiled_ws_listener_factory
+            kwargs:
+              uri: "https://tiled-staging.computing.als.lbl.gov"
+              sub_path: "beamlines/bl733/dylan_test"
+
+        publishers:
+          - class: arroyosas.websockets.OneDWSPublisher
+            kwargs:
+              host: "0.0.0.0"
+              port: 8020
+          - class: arroyosas.lse_reduction.tiled_results_publisher.tiled_results_publisher_factory
+            kwargs:
+              tiled_uri: "https://tiled-staging.computing.als.lbl.gov"
+
+kvrocks:
+  enabled: true
+  image:
+    repository: docker.io/apache/kvrocks
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 6666
+  persistence:
+    enabled: false
+    existingClaim: ""
+    storageClassName: ""
+    size: 5Gi
+
+mlflow:
+  enabled: true
+  image:
+    repository: ghcr.io/mlflow/mlflow
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 5000
+  command:
+    - mlflow
+    - server
+    - --host=0.0.0.0
+    - --port=5000
+    - --backend-store-uri=sqlite:////mlflow/mlflow.db
+    - --default-artifact-root=/mlflow/artifacts
+  persistence:
+    enabled: false
+    existingClaim: ""
+    storageClassName: ""
+    size: 10Gi

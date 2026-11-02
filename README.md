@@ -55,6 +55,24 @@ Changes are typically deployed by updating the Docker images and restarting the 
     ```
     The production configuration `block_configs/lse_operator_block.yaml` is used by default in the `docker-compose.yml`.
 
+### Kubernetes Deployment with Helm
+
+A Helm chart is provided at `charts/arroyosas` to deploy services analogous to `docker-compose.yml`:
+- `tiled`
+- `beamline_sim`
+- `lse_operator`
+- `kvrocks`
+- `mlflow` (tracking server)
+
+Install the chart:
+```bash
+helm upgrade --install arroyosas ./charts/arroyosas \
+  --set tiled.apiKey=<tiled-api-key> \
+  --set lseOperator.tiledApiKey=<tiled-api-key>
+```
+
+By default, persistence is disabled and `emptyDir` volumes are used. Enable persistence per service in `charts/arroyosas/values.yaml` for durable state (for example, MLflow artifacts and database).
+
 # Copyright
 
 Arroyo Stream Processing Toolset (arroyopy) Copyright (c) 2025, The Regents of the University of California, through Lawrence Berkeley National Laboratory (subject to receipt of any required approvals from the U.S. Dept. of Energy). All rights reserved.

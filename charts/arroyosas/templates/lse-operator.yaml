@@ -1,0 +1,70 @@
+{{- if .Values.lseOperator.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "arroyosas.fullname" . }}-lse-operator-config
+  labels:
+    {{- include "arroyosas.labels" . | nindent 4 }}
+data:
+  lse_operator_block.yaml: |
+{{ tpl .Values.lseOperator.blockConfig . | indent 4 }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "arroyosas.fullname" . }}-lse-operator
+  labels:
+    {{- include "arroyosas.labels" . | nindent 4 }}
+    app.kubernetes.io/component: lse-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "arroyosas.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: lse-operator
+  template:
+    metadata:
+      labels:
+        {{- include "arroyosas.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: lse-operator
+    spec:
+      containers:
+        - name: lse-operator
+          image: "{{ .Values.lseOperator.image.repository }}:{{ .Values.lseOperator.image.tag }}"
+          imagePullPolicy: {{ .Values.lseOperator.image.pullPolicy }}
+          command:
+            {{- toYaml .Values.lseOperator.command | nindent 12 }}
+          env:
+            - name: TILED_API_KEY
+              value: {{ .Values.lseOperator.tiledApiKey | quote }}
+            - name: MLFLOW_TRACKING_URI
+              value: {{ default (printf "http://%s-mlflow:%v" (include "arroyosas.fullname" .) .Values.mlflow.service.port) .Values.lseOperator.mlflowTrackingUri | quote }}
+          ports:
+            - name: ws
+              containerPort: {{ .Values.lseOperator.service.port }}
+          volumeMounts:
+            - name: lse-operator-config
+              mountPath: /etc/arroyosas/lse_operator_block.yaml
+              subPath: lse_operator_block.yaml
+      volumes:
+        - name: lse-operator-config
+          configMap:
+            name: {{ include "arroyosas.fullname" . }}-lse-operator-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "arroyosas.fullname" . }}-lse-operator
+  labels:
+    {{- include "arroyosas.labels" . | nindent 4 }}
+    app.kubernetes.io/component: lse-operator
+spec:
+  type: {{ .Values.lseOperator.service.type }}
+  selector:
+    {{- include "arroyosas.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: lse-operator
+  ports:
+    - name: ws
+      port: {{ .Values.lseOperator.service.port }}
+      targetPort: ws
+{{- end }}
