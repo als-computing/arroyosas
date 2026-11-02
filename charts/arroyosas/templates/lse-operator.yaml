@@ -36,7 +36,11 @@ spec:
             {{- toYaml .Values.lseOperator.command | nindent 12 }}
           env:
             - name: TILED_API_KEY
-              value: {{ .Values.lseOperator.tiledApiKey | quote }}
+              value: {{ include "arroyosas.tiledApiKey" . | quote }}
+            - name: TILED_LIVE_API_KEY
+              value: {{ include "arroyosas.tiledApiKey" . | quote }}
+            - name: RESULTS_TILED_API_KEY
+              value: {{ include "arroyosas.tiledApiKey" . | quote }}
             - name: MLFLOW_TRACKING_URI
               value: {{ default (printf "http://%s-mlflow:%v" (include "arroyosas.fullname" .) .Values.mlflow.service.port) .Values.lseOperator.mlflowTrackingUri | quote }}
           ports:

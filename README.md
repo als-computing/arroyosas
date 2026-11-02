@@ -67,8 +67,15 @@ A Helm chart is provided at `charts/arroyosas` to deploy services analogous to `
 Install the chart:
 ```bash
 helm upgrade --install arroyosas ./charts/arroyosas \
-  --set tiled.apiKey=<tiled-api-key> \
-  --set lseOperator.tiledApiKey=<tiled-api-key>
+  --set tiled.apiKey=<tiled-api-key>
+```
+
+By default the LSE operator uses the bundled `tiled`. To point it at an external Tiled server instead:
+```bash
+helm upgrade --install arroyosas ./charts/arroyosas \
+  --set tiled.enabled=false \
+  --set lseOperator.tiled.uri=https://tiled-staging.computing.als.lbl.gov \
+  --set lseOperator.tiled.apiKey=<tiled-api-key>
 ```
 
 By default, persistence is disabled and `emptyDir` volumes are used. Enable persistence per service in `charts/arroyosas/values.yaml` for durable state (for example, MLflow artifacts and database).

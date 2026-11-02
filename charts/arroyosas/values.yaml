@@ -66,7 +66,13 @@ lseOperator:
   service:
     type: ClusterIP
     port: 8021
-  tiledApiKey: ""
+  tiled:
+    # Tiled server the operator listens to and publishes results to.
+    # Empty uses the tiled deployed by this chart (requires tiled.enabled).
+    uri: ""
+    # Empty uses tiled.apiKey when the bundled tiled is in use.
+    apiKey: ""
+    subPath: "beamlines/bl733/dylan_test"
   mlflowTrackingUri: ""
   blockConfig: |
     blocks:
@@ -81,8 +87,8 @@ lseOperator:
         listeners:
           - class: arroyosas.tiled.tiled_websocket_bl733.tiled_ws_listener_factory
             kwargs:
-              uri: "https://tiled-staging.computing.als.lbl.gov"
-              sub_path: "beamlines/bl733/dylan_test"
+              uri: {{ include "arroyosas.tiledUri" . | quote }}
+              sub_path: {{ .Values.lseOperator.tiled.subPath | quote }}
 
         publishers:
           - class: arroyosas.websockets.OneDWSPublisher
@@ -91,7 +97,7 @@ lseOperator:
               port: 8020
           - class: arroyosas.lse_reduction.tiled_results_publisher.tiled_results_publisher_factory
             kwargs:
-              tiled_uri: "https://tiled-staging.computing.als.lbl.gov"
+              tiled_uri: {{ include "arroyosas.tiledUri" . | quote }}
 
 kvrocks:
   enabled: true

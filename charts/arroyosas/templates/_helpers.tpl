@@ -27,3 +27,21 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 app.kubernetes.io/name: {{ include "arroyosas.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
+
+{{- define "arroyosas.tiledUri" -}}
+{{- if .Values.lseOperator.tiled.uri -}}
+{{- .Values.lseOperator.tiled.uri -}}
+{{- else if .Values.tiled.enabled -}}
+{{- printf "http://%s-tiled:%v" (include "arroyosas.fullname" .) .Values.tiled.service.port -}}
+{{- else -}}
+{{- fail "lseOperator.tiled.uri must be set when tiled.enabled is false" -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "arroyosas.tiledApiKey" -}}
+{{- if .Values.lseOperator.tiled.apiKey -}}
+{{- .Values.lseOperator.tiled.apiKey -}}
+{{- else if not .Values.lseOperator.tiled.uri -}}
+{{- .Values.tiled.apiKey -}}
+{{- end -}}
+{{- end -}}
