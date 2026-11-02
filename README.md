@@ -78,6 +78,12 @@ helm upgrade --install arroyosas ./charts/arroyosas \
   --set lseOperator.tiled.apiKey=<tiled-api-key>
 ```
 
+The chart is also published to GitHub Container Registry. Release versions come from `v*` tags; pushes to `main` publish prerelease versions such as `0.1.0-main.42`:
+```bash
+helm upgrade --install arroyosas oci://ghcr.io/als-computing/charts/arroyosas --version <version> \
+  -f my-values.yaml
+```
+
 By default, persistence is disabled and `emptyDir` volumes are used. Enable persistence per service in `charts/arroyosas/values.yaml` for durable state (for example, MLflow artifacts and database).
 
 # Copyright

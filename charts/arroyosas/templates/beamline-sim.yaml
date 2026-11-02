@@ -38,7 +38,7 @@ spec:
     spec:
       containers:
         - name: beamline-sim
-          image: "{{ .Values.beamlineSim.image.repository }}:{{ .Values.beamlineSim.image.tag }}"
+          image: "{{ .Values.beamlineSim.image.repository }}:{{ .Values.beamlineSim.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.beamlineSim.image.pullPolicy }}
           command:
             {{- toYaml .Values.beamlineSim.command | nindent 12 }}

@@ -38,7 +38,8 @@ beamlineSim:
   enabled: true
   image:
     repository: ghcr.io/als-computing/arroyosas
-    tag: main
+    # Empty uses the chart's appVersion.
+    tag: ""
     pullPolicy: IfNotPresent
   command:
     - python
@@ -55,7 +56,8 @@ lseOperator:
   enabled: true
   image:
     repository: ghcr.io/als-computing/arroyosas
-    tag: main
+    # Empty uses the chart's appVersion.
+    tag: ""
     pullPolicy: IfNotPresent
   command:
     - python
@@ -94,7 +96,7 @@ lseOperator:
           - class: arroyosas.websockets.OneDWSPublisher
             kwargs:
               host: "0.0.0.0"
-              port: 8020
+              port: {{ .Values.lseOperator.service.port }}
           - class: arroyosas.lse_reduction.tiled_results_publisher.tiled_results_publisher_factory
             kwargs:
               tiled_uri: {{ include "arroyosas.tiledUri" . | quote }}

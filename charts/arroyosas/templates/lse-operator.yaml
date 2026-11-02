@@ -30,7 +30,7 @@ spec:
     spec:
       containers:
         - name: lse-operator
-          image: "{{ .Values.lseOperator.image.repository }}:{{ .Values.lseOperator.image.tag }}"
+          image: "{{ .Values.lseOperator.image.repository }}:{{ .Values.lseOperator.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.lseOperator.image.pullPolicy }}
           command:
             {{- toYaml .Values.lseOperator.command | nindent 12 }}
