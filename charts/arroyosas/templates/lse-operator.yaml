@@ -1,0 +1,94 @@
+{{- if .Values.lseOperator.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "arroyosas.fullname" . }}-lse-operator-config
+  labels:
+    {{- include "arroyosas.labels" . | nindent 4 }}
+data:
+  lse_operator_block.yaml: |
+{{ tpl .Values.lseOperator.blockConfig . | indent 4 }}
+---
+{{- if and .Values.lseOperator.tiled.apiKey (not .Values.lseOperator.tiled.existingSecret) }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "arroyosas.lseOperator.tiledSecretName" . }}
+  labels:
+    {{- include "arroyosas.labels" . | nindent 4 }}
+type: Opaque
+data:
+  api-key: {{ .Values.lseOperator.tiled.apiKey | b64enc | quote }}
+---
+{{- end }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "arroyosas.fullname" . }}-lse-operator
+  labels:
+    {{- include "arroyosas.labels" . | nindent 4 }}
+    app.kubernetes.io/component: lse-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "arroyosas.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: lse-operator
+  template:
+    metadata:
+      labels:
+        {{- include "arroyosas.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: lse-operator
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: lse-operator
+          image: "{{ .Values.lseOperator.image.repository }}:{{ .Values.lseOperator.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.lseOperator.image.pullPolicy }}
+          command:
+            {{- toYaml .Values.lseOperator.command | nindent 12 }}
+          env:
+            {{- $secretName := include "arroyosas.lseOperator.tiledSecretName" . }}
+            {{- if $secretName }}
+            {{- range list "TILED_API_KEY" "TILED_LIVE_API_KEY" "RESULTS_TILED_API_KEY" }}
+            - name: {{ . }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $secretName }}
+                  key: {{ include "arroyosas.lseOperator.tiledSecretKey" $ }}
+            {{- end }}
+            {{- end }}
+            - name: MLFLOW_TRACKING_URI
+              value: {{ default (printf "http://%s-mlflow:%v" (include "arroyosas.fullname" .) .Values.mlflow.service.port) .Values.lseOperator.mlflowTrackingUri | quote }}
+          ports:
+            - name: ws
+              containerPort: {{ .Values.lseOperator.service.port }}
+          volumeMounts:
+            - name: lse-operator-config
+              mountPath: /etc/arroyosas/lse_operator_block.yaml
+              subPath: lse_operator_block.yaml
+      volumes:
+        - name: lse-operator-config
+          configMap:
+            name: {{ include "arroyosas.fullname" . }}-lse-operator-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "arroyosas.fullname" . }}-lse-operator
+  labels:
+    {{- include "arroyosas.labels" . | nindent 4 }}
+    app.kubernetes.io/component: lse-operator
+spec:
+  type: {{ .Values.lseOperator.service.type }}
+  selector:
+    {{- include "arroyosas.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: lse-operator
+  ports:
+    - name: ws
+      port: {{ .Values.lseOperator.service.port }}
+      targetPort: ws
+{{- end }}

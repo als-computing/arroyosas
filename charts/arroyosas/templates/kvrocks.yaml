@@ -1,0 +1,78 @@
+{{- if .Values.kvrocks.enabled }}
+{{- if and .Values.kvrocks.persistence.enabled (not .Values.kvrocks.persistence.existingClaim) }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "arroyosas.fullname" . }}-kvrocks-data
+  labels:
+    {{- include "arroyosas.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.kvrocks.persistence.size }}
+  {{- if .Values.kvrocks.persistence.storageClassName }}
+  storageClassName: {{ .Values.kvrocks.persistence.storageClassName }}
+  {{- end }}
+---
+{{- end }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "arroyosas.fullname" . }}-kvrocks
+  labels:
+    {{- include "arroyosas.labels" . | nindent 4 }}
+    app.kubernetes.io/component: kvrocks
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "arroyosas.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: kvrocks
+  template:
+    metadata:
+      labels:
+        {{- include "arroyosas.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: kvrocks
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: kvrocks
+          image: "{{ .Values.kvrocks.image.repository }}:{{ .Values.kvrocks.image.tag }}"
+          imagePullPolicy: {{ .Values.kvrocks.image.pullPolicy }}
+          ports:
+            - name: tcp
+              containerPort: {{ .Values.kvrocks.service.port }}
+          volumeMounts:
+            - name: kvrocks-data
+              mountPath: /data
+      volumes:
+        - name: kvrocks-data
+          {{- if .Values.kvrocks.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ default (printf "%s-kvrocks-data" (include "arroyosas.fullname" .)) .Values.kvrocks.persistence.existingClaim }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "arroyosas.fullname" . }}-kvrocks
+  labels:
+    {{- include "arroyosas.labels" . | nindent 4 }}
+    app.kubernetes.io/component: kvrocks
+spec:
+  type: {{ .Values.kvrocks.service.type }}
+  selector:
+    {{- include "arroyosas.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: kvrocks
+  ports:
+    - name: tcp
+      port: {{ .Values.kvrocks.service.port }}
+      targetPort: tcp
+{{- end }}

@@ -1,0 +1,171 @@
+nameOverride: ""
+fullnameOverride: ""
+
+# Secrets for pulling private images, e.g. [{name: ghcr-pull}]. Applied to every pod.
+imagePullSecrets: []
+
+tiled:
+  enabled: true
+  image:
+    repository: ghcr.io/bluesky/tiled
+    tag: 0.2.8
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8000
+  # Stored in a Secret. Empty generates a random key, kept across upgrades.
+  apiKey: ""
+  # Use a pre-created Secret instead; apiKey is then ignored.
+  existingSecret: ""
+  existingSecretKey: api-key
+  config: |
+    authentication:
+      allow_anonymous_access: true
+      single_user_api_key: ${TILED_SINGLE_USER_API_KEY}
+    trees:
+      - path: /
+        tree: catalog
+        args:
+          uri: "/data/tiled_catalog.db"
+          readable_storage: ["/data/tiled_storage", "/data/test_data"]
+          writable_storage: "/data/tiled_storage"
+          init_if_not_exists: true
+    uvicorn:
+      host: 0.0.0.0
+      port: 8000
+    metrics:
+      prometheus: false
+  persistence:
+    enabled: false
+    existingClaim: ""
+    storageClassName: ""
+    size: 10Gi
+
+beamlineSim:
+  enabled: true
+  image:
+    repository: ghcr.io/als-computing/arroyosas
+    # Empty uses the chart's appVersion.
+    tag: ""
+    pullPolicy: IfNotPresent
+  command:
+    - python
+    - -m
+    - arroyosas.app.tiled_event_sim_cli
+    - /app/tiled_event_logs
+  persistence:
+    enabled: false
+    existingClaim: ""
+    storageClassName: ""
+    size: 10Gi
+
+lseOperator:
+  enabled: true
+  image:
+    repository: ghcr.io/als-computing/arroyosas
+    # Empty uses the chart's appVersion.
+    tag: ""
+    pullPolicy: IfNotPresent
+  command:
+    - python
+    - -m
+    - arroyopy.cli
+    - run
+    - /etc/arroyosas/lse_operator_block.yaml
+  service:
+    type: ClusterIP
+    port: 8021
+  tiled:
+    # Tiled server the operator listens to and publishes results to.
+    # Empty uses the tiled deployed by this chart (requires tiled.enabled).
+    uri: ""
+    # Stored in a Secret. Empty uses the bundled tiled's key when uri is empty.
+    apiKey: ""
+    # Use a pre-created Secret instead; apiKey is then ignored.
+    existingSecret: ""
+    existingSecretKey: api-key
+    subPath: "beamlines/bl733/dylan_test"
+  mlflowTrackingUri: ""
+  blockConfig: |
+    blocks:
+      - name: LSE Operator
+        description: 2D latent space operator for SAS Data
+        operator:
+          class: arroyosas.lse_reduction.operator.build_lse_operator
+          kwargs:
+            redis_host: {{ include "arroyosas.fullname" . }}-kvrocks
+            redis_port: 6666
+
+        listeners:
+          - class: arroyosas.tiled.tiled_websocket_bl733.tiled_ws_listener_factory
+            kwargs:
+              uri: {{ include "arroyosas.tiledUri" . | quote }}
+              sub_path: {{ .Values.lseOperator.tiled.subPath | quote }}
+
+        publishers:
+          - class: arroyosas.lse_reduction.publisher.LSEWSResultPublisher
+            kwargs:
+              host: "0.0.0.0"
+              port: {{ .Values.lseOperator.service.port }}
+          - class: arroyosas.lse_reduction.tiled_results_publisher.tiled_results_publisher_factory
+            kwargs:
+              tiled_uri: {{ include "arroyosas.tiledUri" . | quote }}
+
+lseApi:
+  enabled: true
+  image:
+    repository: ghcr.io/als-computing/forge_latent_space_explorer
+    tag: main-api
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8081
+  # Additional env vars, e.g. MLFLOW_TRACKING_USERNAME or PREFECT_API_URL.
+  extraEnv: []
+
+lseUi:
+  enabled: true
+  image:
+    repository: ghcr.io/als-computing/forge_latent_space_explorer
+    tag: main-ui
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 5173
+
+kvrocks:
+  enabled: true
+  image:
+    repository: docker.io/apache/kvrocks
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 6666
+  persistence:
+    enabled: false
+    existingClaim: ""
+    storageClassName: ""
+    size: 5Gi
+
+mlflow:
+  enabled: true
+  image:
+    repository: ghcr.io/mlflow/mlflow
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 5000
+  command:
+    - mlflow
+    - server
+    - --host=0.0.0.0
+    - --port=5000
+    - --backend-store-uri=sqlite:////mlflow/mlflow.db
+    - --default-artifact-root=/mlflow/artifacts
+  persistence:
+    enabled: false
+    existingClaim: ""
+    storageClassName: ""
+    size: 10Gi

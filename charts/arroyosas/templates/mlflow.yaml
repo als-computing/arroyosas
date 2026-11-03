@@ -1,0 +1,92 @@
+{{- if .Values.mlflow.enabled }}
+{{- if and .Values.mlflow.persistence.enabled (not .Values.mlflow.persistence.existingClaim) }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "arroyosas.fullname" . }}-mlflow-data
+  labels:
+    {{- include "arroyosas.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.mlflow.persistence.size }}
+  {{- if .Values.mlflow.persistence.storageClassName }}
+  storageClassName: {{ .Values.mlflow.persistence.storageClassName }}
+  {{- end }}
+---
+{{- end }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "arroyosas.fullname" . }}-mlflow
+  labels:
+    {{- include "arroyosas.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mlflow
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "arroyosas.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: mlflow
+  template:
+    metadata:
+      labels:
+        {{- include "arroyosas.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: mlflow
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: mlflow
+          image: "{{ .Values.mlflow.image.repository }}:{{ .Values.mlflow.image.tag }}"
+          imagePullPolicy: {{ .Values.mlflow.image.pullPolicy }}
+          command:
+            {{- toYaml .Values.mlflow.command | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.mlflow.service.port }}
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          volumeMounts:
+            - name: mlflow-data
+              mountPath: /mlflow
+      volumes:
+        - name: mlflow-data
+          {{- if .Values.mlflow.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ default (printf "%s-mlflow-data" (include "arroyosas.fullname" .)) .Values.mlflow.persistence.existingClaim }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "arroyosas.fullname" . }}-mlflow
+  labels:
+    {{- include "arroyosas.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mlflow
+spec:
+  type: {{ .Values.mlflow.service.type }}
+  selector:
+    {{- include "arroyosas.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: mlflow
+  ports:
+    - name: http
+      port: {{ .Values.mlflow.service.port }}
+      targetPort: http
+{{- end }}

@@ -1,0 +1,60 @@
+{{- if .Values.beamlineSim.enabled }}
+{{- if and .Values.beamlineSim.persistence.enabled (not .Values.beamlineSim.persistence.existingClaim) }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "arroyosas.fullname" . }}-beamline-sim-logs
+  labels:
+    {{- include "arroyosas.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.beamlineSim.persistence.size }}
+  {{- if .Values.beamlineSim.persistence.storageClassName }}
+  storageClassName: {{ .Values.beamlineSim.persistence.storageClassName }}
+  {{- end }}
+---
+{{- end }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "arroyosas.fullname" . }}-beamline-sim
+  labels:
+    {{- include "arroyosas.labels" . | nindent 4 }}
+    app.kubernetes.io/component: beamline-sim
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "arroyosas.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: beamline-sim
+  template:
+    metadata:
+      labels:
+        {{- include "arroyosas.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: beamline-sim
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: beamline-sim
+          image: "{{ .Values.beamlineSim.image.repository }}:{{ .Values.beamlineSim.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.beamlineSim.image.pullPolicy }}
+          command:
+            {{- toYaml .Values.beamlineSim.command | nindent 12 }}
+          volumeMounts:
+            - name: beamline-sim-logs
+              mountPath: /app/tiled_event_logs
+      volumes:
+        - name: beamline-sim-logs
+          {{- if .Values.beamlineSim.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ default (printf "%s-beamline-sim-logs" (include "arroyosas.fullname" .)) .Values.beamlineSim.persistence.existingClaim }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+{{- end }}

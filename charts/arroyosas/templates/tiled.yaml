@@ -1,0 +1,124 @@
+{{- if .Values.tiled.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "arroyosas.fullname" . }}-tiled-config
+  labels:
+    {{- include "arroyosas.labels" . | nindent 4 }}
+data:
+  config.yml: |
+{{ .Values.tiled.config | indent 4 }}
+---
+{{- if not .Values.tiled.existingSecret }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "arroyosas.tiled.secretName" . }}
+  labels:
+    {{- include "arroyosas.labels" . | nindent 4 }}
+type: Opaque
+data:
+  api-key: {{ include "arroyosas.tiled.apiKey" . | b64enc | quote }}
+---
+{{- end }}
+{{- if and .Values.tiled.persistence.enabled (not .Values.tiled.persistence.existingClaim) }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "arroyosas.fullname" . }}-tiled-data
+  labels:
+    {{- include "arroyosas.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.tiled.persistence.size }}
+  {{- if .Values.tiled.persistence.storageClassName }}
+  storageClassName: {{ .Values.tiled.persistence.storageClassName }}
+  {{- end }}
+---
+{{- end }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "arroyosas.fullname" . }}-tiled
+  labels:
+    {{- include "arroyosas.labels" . | nindent 4 }}
+    app.kubernetes.io/component: tiled
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "arroyosas.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: tiled
+  template:
+    metadata:
+      labels:
+        {{- include "arroyosas.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: tiled
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: tiled
+          image: "{{ .Values.tiled.image.repository }}:{{ .Values.tiled.image.tag }}"
+          imagePullPolicy: {{ .Values.tiled.image.pullPolicy }}
+          env:
+            - name: TILED_SINGLE_USER_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "arroyosas.tiled.secretName" . }}
+                  key: {{ include "arroyosas.tiled.secretKey" . }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.tiled.service.port }}
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          volumeMounts:
+            - name: tiled-config
+              mountPath: /config/config.yml
+              subPath: config.yml
+            - name: tiled-data
+              mountPath: /data
+      volumes:
+        - name: tiled-config
+          configMap:
+            name: {{ include "arroyosas.fullname" . }}-tiled-config
+        - name: tiled-data
+          {{- if .Values.tiled.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ default (printf "%s-tiled-data" (include "arroyosas.fullname" .)) .Values.tiled.persistence.existingClaim }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "arroyosas.fullname" . }}-tiled
+  labels:
+    {{- include "arroyosas.labels" . | nindent 4 }}
+    app.kubernetes.io/component: tiled
+spec:
+  type: {{ .Values.tiled.service.type }}
+  selector:
+    {{- include "arroyosas.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: tiled
+  ports:
+    - name: http
+      port: {{ .Values.tiled.service.port }}
+      targetPort: http
+{{- end }}
