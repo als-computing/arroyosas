@@ -1,6 +1,9 @@
 nameOverride: ""
 fullnameOverride: ""
 
+# Secrets for pulling private images, e.g. [{name: ghcr-pull}]. Applied to every pod.
+imagePullSecrets: []
+
 tiled:
   enabled: true
   image:
@@ -100,13 +103,35 @@ lseOperator:
               sub_path: {{ .Values.lseOperator.tiled.subPath | quote }}
 
         publishers:
-          - class: arroyosas.websockets.OneDWSPublisher
+          - class: arroyosas.lse_reduction.publisher.LSEWSResultPublisher
             kwargs:
               host: "0.0.0.0"
               port: {{ .Values.lseOperator.service.port }}
           - class: arroyosas.lse_reduction.tiled_results_publisher.tiled_results_publisher_factory
             kwargs:
               tiled_uri: {{ include "arroyosas.tiledUri" . | quote }}
+
+lseApi:
+  enabled: true
+  image:
+    repository: ghcr.io/als-computing/forge_latent_space_explorer
+    tag: main-api
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8081
+  # Additional env vars, e.g. MLFLOW_TRACKING_USERNAME or PREFECT_API_URL.
+  extraEnv: []
+
+lseUi:
+  enabled: true
+  image:
+    repository: ghcr.io/als-computing/forge_latent_space_explorer
+    tag: main-ui
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 5173
 
 kvrocks:
   enabled: true

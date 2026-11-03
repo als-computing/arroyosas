@@ -40,6 +40,10 @@ spec:
         {{- include "arroyosas.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: lse-operator
     spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: lse-operator
           image: "{{ .Values.lseOperator.image.repository }}:{{ .Values.lseOperator.image.tag | default .Chart.AppVersion }}"

@@ -36,6 +36,10 @@ spec:
         {{- include "arroyosas.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: beamline-sim
     spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: beamline-sim
           image: "{{ .Values.beamlineSim.image.repository }}:{{ .Values.beamlineSim.image.tag | default .Chart.AppVersion }}"

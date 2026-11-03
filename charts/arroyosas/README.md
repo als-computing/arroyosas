@@ -5,7 +5,9 @@ Deploys the arroyoSAXS stream processing stack:
 | Component | Image | Purpose |
 |---|---|---|
 | `tiled` | `ghcr.io/bluesky/tiled` | Data server the operator reads from and writes results to |
-| `lse-operator` | `ghcr.io/als-computing/arroyosas` | LSE reduction operator; serves results to the frontend over websocket |
+| `lse-operator` | `ghcr.io/als-computing/arroyosas` | LSE reduction operator; publishes latent space events over websocket |
+| `lse-api` | `ghcr.io/als-computing/forge_latent_space_explorer:main-api` | Latent Space Explorer backend; reads the operator's websocket, tiled, kvrocks and mlflow |
+| `lse-ui` | `ghcr.io/als-computing/forge_latent_space_explorer:main-ui` | Latent Space Explorer web UI (nginx); proxies `/api/v1/` to `lse-api` |
 | `beamline-sim` | `ghcr.io/als-computing/arroyosas` | Replays recorded tiled events for testing |
 | `kvrocks` | `docker.io/apache/kvrocks` | Redis-compatible model store used by the operator |
 | `mlflow` | `ghcr.io/mlflow/mlflow` | Tracking server for the operator's models |
@@ -91,18 +93,13 @@ kubectl -n arroyo rollout restart deploy/arroyosas-tiled deploy/arroyosas-lse-op
 All services are `ClusterIP`. Use port forwarding:
 
 ```bash
+kubectl -n arroyo port-forward svc/arroyosas-lse-ui 5173:5173         # http://localhost:5173 (Latent Space Explorer)
 kubectl -n arroyo port-forward svc/arroyosas-tiled 8000:8000          # http://localhost:8000/ui/
 kubectl -n arroyo port-forward svc/arroyosas-mlflow 5000:5000         # http://localhost:5000
-kubectl -n arroyo port-forward svc/arroyosas-lse-operator 8021:8021   # websocket for the frontend
 ```
 
-The frontend is not part of this chart. Run it from `frontend/` pointed at the
-forwarded operator:
-
-```bash
-cd frontend && npm install
-REACT_APP_WEBSOCKET_URL=ws://localhost:8021 npm start
-```
+The UI only needs its own port forwarded; it reaches the API, and the API reaches the
+operator, tiled, kvrocks and mlflow, inside the cluster.
 
 ## Persistence
 
@@ -127,6 +124,7 @@ replay until event logs are placed in that volume.
 | Key | Default | Description |
 |---|---|---|
 | `nameOverride` / `fullnameOverride` | `""` | Override resource names |
+| `imagePullSecrets` | `[]` | Pull secrets applied to every pod, e.g. `[{name: ghcr-pull}]` |
 | `tiled.enabled` | `true` | Deploy tiled |
 | `tiled.image.repository` / `tag` | `ghcr.io/bluesky/tiled` / `0.2.8` | Tiled image |
 | `tiled.service.port` | `8000` | Tiled service port |
@@ -147,6 +145,13 @@ replay until event logs are placed in that volume.
 | `lseOperator.tiled.subPath` | `beamlines/bl733/dylan_test` | Tiled path the operator listens on |
 | `lseOperator.mlflowTrackingUri` | `""` | MLflow URI; empty uses the bundled mlflow |
 | `lseOperator.blockConfig` | see `values.yaml` | arroyopy block config, rendered with `tpl` |
+| `lseApi.enabled` | `true` | Deploy the Latent Space Explorer API |
+| `lseApi.image.tag` | `main-api` | API image tag |
+| `lseApi.service.port` | `8081` | API service port |
+| `lseApi.extraEnv` | `[]` | Extra env vars, e.g. `MLFLOW_TRACKING_USERNAME`, `PREFECT_API_URL` |
+| `lseUi.enabled` | `true` | Deploy the Latent Space Explorer UI |
+| `lseUi.image.tag` | `main-ui` | UI image tag |
+| `lseUi.service.port` | `5173` | UI service port |
 | `kvrocks.enabled` | `true` | Deploy kvrocks |
 | `kvrocks.image.tag` | `latest` | Kvrocks image tag |
 | `kvrocks.service.port` | `6666` | Kvrocks service port |

@@ -1,0 +1,87 @@
+{{- if .Values.lseApi.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "arroyosas.fullname" . }}-lse-api
+  labels:
+    {{- include "arroyosas.labels" . | nindent 4 }}
+    app.kubernetes.io/component: lse-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "arroyosas.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: lse-api
+  template:
+    metadata:
+      labels:
+        {{- include "arroyosas.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: lse-api
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: lse-api
+          image: "{{ .Values.lseApi.image.repository }}:{{ .Values.lseApi.image.tag }}"
+          imagePullPolicy: {{ .Values.lseApi.image.pullPolicy }}
+          env:
+            - name: DEFAULT_TILED_URI
+              value: {{ include "arroyosas.tiledUri" . | quote }}
+            - name: RESULTS_TILED_URI
+              value: {{ include "arroyosas.tiledUri" . | quote }}
+            {{- $secretName := include "arroyosas.lseOperator.tiledSecretName" . }}
+            {{- if $secretName }}
+            {{- range list "DATA_TILED_KEY" "RESULTS_TILED_API_KEY" }}
+            - name: {{ . }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $secretName }}
+                  key: {{ include "arroyosas.lseOperator.tiledSecretKey" $ }}
+            {{- end }}
+            {{- end }}
+            - name: ARROYO_HOST
+              value: {{ include "arroyosas.fullname" . }}-lse-operator
+            - name: ARROYO_PORT
+              value: {{ .Values.lseOperator.service.port | quote }}
+            - name: REDIS_HOST
+              value: {{ include "arroyosas.fullname" . }}-kvrocks
+            - name: REDIS_PORT
+              value: {{ .Values.kvrocks.service.port | quote }}
+            - name: MLFLOW_TRACKING_URI
+              value: {{ default (printf "http://%s-mlflow:%v" (include "arroyosas.fullname" .) .Values.mlflow.service.port) .Values.lseOperator.mlflowTrackingUri | quote }}
+            {{- with .Values.lseApi.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          ports:
+            - name: http
+              containerPort: 8081
+          readinessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "arroyosas.fullname" . }}-lse-api
+  labels:
+    {{- include "arroyosas.labels" . | nindent 4 }}
+    app.kubernetes.io/component: lse-api
+spec:
+  type: {{ .Values.lseApi.service.type }}
+  selector:
+    {{- include "arroyosas.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: lse-api
+  ports:
+    - name: http
+      port: {{ .Values.lseApi.service.port }}
+      targetPort: http
+{{- end }}
