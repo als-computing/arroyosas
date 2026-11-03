@@ -38,10 +38,56 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 {{- end -}}
 
-{{- define "arroyosas.tiledApiKey" -}}
-{{- if .Values.lseOperator.tiled.apiKey -}}
-{{- .Values.lseOperator.tiled.apiKey -}}
-{{- else if not .Values.lseOperator.tiled.uri -}}
+{{/* Secret holding the bundled tiled's API key. */}}
+{{- define "arroyosas.tiled.secretName" -}}
+{{- default (printf "%s-tiled" (include "arroyosas.fullname" .)) .Values.tiled.existingSecret -}}
+{{- end -}}
+
+{{- define "arroyosas.tiled.secretKey" -}}
+{{- if .Values.tiled.existingSecret -}}
+{{- .Values.tiled.existingSecretKey -}}
+{{- else -}}
+api-key
+{{- end -}}
+{{- end -}}
+
+{{/*
+Bundled tiled API key: tiled.apiKey if set, otherwise the key already stored
+in the release's Secret, otherwise a newly generated one.
+*/}}
+{{- define "arroyosas.tiled.apiKey" -}}
+{{- if .Values.tiled.apiKey -}}
 {{- .Values.tiled.apiKey -}}
+{{- else -}}
+{{- $existing := lookup "v1" "Secret" .Release.Namespace (include "arroyosas.tiled.secretName" .) -}}
+{{- if and $existing (index $existing.data "api-key") -}}
+{{- index $existing.data "api-key" | b64dec -}}
+{{- else -}}
+{{- randAlphaNum 32 -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Secret holding the key the operator uses for tiled. Empty when the operator
+talks to an external tiled without a key.
+*/}}
+{{- define "arroyosas.lseOperator.tiledSecretName" -}}
+{{- if .Values.lseOperator.tiled.existingSecret -}}
+{{- .Values.lseOperator.tiled.existingSecret -}}
+{{- else if .Values.lseOperator.tiled.apiKey -}}
+{{- printf "%s-lse-operator-tiled" (include "arroyosas.fullname" .) -}}
+{{- else if not .Values.lseOperator.tiled.uri -}}
+{{- include "arroyosas.tiled.secretName" . -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "arroyosas.lseOperator.tiledSecretKey" -}}
+{{- if .Values.lseOperator.tiled.existingSecret -}}
+{{- .Values.lseOperator.tiled.existingSecretKey -}}
+{{- else if .Values.lseOperator.tiled.apiKey -}}
+api-key
+{{- else -}}
+{{- include "arroyosas.tiled.secretKey" . -}}
 {{- end -}}
 {{- end -}}

@@ -9,6 +9,18 @@ data:
   config.yml: |
 {{ .Values.tiled.config | indent 4 }}
 ---
+{{- if not .Values.tiled.existingSecret }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "arroyosas.tiled.secretName" . }}
+  labels:
+    {{- include "arroyosas.labels" . | nindent 4 }}
+type: Opaque
+data:
+  api-key: {{ include "arroyosas.tiled.apiKey" . | b64enc | quote }}
+---
+{{- end }}
 {{- if and .Values.tiled.persistence.enabled (not .Values.tiled.persistence.existingClaim) }}
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -52,7 +64,10 @@ spec:
           imagePullPolicy: {{ .Values.tiled.image.pullPolicy }}
           env:
             - name: TILED_SINGLE_USER_API_KEY
-              value: {{ .Values.tiled.apiKey | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "arroyosas.tiled.secretName" . }}
+                  key: {{ include "arroyosas.tiled.secretKey" . }}
           ports:
             - name: http
               containerPort: {{ .Values.tiled.service.port }}

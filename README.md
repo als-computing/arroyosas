@@ -57,7 +57,7 @@ Changes are typically deployed by updating the Docker images and restarting the 
 
 ### Kubernetes Deployment with Helm
 
-A Helm chart is provided at `charts/arroyosas` to deploy services analogous to `docker-compose.yml`:
+A Helm chart is provided at `charts/arroyosas` to deploy services analogous to `docker-compose.yml` (full documentation in [charts/arroyosas/README.md](charts/arroyosas/README.md)):
 - `tiled`
 - `beamline_sim`
 - `lse_operator`

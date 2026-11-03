@@ -10,7 +10,11 @@ tiled:
   service:
     type: ClusterIP
     port: 8000
+  # Stored in a Secret. Empty generates a random key, kept across upgrades.
   apiKey: ""
+  # Use a pre-created Secret instead; apiKey is then ignored.
+  existingSecret: ""
+  existingSecretKey: api-key
   config: |
     authentication:
       allow_anonymous_access: true
@@ -72,8 +76,11 @@ lseOperator:
     # Tiled server the operator listens to and publishes results to.
     # Empty uses the tiled deployed by this chart (requires tiled.enabled).
     uri: ""
-    # Empty uses tiled.apiKey when the bundled tiled is in use.
+    # Stored in a Secret. Empty uses the bundled tiled's key when uri is empty.
     apiKey: ""
+    # Use a pre-created Secret instead; apiKey is then ignored.
+    existingSecret: ""
+    existingSecretKey: api-key
     subPath: "beamlines/bl733/dylan_test"
   mlflowTrackingUri: ""
   blockConfig: |
